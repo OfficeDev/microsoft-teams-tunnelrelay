@@ -45,7 +45,10 @@ namespace TunnelRelay
             }
             else
             {
-                Instance = new ApplicationData();
+                Instance = new ApplicationData
+                {
+                    RedirectionUrl = "https://localhost/",
+                };
             }
         }
 
