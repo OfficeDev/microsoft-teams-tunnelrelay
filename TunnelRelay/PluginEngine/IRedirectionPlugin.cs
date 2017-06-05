@@ -26,6 +26,7 @@ namespace TunnelRelay.PluginEngine
 {
     using System.Net;
     using System.Net.Http;
+    using System.Threading.Tasks;
 
     /// <summary>
     /// Interface for developing plugins.
@@ -48,17 +49,17 @@ namespace TunnelRelay.PluginEngine
         string HelpText { get; }
 
         /// <summary>
-        /// Performes required processing before request is made to service.
+        /// Performes required processing before request is made to service asynchronously.
         /// </summary>
         /// <param name="webRequest">The web request.</param>
         /// <returns>Processed http web request.</returns>
-        HttpRequestMessage PreProcessRequestToService(HttpRequestMessage webRequest);
+        Task<HttpRequestMessage> PreProcessRequestToServiceAsync(HttpRequestMessage webRequest);
 
         /// <summary>
-        /// Performes required processing after response is received from service.
+        /// Performes required processing after response is received from service asynchronously.
         /// </summary>
         /// <param name="webResponse">The web response.</param>
         /// <returns>Processed http web response.</returns>
-        HttpResponseMessage PostProcessResponseFromService(HttpResponseMessage webResponse);
+        Task<HttpResponseMessage> PostProcessResponseFromServiceAsync(HttpResponseMessage webResponse);
     }
 }

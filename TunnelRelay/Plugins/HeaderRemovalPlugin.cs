@@ -83,25 +83,25 @@ namespace TunnelRelay.Plugins
         }
 
         /// <summary>
-        /// Performes required processing after response is received from service.
+        /// Performes required processing after response is received from service asynchronously.
         /// </summary>
         /// <param name="webResponse">The web response.</param>
         /// <returns>
         /// Processed http web response.
         /// </returns>
-        public HttpResponseMessage PostProcessResponseFromService(HttpResponseMessage webResponse)
+        public Task<HttpResponseMessage> PostProcessResponseFromServiceAsync(HttpResponseMessage webResponse)
         {
-            return webResponse;
+            return Task.FromResult(webResponse);
         }
 
         /// <summary>
-        /// Performes required processing before request is made to service.
+        /// Performes required processing before request is made to service asynchronously.
         /// </summary>
         /// <param name="webRequest">The web request.</param>
         /// <returns>
         /// Processed http web request.
         /// </returns>
-        public HttpRequestMessage PreProcessRequestToService(HttpRequestMessage webRequest)
+        public Task<HttpRequestMessage> PreProcessRequestToServiceAsync(HttpRequestMessage webRequest)
         {
             this.headersToRemove.ForEach(headerToRemove =>
             {
@@ -111,7 +111,7 @@ namespace TunnelRelay.Plugins
                 }
             });
 
-            return webRequest;
+            return Task.FromResult(webRequest);
         }
     }
 }

@@ -33,6 +33,7 @@ namespace TunnelRelay
     using System.Net;
     using System.Net.Http;
     using System.Net.Security;
+    using System.Reflection;
     using System.ServiceModel.Channels;
     using System.ServiceModel.Web;
     using System.Text;
@@ -66,6 +67,21 @@ namespace TunnelRelay
             Plugins = new ObservableCollection<IRedirectionPlugin>();
             Plugins.Add(new HeaderAdditionPlugin());
             Plugins.Add(new HeaderRemovalPlugin());
+            string pluginDirectory = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Plugins");
+            Directory.EnumerateFiles(pluginDirectory, "*.dll").ToList().ForEach(dll =>
+            {
+                try
+                {
+                    Assembly assembly = Assembly.LoadFrom(dll);
+                    foreach (Type pluginType in assembly.GetExportedTypes().Where(type => type.GetInterfaces().Contains(typeof(IRedirectionPlugin))))
+                    {
+                        Plugins.Add(Activator.CreateInstance(pluginType) as IRedirectionPlugin);
+                    }
+                }
+                catch (Exception)
+                {
+                }
+            });
         }
 
         /// <summary>
@@ -173,7 +189,7 @@ namespace TunnelRelay
 
                 foreach (IRedirectionPlugin plugin in Plugins)
                 {
-                    requestMessage = plugin.PreProcessRequestToService(requestMessage);
+                    requestMessage = await plugin.PreProcessRequestToServiceAsync(requestMessage);
                 }
 
                 // Using ConfigureAwait true as we need to context back otherwise we will lose WebOperationContext.
@@ -192,7 +208,7 @@ namespace TunnelRelay
 
                 foreach (IRedirectionPlugin plugin in Plugins)
                 {
-                    response = plugin.PostProcessResponseFromService(response);
+                    response = await plugin.PostProcessResponseFromServiceAsync(response);
                 }
 
                 MainWindow.Instance.Dispatcher.Invoke(new Action(() =>
