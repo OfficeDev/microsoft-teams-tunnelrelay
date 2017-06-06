@@ -68,20 +68,24 @@ namespace TunnelRelay
             Plugins.Add(new HeaderAdditionPlugin());
             Plugins.Add(new HeaderRemovalPlugin());
             string pluginDirectory = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Plugins");
-            Directory.EnumerateFiles(pluginDirectory, "*.dll").ToList().ForEach(dll =>
+
+            if (Directory.Exists(pluginDirectory))
             {
-                try
+                Directory.EnumerateFiles(pluginDirectory, "*.dll").ToList().ForEach(dll =>
                 {
-                    Assembly assembly = Assembly.LoadFrom(dll);
-                    foreach (Type pluginType in assembly.GetExportedTypes().Where(type => type.GetInterfaces().Contains(typeof(IRedirectionPlugin))))
+                    try
                     {
-                        Plugins.Add(Activator.CreateInstance(pluginType) as IRedirectionPlugin);
+                        Assembly assembly = Assembly.LoadFrom(dll);
+                        foreach (Type pluginType in assembly.GetExportedTypes().Where(type => type.GetInterfaces().Contains(typeof(IRedirectionPlugin))))
+                        {
+                            Plugins.Add(Activator.CreateInstance(pluginType) as IRedirectionPlugin);
+                        }
                     }
-                }
-                catch (Exception)
-                {
-                }
-            });
+                    catch (Exception)
+                    {
+                    }
+                });
+            }
         }
 
         /// <summary>
@@ -117,9 +121,9 @@ namespace TunnelRelay
                         ApplicationData.Instance.ServiceBusKeyName,
                         ApplicationData.Instance.ServiceBusSharedKey)));
 
-            ApplicationEngine.ServiceHost.Open();
+            ServiceHost.Open();
 
-            // Ignore all HTTPs cert errors. We wanna do this after the call to Azure is made so that if Azure call present wrong cert we bail out.
+            // Ignore all HTTPs cert errors. We wanna do this after the call to Azure is made so that if Azure call presents wrong cert we bail out.
             ServicePointManager.ServerCertificateValidationCallback = new RemoteCertificateValidationCallback((sender, cert, chain, errs) => true);
         }
 
@@ -213,7 +217,6 @@ namespace TunnelRelay
                     requestMessage = await plugin.PreProcessRequestToServiceAsync(requestMessage);
                 }
 
-                // Using ConfigureAwait true as we need to context back otherwise we will lose WebOperationContext.
                 HttpResponseMessage response = await httpClient.SendAsync(requestMessage, HttpCompletionOption.ResponseContentRead);
 
                 foreach (IRedirectionPlugin plugin in Plugins)
@@ -238,7 +241,7 @@ namespace TunnelRelay
                 stopWatch.Start();
                 requestDetails.Duration = stopWatch.ElapsedMilliseconds.ToString() + "ms";
 
-                Message responseMessage = string.IsNullOrEmpty(responseData) ?
+                Message responseMessage = string.IsNullOrEmpty(responseData) || response.Content.Headers.ContentType == null ?
                     operationContext.CreateTextResponse(responseData) :
                     operationContext.CreateTextResponse(responseData, response.Content.Headers.ContentType.ToString());
                 operationContext.OutgoingResponse.StatusCode = response.StatusCode;

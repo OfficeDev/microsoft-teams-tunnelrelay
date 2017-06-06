@@ -93,7 +93,7 @@ namespace TunnelRelay
                 // Add a NewLine for carriage return
                 copyContent += Environment.NewLine;
             }
-
+            
             Clipboard.SetText(copyContent);
         }
 
