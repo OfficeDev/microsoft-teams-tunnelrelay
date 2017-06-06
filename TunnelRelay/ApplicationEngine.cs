@@ -90,11 +90,6 @@ namespace TunnelRelay
         internal static WebServiceHost ServiceHost { get; set; }
 
         /// <summary>
-        /// Gets or sets the proxy URL.
-        /// </summary>
-        internal static string ProxyUrl { get; set; }
-
-        /// <summary>
         /// Gets or sets the requests.
         /// </summary>
         internal static ObservableCollection<RequestDetails> Requests { get; set; }
@@ -109,14 +104,13 @@ namespace TunnelRelay
         /// </summary>
         internal static void StartAzureRelayEngine()
         {
-            ApplicationEngine.ProxyUrl = ApplicationData.Instance.ServiceBusUrl + Environment.MachineName;
-            ApplicationEngine.ServiceHost = new WebServiceHost(typeof(WCFContract));
-            ApplicationEngine.ServiceHost.AddServiceEndpoint(
+            ServiceHost = new WebServiceHost(typeof(WCFContract));
+            ServiceHost.AddServiceEndpoint(
                 typeof(WCFContract),
                 new WebHttpRelayBinding(
                     EndToEndWebHttpSecurityMode.Transport,
                     RelayClientAuthenticationType.None),
-                ApplicationEngine.ProxyUrl)
+                ApplicationData.Instance.ProxyBaseUrl)
             .EndpointBehaviors.Add(
                 new TransportClientEndpointBehavior(
                     TokenProvider.CreateSharedAccessSignatureTokenProvider(
@@ -144,7 +138,7 @@ namespace TunnelRelay
             var requestDetails = new RequestDetails()
             {
                 Method = incomingReq.Method,
-                Url = incomingReq.UriTemplateMatch.RequestUri.AbsoluteUri.Replace(ProxyUrl, string.Empty),
+                Url = incomingReq.UriTemplateMatch.RequestUri.PathAndQuery.Replace(incomingReq.UriTemplateMatch.RequestUri.Segments[1], string.Empty),
                 RequestHeaders = new ObservableCollection<HeaderDetails>(headerMap.GetUIHeaderMap()),
                 Timestamp = DateTime.Now.ToString("O"),
                 RequestReceiveTime = DateTime.Now,
@@ -173,7 +167,34 @@ namespace TunnelRelay
                 // add the local redirection e.g. https://localhost to it. Thus making https://localhost/ActualPath
                 string newUrl = ApplicationData.Instance.RedirectionUrl.TrimEnd('/') + incomingReq.UriTemplateMatch.RequestUri.PathAndQuery.Replace(incomingReq.UriTemplateMatch.RequestUri.Segments[1], string.Empty);
 
-                HttpRequestMessage requestMessage = new HttpRequestMessage(HttpMethod.Post, newUrl);
+                HttpMethod httpMethod;
+
+                if (incomingReq.Method.Equals("POST", StringComparison.OrdinalIgnoreCase))
+                {
+                    httpMethod = HttpMethod.Post;
+                }
+                else if (incomingReq.Method.Equals("GET", StringComparison.OrdinalIgnoreCase))
+                {
+                    httpMethod = HttpMethod.Get;
+                }
+                else if (incomingReq.Method.Equals("OPTIONS", StringComparison.OrdinalIgnoreCase))
+                {
+                    httpMethod = HttpMethod.Options;
+                }
+                else if (incomingReq.Method.Equals("PUT", StringComparison.OrdinalIgnoreCase))
+                {
+                    httpMethod = HttpMethod.Put;
+                }
+                else if (incomingReq.Method.Equals("DELETE", StringComparison.OrdinalIgnoreCase))
+                {
+                    httpMethod = HttpMethod.Delete;
+                }
+                else
+                {
+                    throw new NotSupportedException("TunnelRelay does not support this HTTP method at this time.");
+                }
+
+                HttpRequestMessage requestMessage = new HttpRequestMessage(httpMethod, newUrl);
                 requestMessage.CopyRequestHeaders(incomingReq);
 
                 if (stream != null)
@@ -195,6 +216,11 @@ namespace TunnelRelay
                 // Using ConfigureAwait true as we need to context back otherwise we will lose WebOperationContext.
                 HttpResponseMessage response = await httpClient.SendAsync(requestMessage, HttpCompletionOption.ResponseContentRead);
 
+                foreach (IRedirectionPlugin plugin in Plugins)
+                {
+                    response = await plugin.PostProcessResponseFromServiceAsync(response);
+                }
+
                 string responseData = string.Empty;
                 if (response.Content != null)
                 {
@@ -204,11 +230,6 @@ namespace TunnelRelay
                 else
                 {
                     requestDetails.ResponseData = string.Empty;
-                }
-
-                foreach (IRedirectionPlugin plugin in Plugins)
-                {
-                    response = await plugin.PostProcessResponseFromServiceAsync(response);
                 }
 
                 MainWindow.Instance.Dispatcher.Invoke(new Action(() =>

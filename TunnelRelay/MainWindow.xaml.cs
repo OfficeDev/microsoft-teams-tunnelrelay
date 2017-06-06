@@ -111,7 +111,7 @@ namespace TunnelRelay
                     this.Dispatcher.Invoke(new Action(() =>
                     {
                         this.prgressBar.Visibility = Visibility.Hidden;
-                        this.txtProxyDetails.Text = "Azure Proxy is running on " + ApplicationEngine.ProxyUrl;
+                        this.txtProxyDetails.Text = "Azure Proxy is running on " + ApplicationData.Instance.ProxyBaseUrl;
                     }));
                 }
                 catch (Exception)

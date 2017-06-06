@@ -74,10 +74,10 @@ namespace TunnelRelay
         /// <param name="pStream">Incoming request stream.</param>
         /// <returns>Response from underlying service.</returns>
         [OperationContract]
-        [WebInvoke(UriTemplate = "*", Method = "OPTIONS", BodyStyle = WebMessageBodyStyle.Bare)]
+        [WebInvoke(UriTemplate = "*", Method = "OPTIONS")]
         private async Task<Message> OptionsRequest(Stream pStream)
         {
-            return await ApplicationEngine.GetResponse(WebOperationContext.Current, pStream);
+            return await ApplicationEngine.GetResponse(WebOperationContext.Current);
         }
 
         /// <summary>

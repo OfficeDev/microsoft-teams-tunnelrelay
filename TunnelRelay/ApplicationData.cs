@@ -24,6 +24,7 @@
 
 namespace TunnelRelay
 {
+    using System;
     using System.Collections.Generic;
     using System.IO;
     using Newtonsoft.Json;
@@ -63,6 +64,18 @@ namespace TunnelRelay
         /// </summary>
         [JsonProperty(PropertyName = "RedirectionUrl")]
         public string RedirectionUrl { get; internal set; }
+
+        /// <summary>
+        /// Gets the proxy base URL.
+        /// </summary>
+        [JsonIgnore]
+        public string ProxyBaseUrl
+        {
+            get
+            {
+                return this.ServiceBusUrl + Environment.MachineName;
+            }
+        }
 
         /// <summary>
         /// Gets the overflow properties. Can be used to store plugin data.
