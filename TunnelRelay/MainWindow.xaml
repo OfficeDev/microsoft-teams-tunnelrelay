@@ -135,7 +135,7 @@
 
             <TabControl Grid.Row="2">
                 <TabItem Header="Request Body">
-                    <TextBlock Name="txtRequestBody" TextWrapping="Wrap" ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.CanContentScroll="True" Text="{Binding ElementName=lstRequests, Path=SelectedItem.RequestData}"/>
+                    <TextBox IsReadOnly="True" Name="txtRequestBody" TextWrapping="Wrap" ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.CanContentScroll="True" Text="{Binding ElementName=lstRequests, Path=SelectedItem.RequestData}"/>
                 </TabItem>
                 <TabItem Header="Request Headers">
                     <ListView ItemsSource="{Binding ElementName=lstRequests, Path=SelectedItem.RequestHeaders}" Name="lstRequestHeaders">
@@ -163,7 +163,7 @@
 
             <TabControl Grid.Row="4">
                 <TabItem Header="Response Body">
-                    <TextBlock Name="txtResponseBody" TextWrapping="Wrap" ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.CanContentScroll="True" Text="{Binding ElementName=lstRequests, Path=SelectedItem.ResponseData}"/>
+                    <TextBox IsReadOnly="True" Name="txtResponseBody" TextWrapping="Wrap" ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.CanContentScroll="True" Text="{Binding ElementName=lstRequests, Path=SelectedItem.ResponseData}"/>
                 </TabItem>
                 <TabItem Header="Response Headers">
                     <ListView ItemsSource="{Binding ElementName=lstRequests, Path=SelectedItem.ResponseHeaders}" Name="lstResponseHeaders">

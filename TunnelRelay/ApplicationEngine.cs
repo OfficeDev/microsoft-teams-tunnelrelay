@@ -200,6 +200,7 @@ namespace TunnelRelay
 
                 HttpRequestMessage requestMessage = new HttpRequestMessage(httpMethod, newUrl);
                 requestMessage.CopyRequestHeaders(incomingReq);
+                requestMessage.Headers.Host = new Uri(newUrl).Authority;
 
                 if (stream != null)
                 {
