@@ -12,20 +12,19 @@
             <Setter Property="HorizontalContentAlignment" Value="Stretch" />
         </Style>
         <Style x:Key="hiddenHeaderStyle" TargetType="{x:Type GridViewColumnHeader}">
-            <Setter Property="Visibility" Value="Collapsed" />
+            <Setter Property="Visibility" Value="Visible" />
         </Style>
         <local:RequestStatusConvertor  x:Key="requestColor"/>
     </Window.Resources>
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="10" />
-            <RowDefinition Height="40" />
+            <RowDefinition Height="45" />
             <RowDefinition Height="10" />
             <RowDefinition Height="30" />
             <RowDefinition Height="10" />
             <RowDefinition Height="*" />
             <RowDefinition Height="10" />
-            <RowDefinition Height="200" />
             <RowDefinition Height="10" />
         </Grid.RowDefinitions>
 
@@ -37,25 +36,24 @@
         </Grid.ColumnDefinitions>
 
         <!--  Top Controls -->
-        <Grid Grid.Column="1" Grid.Row="1" Grid.ColumnSpan="2">
+        <Grid Grid.Column="1" Grid.Row="1" Grid.ColumnSpan="2" Grid.RowSpan="3">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*" />
+                <RowDefinition Height="30" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="100" />
+                <ColumnDefinition Width="150" />
             </Grid.ColumnDefinitions>
-            <Label Name="lblServiceBusDetails" />
-            <Button Name="btnLogout" Content="Logout" Grid.Column="1" Click="BtnLogout_Click" />
-        </Grid>
-        <Grid Grid.Column="1" Grid.Row="3" Grid.ColumnSpan="2">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="*" />
-            </Grid.ColumnDefinitions>
-            <ProgressBar Name="prgressBar" Grid.Column="0" Grid.ColumnSpan="2" IsIndeterminate="True" Background="White"/>
-            <TextBox Name="txtProxyDetails" Text="Running Azure Proxy at " Grid.Column="0" Grid.ColumnSpan="2" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" IsReadOnly="True" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" BorderThickness="0" Background="Transparent"/>
-            <Label Content="Redirecting incoming requests to " Grid.Column="2" HorizontalAlignment="Right"/>
-            <TextBox Name="txtRedirectionUrl" Grid.Column="3" TextChanged="TxtRedirectionUrl_TextChanged" HorizontalAlignment="Stretch" FontWeight="SemiBold" VerticalAlignment="Center" TextAlignment="Left"/>
+            <Button Name="btnLogout" Content="Sign out" Grid.Column="1" Grid.Row="0" Click="BtnLogout_Click" />
+
+            <StackPanel Grid.Column="0" Grid.Row="0" Orientation="Horizontal">
+                <Label Content="Azure Proxy is running on " FontWeight="Bold"/>
+                <TextBox Name="txtProxyDetails" Text="Starting!!!!" Grid.Column="0" Grid.Row="0" Width="400" VerticalAlignment="Center" TextAlignment="Left" BorderThickness="0" IsReadOnly="True"/>
+            </StackPanel>
+            <Label Content="Redirecting incoming requests to " Grid.Column="0" Grid.Row="1" FontSize="10" HorizontalAlignment="Left" VerticalAlignment="Bottom"/>
+            <TextBox Name="txtRedirectionUrl" Grid.Column="0" Grid.Row="2" TextChanged="TxtRedirectionUrl_TextChanged" FontWeight="SemiBold" TextAlignment="Left" Width="400" HorizontalAlignment="Left"/>
         </Grid>
 
         <!-- Left Hand Side -->
@@ -71,7 +69,7 @@
                 <Button Content="Clear Requests" HorizontalAlignment="Right" Name="btnClearAllRequests" Width="100" BorderBrush="LightSlateGray" Background="White" Click="BtnClearAllRequests_Click"/>
             </Grid>
 
-            <ListView Name="lstRequests" x:FieldModifier="public" Grid.Row="2" BorderThickness="0" ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.HorizontalScrollBarVisibility="Auto" Grid.ColumnSpan="10">
+            <ListView Name="lstRequests" x:FieldModifier="public" Grid.Row="2" BorderThickness="0" ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
                 <ListView.View>
                     <GridView ColumnHeaderContainerStyle="{StaticResource hiddenHeaderStyle}">
                         <GridViewColumn Header="Method" Width="100">
@@ -81,24 +79,24 @@
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>
-                        <GridViewColumn Header="Url" Width="150" >
+                        <GridViewColumn Header="Url" Width="250">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
                                     <TextBlock Text="{Binding Url}" Foreground="{Binding Converter={StaticResource requestColor}}" TextAlignment="Justify" HorizontalAlignment="Stretch"/>
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>
-                        <GridViewColumn Header="Status Code" Width="150">
+                        <GridViewColumn Header="Status Code" Width="110">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
-                                    <TextBlock Text="{Binding StatusCode}" Foreground="{Binding Converter={StaticResource requestColor}}" TextAlignment="Center" HorizontalAlignment="Right"/>
+                                    <TextBlock Text="{Binding StatusCode}" Foreground="{Binding Converter={StaticResource requestColor}}" TextAlignment="Center" HorizontalAlignment="Center"/>
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>
-                        <GridViewColumn Header="Time" Width="250">
+                        <GridViewColumn Header="Start time" Width="220">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
-                                    <TextBlock Text="{Binding Timestamp}" Foreground="{Binding Converter={StaticResource requestColor}}" TextAlignment="Center" HorizontalAlignment="Right" />
+                                    <TextBlock Text="{Binding Timestamp}" Foreground="{Binding Converter={StaticResource requestColor}}" TextAlignment="Center" HorizontalAlignment="Center" />
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>
@@ -130,7 +128,7 @@
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
                 <Label Content="{Binding ElementName=lstRequests, Path=SelectedItem.Timestamp}" Grid.Row="0"/>
-                <Label Content="{Binding ElementName=lstRequests, Path=SelectedItem.Url}" Grid.Row="1" />
+                <TextBox Text="{Binding ElementName=lstRequests, Path=SelectedItem.Url}" Grid.Row="1" IsReadOnly="True" BorderThickness="0"/>
             </Grid>
 
             <TabControl Grid.Row="2">
@@ -188,53 +186,6 @@
                     </ListView>
                 </TabItem>
             </TabControl>
-        </Grid>
-
-        <!-- Bottom controls for Plugins -->
-        <Grid Grid.Row="7" Grid.Column="1" Grid.ColumnSpan="2">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="300" />
-                <ColumnDefinition Width="10" />
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="10" />
-                <ColumnDefinition Width="200" />
-            </Grid.ColumnDefinitions>
-
-            <Grid.RowDefinitions>
-                <RowDefinition Height="30" />
-                <RowDefinition Height="*" />
-            </Grid.RowDefinitions>
-
-            <StackPanel Grid.Column="0" Orientation="Vertical" VerticalAlignment="Center" HorizontalAlignment="Center" Grid.Row="0" Grid.RowSpan="2">
-                <Label Content="Select plugin below to configure settings" HorizontalAlignment="Center" />
-                <ComboBox Name="lstbox_PluginList" Height="30" Width="300" DisplayMemberPath="PluginName" SelectedValuePath="PluginName" />
-            </StackPanel>
-
-            <Label Content="Enter plugin settings below" Grid.Column="2" Grid.Row="0" HorizontalAlignment="Left"/>
-            <Button Content="Update Plugin Settings" Grid.Column="2" Grid.Row="0" HorizontalAlignment="Right" Click="SavePluginSettings_Click" />
-            <TextBox
-                Grid.Column="2"
-                Grid.Row="1"
-                Name="txtBox_PluginSettings" 
-                VerticalAlignment="Stretch" 
-                HorizontalAlignment="Stretch"
-                TextWrapping="Wrap"
-                AcceptsReturn="True"
-                AcceptsTab="True"
-                Text="{Binding ElementName=lstbox_PluginList, Path=SelectedItem.PluginData }"
-                ScrollViewer.HorizontalScrollBarVisibility="Auto" 
-                ScrollViewer.VerticalScrollBarVisibility="Auto"/>
-
-            <Label Content="Help Text" Grid.Column="4" Grid.Row="0"/>
-            <TextBlock
-                Grid.Column="4"
-                Grid.Row="1"
-                Text="{ Binding ElementName=lstbox_PluginList, Path=SelectedItem.HelpText }"
-                VerticalAlignment="Stretch" 
-                HorizontalAlignment="Stretch" 
-                ScrollViewer.HorizontalScrollBarVisibility="Auto" 
-                ScrollViewer.VerticalScrollBarVisibility="Auto" 
-                TextWrapping="Wrap" />
         </Grid>
     </Grid>
 </Window>

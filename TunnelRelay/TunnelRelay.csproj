@@ -112,17 +112,24 @@
     </ApplicationDefinition>
     <Compile Include="ApplicationData.cs" />
     <Compile Include="ApplicationEngine.cs" />
-    <Compile Include="GettingStarted.xaml.cs">
-      <DependentUpon>GettingStarted.xaml</DependentUpon>
-    </Compile>
     <Compile Include="HeaderDetails.cs" />
+    <Compile Include="IValueConvertors\BooleanInvertorConvertor.cs" />
     <Compile Include="IValueConvertors\RequestStatusConvertor.cs" />
+    <Compile Include="LoginToAzure.xaml.cs">
+      <DependentUpon>LoginToAzure.xaml</DependentUpon>
+    </Compile>
     <Compile Include="PluginEngine\IRedirectionPlugin.cs" />
     <Compile Include="Plugins\HeaderAdditionPlugin.cs" />
     <Compile Include="Plugins\HeaderRemovalPlugin.cs" />
     <Compile Include="RequestDetails.cs" />
+    <Compile Include="SelectServiceBus.xaml.cs">
+      <DependentUpon>SelectServiceBus.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Startup.xaml.cs">
+      <DependentUpon>Startup.xaml</DependentUpon>
+    </Compile>
     <Compile Include="WCFContract.cs" />
-    <Page Include="GettingStarted.xaml">
+    <Page Include="LoginToAzure.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -139,6 +146,14 @@
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Page Include="SelectServiceBus.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Startup.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs">

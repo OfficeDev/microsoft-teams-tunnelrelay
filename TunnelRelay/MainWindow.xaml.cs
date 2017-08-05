@@ -44,31 +44,12 @@ namespace TunnelRelay
             this.InitializeComponent();
             Instance = this;
 
-            if (string.IsNullOrEmpty(ApplicationData.Instance.LoginId))
-            {
-                GettingStarted gettingStarted = new GettingStarted();
-                bool? val = gettingStarted.ShowDialog();
-
-                if ((val.HasValue && !val.Value) || !val.HasValue)
-                {
-                    Application.Current.Shutdown();
-                    return;
-                }
-            }
-
-            this.prgressBar.Visibility = Visibility.Visible;
             this.txtProxyDetails.Text = "Starting Azure Proxy";
             this.lstRequests.ItemsSource = ApplicationEngine.Requests;
-            this.lstbox_PluginList.ItemsSource = ApplicationEngine.Plugins;
             CommandBinding cb = new CommandBinding(ApplicationCommands.Copy, this.CopyCmdExecuted, this.CopyCmdCanExecute);
             this.lstRequestHeaders.CommandBindings.Add(cb);
             this.lstResponseHeaders.CommandBindings.Add(cb);
             this.txtRedirectionUrl.Text = ApplicationData.Instance.RedirectionUrl;
-            this.lblServiceBusDetails.Content = string.Format(
-                "Logged in using '{0}' account. And using Service bus with namespace '{1}' with Authorization key '{2}'",
-                ApplicationData.Instance.LoginId,
-                ApplicationData.Instance.ServiceBusName,
-                ApplicationData.Instance.ServiceBusKeyName);
             this.StartRelayEngine();
         }
 
@@ -93,7 +74,7 @@ namespace TunnelRelay
                 // Add a NewLine for carriage return
                 copyContent += Environment.NewLine;
             }
-            
+
             Clipboard.SetText(copyContent);
         }
 
@@ -110,15 +91,13 @@ namespace TunnelRelay
 
                     this.Dispatcher.Invoke(new Action(() =>
                     {
-                        this.prgressBar.Visibility = Visibility.Hidden;
-                        this.txtProxyDetails.Text = "Azure Proxy is running on " + ApplicationData.Instance.ProxyBaseUrl;
+                        this.txtProxyDetails.Text = ApplicationData.Instance.ProxyBaseUrl;
                     }));
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
                     this.Dispatcher.Invoke(new Action(() =>
                     {
-                        this.prgressBar.Visibility = Visibility.Hidden;
                         this.txtProxyDetails.Text = "FAILED TO START AZURE PROXY!!!!";
                     }));
                 }
@@ -166,28 +145,13 @@ namespace TunnelRelay
         }
 
         /// <summary>
-        /// Handles the Click event of the SavePluginSettings control.
-        /// </summary>
-        /// <param name="sender">The source of the event.</param>
-        /// <param name="e">The <see cref="RoutedEventArgs"/> instance containing the event data.</param>
-        private void SavePluginSettings_Click(object sender, RoutedEventArgs e)
-        {
-            if (this.lstbox_PluginList.SelectedItem != null)
-            {
-                (this.lstbox_PluginList.SelectedItem as IRedirectionPlugin).PluginData = this.txtBox_PluginSettings.Text;
-            }
-        }
-
-        /// <summary>
         /// Handles the Click event of the BtnLogin control.
         /// </summary>
         /// <param name="sender">The source of the event.</param>
         /// <param name="e">The <see cref="RoutedEventArgs"/> instance containing the event data.</param>
         private void BtnLogout_Click(object sender, RoutedEventArgs e)
         {
-            ApplicationData.Instance.LoginId = string.Empty;
             ApplicationData.Instance.ServiceBusKeyName = string.Empty;
-            ApplicationData.Instance.ServiceBusName = string.Empty;
             ApplicationData.Instance.ServiceBusSharedKey = string.Empty;
             ApplicationData.Instance.ServiceBusUrl = string.Empty;
 

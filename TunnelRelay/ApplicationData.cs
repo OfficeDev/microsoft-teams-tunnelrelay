@@ -84,18 +84,6 @@ namespace TunnelRelay
         public Dictionary<string, JToken> Properties { get; internal set; }
 
         /// <summary>
-        /// Gets or sets the login identifier.
-        /// </summary>
-        [JsonProperty(PropertyName = "LoginId")]
-        internal string LoginId { get; set; }
-
-        /// <summary>
-        /// Gets or sets the service bus name.
-        /// </summary>
-        [JsonProperty(PropertyName = "ServiceBusName")]
-        internal string ServiceBusName { get; set; }
-
-        /// <summary>
         /// Gets or sets the service bus URL.
         /// </summary>
         [JsonProperty(PropertyName = "ServiceBusUrl")]
