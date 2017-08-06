@@ -57,6 +57,7 @@ namespace TunnelRelay.Plugins
         /// <summary>
         /// Gets or sets the plugin data.
         /// </summary>
+        [PluginSetting("HeaderNames", "Comma separated values")]
         public string PluginData
         {
             get

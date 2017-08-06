@@ -37,7 +37,6 @@ namespace TunnelRelay
     using System.ServiceModel.Web;
     using System.Threading.Tasks;
     using Newtonsoft.Json;
-    using TunnelRelay.PluginEngine;
 
     /// <summary>
     /// WCF contract for handling requests.

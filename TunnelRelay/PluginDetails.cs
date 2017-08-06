@@ -1,4 +1,4 @@
-﻿// <copyright file="PluginManagement.xaml.cs" company="Microsoft">
+﻿// <copyright file="PluginDetails.cs" company="Microsoft">
 // Copyright (c) Microsoft. All rights reserved.
 // </copyright>
 // Licensed under the MIT license.
@@ -28,29 +28,32 @@ namespace TunnelRelay
     using System.Collections.Generic;
     using System.Collections.ObjectModel;
     using System.Linq;
+    using System.Reflection;
     using System.Text;
     using System.Threading.Tasks;
-    using System.Windows;
-    using System.Windows.Controls;
-    using System.Windows.Data;
-    using System.Windows.Documents;
-    using System.Windows.Input;
-    using System.Windows.Media;
-    using System.Windows.Media.Imaging;
-    using System.Windows.Shapes;
+    using TunnelRelay.PluginEngine;
 
     /// <summary>
-    /// Interaction logic for PluginManagement.xaml
+    /// Plugin instance details.
     /// </summary>
-    public partial class PluginManagement : Window
+    public class PluginDetails
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="PluginManagement"/> class.
+        /// Gets a value indicating whether this instance is enabled.
         /// </summary>
-        public PluginManagement()
-        {
-            this.InitializeComponent();
-            this.lstPluginList.ItemsSource = ApplicationEngine.Plugins;
-        }
+        /// <value>
+        ///   <c>true</c> if this instance is enabled; otherwise, <c>false</c>.
+        /// </value>
+        public bool IsEnabled { get; internal set; }
+
+        /// <summary>
+        /// Gets the plugin instance.
+        /// </summary>
+        public IRedirectionPlugin PluginInstance { get; internal set; }
+
+        /// <summary>
+        /// Gets the plugin settings.
+        /// </summary>
+        public ObservableCollection<PluginSettingDetails> PluginSettings { get; internal set; }
     }
 }

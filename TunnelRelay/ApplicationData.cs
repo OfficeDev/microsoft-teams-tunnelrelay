@@ -54,6 +54,14 @@ namespace TunnelRelay
         }
 
         /// <summary>
+        /// Initializes a new instance of the <see cref="ApplicationData"/> class.
+        /// </summary>
+        public ApplicationData()
+        {
+            this.EnabledPlugins = new List<string>();
+        }
+
+        /// <summary>
         /// Gets the application data instance.
         /// </summary>
         [JsonIgnore]
@@ -100,6 +108,12 @@ namespace TunnelRelay
         /// </summary>
         [JsonProperty(PropertyName = "ServiceBusSharedKey")]
         internal string ServiceBusSharedKey { get; set; }
+
+        /// <summary>
+        /// Gets or sets the list of enabled plugins.
+        /// </summary>
+        [JsonProperty(PropertyName = "EnabledPlugins")]
+        internal List<string> EnabledPlugins { get; set; }
 
         /// <summary>
         /// Stores the application data. Can be used to store plugin data.

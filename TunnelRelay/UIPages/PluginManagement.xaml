@@ -11,6 +11,7 @@
             <ColumnDefinition Width="10" />
             <ColumnDefinition Width="*" />
             <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="*" />
             <ColumnDefinition Width="10" />
         </Grid.ColumnDefinitions>
 
@@ -25,11 +26,45 @@
 
         <!--Top controls-->
         <TextBlock Text="Configure plugins" FontSize="20" FontWeight="SemiBold" Grid.Column="1" Grid.Row="1" />
-        <TextBlock Text="Select the plugins you want to configure and set the settings for the same" Grid.Column="1" Grid.Row="2" />
-        
-        
+        <TextBlock Text="Select the plugins you want to configure and set the settings for the same" Grid.Column="1" Grid.Row="2" Grid.ColumnSpan="2" />
+
+
         <!--Left List views-->
-        <ListView Grid.Row="4" Grid.Column="1" />
-        <StackPanel Name="stcPanel"/>
+        <ListView Grid.Row="4" Grid.Column="1" Name="lstPluginList" DisplayMemberPath="PluginInstance.PluginName"/>
+
+        <!--Right view-->
+        <Grid Grid.Column="2" Grid.ColumnSpan="2" Grid.Row="3" Grid.RowSpan="5" >
+            <Grid.RowDefinitions>
+                <RowDefinition Height="30" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="10" />
+            </Grid.RowDefinitions>
+            <CheckBox Grid.Row="0" Grid.Column="2" HorizontalAlignment="Center" Content="IsEnabled" VerticalAlignment="Center"/>
+            <ListView Grid.Row="1" ItemsSource="{ Binding ElementName=lstPluginList, Path=SelectedItem.PluginSettings }" >
+                <ListView.View>
+                    <GridView>
+                        <GridViewColumn Header="Setting Name" Width="150">
+                            <GridViewColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding AttributeData.DisplayName}" TextAlignment="Left" HorizontalAlignment="Left"/>
+                                </DataTemplate>
+                            </GridViewColumn.CellTemplate>
+                        </GridViewColumn>
+                        <GridViewColumn Header="Value" Width="400">
+                            <GridViewColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBox Text="{Binding Value}" TextAlignment="Right" HorizontalAlignment="Right" MinWidth="400"/>
+                                </DataTemplate>
+                            </GridViewColumn.CellTemplate>
+                        </GridViewColumn>
+                    </GridView>
+                </ListView.View>
+                <ListView.ItemContainerStyle>
+                    <Style TargetType="{x:Type ListViewItem}">
+                        <Setter Property="ToolTip" Value="{Binding AttributeData.HelpText}" />
+                    </Style>
+                </ListView.ItemContainerStyle>
+            </ListView>
+        </Grid>
     </Grid>
 </Window>

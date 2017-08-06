@@ -47,6 +47,7 @@
                 <ColumnDefinition Width="150" />
             </Grid.ColumnDefinitions>
             <Button Name="btnLogout" Content="Sign out" Grid.Column="1" Grid.Row="0" Click="BtnLogout_Click" />
+            <Button Grid.Column="1" Grid.Row="1" Content="Plugin Management" Click="PluginManagement_Click"/>
 
             <StackPanel Grid.Column="0" Grid.Row="0" Orientation="Horizontal">
                 <Label Content="Azure Proxy is running on " FontWeight="Bold"/>

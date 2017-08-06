@@ -115,6 +115,8 @@
     <Compile Include="HeaderDetails.cs" />
     <Compile Include="IValueConvertors\BooleanInvertorConvertor.cs" />
     <Compile Include="IValueConvertors\RequestStatusConvertor.cs" />
+    <Compile Include="PluginDetails.cs" />
+    <Compile Include="PluginSettingDetails.cs" />
     <Compile Include="UIPages\LoginToAzure.xaml.cs">
       <DependentUpon>LoginToAzure.xaml</DependentUpon>
     </Compile>

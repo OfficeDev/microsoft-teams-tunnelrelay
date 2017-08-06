@@ -64,9 +64,10 @@ namespace TunnelRelay
         static ApplicationEngine()
         {
             Requests = new ObservableCollection<RequestDetails>();
-            Plugins = new ObservableCollection<IRedirectionPlugin>();
-            Plugins.Add(new HeaderAdditionPlugin());
-            Plugins.Add(new HeaderRemovalPlugin());
+            Plugins = new ObservableCollection<PluginDetails>();
+            var pluginInstances = new List<IRedirectionPlugin>();
+            pluginInstances.Add(new HeaderAdditionPlugin());
+            pluginInstances.Add(new HeaderRemovalPlugin());
             string pluginDirectory = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Plugins");
 
             if (Directory.Exists(pluginDirectory))
@@ -78,7 +79,7 @@ namespace TunnelRelay
                         Assembly assembly = Assembly.LoadFrom(dll);
                         foreach (Type pluginType in assembly.GetExportedTypes().Where(type => type.GetInterfaces().Contains(typeof(IRedirectionPlugin))))
                         {
-                            Plugins.Add(Activator.CreateInstance(pluginType) as IRedirectionPlugin);
+                            pluginInstances.Add(Activator.CreateInstance(pluginType) as IRedirectionPlugin);
                         }
                     }
                     catch (Exception)
@@ -86,6 +87,30 @@ namespace TunnelRelay
                     }
                 });
             }
+
+            pluginInstances.ForEach(plugin =>
+            {
+                PluginDetails pluginDetails = new PluginDetails
+                {
+                    PluginInstance = plugin,
+                    PluginSettings = new ObservableCollection<PluginSettingDetails>(),
+                    IsEnabled = ApplicationData.Instance.EnabledPlugins.Contains(plugin.GetType().FullName),
+                };
+
+                var settingProperties = plugin.GetType().GetProperties().Where(memberInfo => memberInfo.GetCustomAttribute(typeof(PluginSetting)) != null);
+
+                foreach (var setting in settingProperties)
+                {
+                    pluginDetails.PluginSettings.Add(new PluginSettingDetails
+                    {
+                        AttributeData = setting.GetCustomAttribute<PluginSetting>(),
+                        PluginInstance = plugin,
+                        PropertyDetails = setting,
+                    });
+                }
+
+                Plugins.Add(pluginDetails);
+            });
         }
 
         /// <summary>
@@ -101,7 +126,7 @@ namespace TunnelRelay
         /// <summary>
         /// Gets or sets the plugins.
         /// </summary>
-        internal static ObservableCollection<IRedirectionPlugin> Plugins { get; set; }
+        internal static ObservableCollection<PluginDetails> Plugins { get; set; }
 
         /// <summary>
         /// Starts the azure relay engine.

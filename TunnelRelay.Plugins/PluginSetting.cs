@@ -11,6 +11,8 @@ namespace TunnelRelay.PluginEngine
     {
         public PluginSetting(string displayName, string helpText)
         {
+            this.DisplayName = displayName;
+            this.HelpText = helpText;
         }
 
         public string DisplayName { get; private set; }

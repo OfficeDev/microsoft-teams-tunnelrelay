@@ -29,7 +29,6 @@ namespace TunnelRelay
     using System.Windows;
     using System.Windows.Controls;
     using System.Windows.Input;
-    using TunnelRelay.PluginEngine;
 
     /// <summary>
     /// Interaction logic for MainWindow.xaml
@@ -157,6 +156,12 @@ namespace TunnelRelay
 
             MessageBox.Show("Logout Complete. Application will now close to complete cleanup. Open again to login");
             Application.Current.Shutdown();
+        }
+
+        private void PluginManagement_Click(object sender, RoutedEventArgs e)
+        {
+            PluginManagement pluginMangement = new PluginManagement();
+            pluginMangement.Show();
         }
     }
 }
