@@ -115,25 +115,25 @@
     <Compile Include="HeaderDetails.cs" />
     <Compile Include="IValueConvertors\BooleanInvertorConvertor.cs" />
     <Compile Include="IValueConvertors\RequestStatusConvertor.cs" />
-    <Compile Include="LoginToAzure.xaml.cs">
+    <Compile Include="UIPages\LoginToAzure.xaml.cs">
       <DependentUpon>LoginToAzure.xaml</DependentUpon>
     </Compile>
-    <Compile Include="PluginEngine\IRedirectionPlugin.cs" />
-    <Compile Include="Plugins\HeaderAdditionPlugin.cs" />
-    <Compile Include="Plugins\HeaderRemovalPlugin.cs" />
     <Compile Include="RequestDetails.cs" />
-    <Compile Include="SelectServiceBus.xaml.cs">
+    <Compile Include="UIPages\PluginManagement.xaml.cs">
+      <DependentUpon>PluginManagement.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="UIPages\SelectServiceBus.xaml.cs">
       <DependentUpon>SelectServiceBus.xaml</DependentUpon>
     </Compile>
     <Compile Include="Startup.xaml.cs">
       <DependentUpon>Startup.xaml</DependentUpon>
     </Compile>
     <Compile Include="WCFContract.cs" />
-    <Page Include="LoginToAzure.xaml">
+    <Page Include="UIPages\LoginToAzure.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="MainWindow.xaml">
+    <Page Include="UIPages\MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
@@ -142,11 +142,15 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Helpers.cs" />
-    <Compile Include="MainWindow.xaml.cs">
+    <Compile Include="UIPages\MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Page Include="SelectServiceBus.xaml">
+    <Page Include="UIPages\PluginManagement.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="UIPages\SelectServiceBus.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -171,7 +175,12 @@
     <Analyzer Include="..\packages\StyleCop.Analyzers.1.1.0-beta001\analyzers\dotnet\cs\StyleCop.Analyzers.CodeFixes.dll" />
     <Analyzer Include="..\packages\StyleCop.Analyzers.1.1.0-beta001\analyzers\dotnet\cs\StyleCop.Analyzers.dll" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <ProjectReference Include="..\TunnelRelay.Plugins\TunnelRelay.Plugins.csproj">
+      <Project>{5eb32488-8c81-4e8f-acff-2c457f5f95f1}</Project>
+      <Name>TunnelRelay.Plugins</Name>
+    </ProjectReference>
+  </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.6.1">
       <Visible>False</Visible>
