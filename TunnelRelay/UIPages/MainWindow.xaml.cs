@@ -123,7 +123,7 @@ namespace TunnelRelay
                         this.txtProxyDetails.Text = ApplicationData.Instance.ProxyBaseUrl;
                     }));
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
                     this.Dispatcher.Invoke(new Action(() =>
                     {
@@ -160,7 +160,7 @@ namespace TunnelRelay
         /// <param name="e">The <see cref="RoutedEventArgs"/> instance containing the event data.</param>
         private void BtnClearAllRequests_Click(object sender, RoutedEventArgs e)
         {
-            ApplicationEngine.Requests.Clear();
+            this.lstRequests.Items.Clear();
         }
 
         /// <summary>

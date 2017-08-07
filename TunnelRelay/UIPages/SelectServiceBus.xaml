@@ -6,9 +6,6 @@
         xmlns:local="clr-namespace:TunnelRelay"
         mc:Ignorable="d"
         Title="" Height="400" Width="700" WindowStartupLocation="Manual">
-    <Window.Resources>
-        <local:BooleanInvertorConvertor  x:Key="boolenInvertor"/>
-    </Window.Resources>
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="50"/>
