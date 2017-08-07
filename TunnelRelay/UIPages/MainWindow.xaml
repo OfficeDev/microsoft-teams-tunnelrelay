@@ -73,7 +73,7 @@
             <ListView Name="lstRequests" x:FieldModifier="public" Grid.Row="2" BorderThickness="0" ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
                 <ListView.View>
                     <GridView ColumnHeaderContainerStyle="{StaticResource hiddenHeaderStyle}">
-                        <GridViewColumn Header="Method" Width="100">
+                        <GridViewColumn Header="Method" Width="60">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
                                     <TextBlock Text="{Binding Method}" Foreground="{Binding Converter={StaticResource requestColor}}" TextAlignment="Left" HorizontalAlignment="Left"/>
@@ -87,7 +87,7 @@
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>
-                        <GridViewColumn Header="Status Code" Width="110">
+                        <GridViewColumn Header="Status Code" Width="150">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
                                     <TextBlock Text="{Binding StatusCode}" Foreground="{Binding Converter={StaticResource requestColor}}" TextAlignment="Center" HorizontalAlignment="Center"/>

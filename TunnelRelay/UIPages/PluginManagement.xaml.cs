@@ -51,6 +51,7 @@ namespace TunnelRelay
         {
             this.InitializeComponent();
             this.lstPluginList.ItemsSource = ApplicationEngine.Plugins;
+            this.lstPluginList.SelectedIndex = 0;
         }
     }
 }

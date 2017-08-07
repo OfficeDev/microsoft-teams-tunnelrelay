@@ -39,8 +39,8 @@
                 <RowDefinition Height="*" />
                 <RowDefinition Height="10" />
             </Grid.RowDefinitions>
-            <CheckBox Grid.Row="0" Grid.Column="2" HorizontalAlignment="Center" Content="IsEnabled" VerticalAlignment="Center"/>
-            <ListView Grid.Row="1" ItemsSource="{ Binding ElementName=lstPluginList, Path=SelectedItem.PluginSettings }" >
+            <CheckBox Name="chkIsEnabled" Grid.Row="0" Grid.Column="2" HorizontalAlignment="Center" Content="IsEnabled" VerticalAlignment="Center" IsChecked="{ Binding ElementName=lstPluginList, Path=SelectedItem.IsEnabled }"/>
+            <ListView Grid.Row="1" ItemsSource="{ Binding ElementName=lstPluginList, Path=SelectedItem.PluginSettings }" IsEnabled="{ Binding ElementName=chkIsEnabled, Path=IsChecked }">
                 <ListView.View>
                     <GridView>
                         <GridViewColumn Header="Setting Name" Width="150">
@@ -50,10 +50,10 @@
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>
-                        <GridViewColumn Header="Value" Width="400">
+                        <GridViewColumn Header="Value" Width="420">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
-                                    <TextBox Text="{Binding Value}" TextAlignment="Right" HorizontalAlignment="Right" MinWidth="400"/>
+                                    <TextBox Text="{Binding Value}" TextAlignment="Right" HorizontalAlignment="Right" MinWidth="400" TextWrapping="Wrap" AcceptsReturn="True"/>
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>

@@ -27,6 +27,7 @@ namespace TunnelRelay
     using System;
     using System.Collections.Generic;
     using System.Collections.ObjectModel;
+    using System.ComponentModel;
     using System.Diagnostics;
     using System.IO;
     using System.Linq;
@@ -63,7 +64,7 @@ namespace TunnelRelay
         /// </summary>
         static ApplicationEngine()
         {
-            Requests = new ObservableCollection<RequestDetails>();
+            Requests = new AwareObservableCollection<RequestDetails>();
             Plugins = new ObservableCollection<PluginDetails>();
             var pluginInstances = new List<IRedirectionPlugin>();
             pluginInstances.Add(new HeaderAdditionPlugin());
@@ -121,7 +122,7 @@ namespace TunnelRelay
         /// <summary>
         /// Gets or sets the requests.
         /// </summary>
-        internal static ObservableCollection<RequestDetails> Requests { get; set; }
+        internal static AwareObservableCollection<RequestDetails> Requests { get; set; }
 
         /// <summary>
         /// Gets or sets the plugins.
@@ -182,11 +183,7 @@ namespace TunnelRelay
             {
                 lock (locker)
                 {
-                    MainWindow.Instance.Dispatcher.Invoke(new Action(() =>
-                    {
-                        Requests.Insert(0, requestDetails);
-                        MainWindow.Instance.lstRequests.Items.Refresh();
-                    }));
+                    Requests.Insert(0, requestDetails);
                 }
 
                 // Url Creation
@@ -238,16 +235,22 @@ namespace TunnelRelay
                     requestMessage.CopyContentHeaders(headerMap);
                 }
 
-                foreach (IRedirectionPlugin plugin in Plugins)
+                foreach (PluginDetails plugin in Plugins)
                 {
-                    requestMessage = await plugin.PreProcessRequestToServiceAsync(requestMessage);
+                    if (plugin.IsEnabled)
+                    {
+                        requestMessage = await plugin.PluginInstance.PreProcessRequestToServiceAsync(requestMessage);
+                    }
                 }
 
                 HttpResponseMessage response = await httpClient.SendAsync(requestMessage, HttpCompletionOption.ResponseContentRead);
 
-                foreach (IRedirectionPlugin plugin in Plugins)
+                foreach (PluginDetails plugin in Plugins)
                 {
-                    response = await plugin.PostProcessResponseFromServiceAsync(response);
+                    if (plugin.IsEnabled)
+                    {
+                        response = await plugin.PluginInstance.PostProcessResponseFromServiceAsync(response);
+                    }
                 }
 
                 string responseData = string.Empty;
@@ -261,8 +264,8 @@ namespace TunnelRelay
                     requestDetails.ResponseData = string.Empty;
                 }
 
-                MainWindow.Instance.Dispatcher.Invoke(new Action(() =>
-                    response.Headers.GetUIHeaderMap().ForEach(header => requestDetails.ResponseHeaders.Add(header))));
+                response.Headers.GetUIHeaderMap().ForEach(header => requestDetails.ResponseHeaders.Add(header));
+
                 requestDetails.StatusCode = response.StatusCode.ToString();
                 stopWatch.Start();
                 requestDetails.Duration = stopWatch.ElapsedMilliseconds.ToString() + "ms";
@@ -294,12 +297,6 @@ namespace TunnelRelay
                 Message exceptionMessage = WebOperationContext.Current.CreateTextResponse(ex.ToString());
                 WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.InternalServerError;
                 return exceptionMessage;
-            }
-            finally
-            {
-                // Update the listview so it can detect the changes.
-                MainWindow.Instance.Dispatcher.Invoke(new Action(() =>
-                    MainWindow.Instance.lstRequests.Items.Refresh()));
             }
         }
     }

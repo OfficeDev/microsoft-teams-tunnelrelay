@@ -39,12 +39,42 @@ namespace TunnelRelay
     public class PluginDetails
     {
         /// <summary>
-        /// Gets a value indicating whether this instance is enabled.
+        /// Is this plugin enabled or not. Used to cache the value to avoid probing the list everytime.
+        /// </summary>
+        private bool? isEnabled;
+
+        /// <summary>
+        /// Gets or sets a value indicating whether this instance is enabled.
         /// </summary>
         /// <value>
         ///   <c>true</c> if this instance is enabled; otherwise, <c>false</c>.
         /// </value>
-        public bool IsEnabled { get; internal set; }
+        public bool IsEnabled
+        {
+            get
+            {
+                if (this.isEnabled == null)
+                {
+                    this.isEnabled = ApplicationData.Instance.EnabledPlugins.Contains(this.PluginInstance.GetType().FullName);
+                }
+
+                return this.isEnabled.Value;
+            }
+
+            set
+            {
+                if (value == true)
+                {
+                    ApplicationData.Instance.EnabledPlugins.Add(this.PluginInstance.GetType().FullName);
+                    this.isEnabled = true;
+                }
+                else
+                {
+                    ApplicationData.Instance.EnabledPlugins.Remove(this.PluginInstance.GetType().FullName);
+                    this.isEnabled = false;
+                }
+            }
+        }
 
         /// <summary>
         /// Gets the plugin instance.

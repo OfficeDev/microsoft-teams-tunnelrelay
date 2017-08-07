@@ -112,6 +112,7 @@
     </ApplicationDefinition>
     <Compile Include="ApplicationData.cs" />
     <Compile Include="ApplicationEngine.cs" />
+    <Compile Include="AwareObservableCollection.cs" />
     <Compile Include="HeaderDetails.cs" />
     <Compile Include="IValueConvertors\BooleanInvertorConvertor.cs" />
     <Compile Include="IValueConvertors\RequestStatusConvertor.cs" />

@@ -41,21 +41,51 @@ namespace TunnelRelay
         public MainWindow()
         {
             this.InitializeComponent();
-            Instance = this;
 
             this.txtProxyDetails.Text = "Starting Azure Proxy";
-            this.lstRequests.ItemsSource = ApplicationEngine.Requests;
+            ////this.lstRequests.ItemsSource = ApplicationEngine.Requests;
             CommandBinding cb = new CommandBinding(ApplicationCommands.Copy, this.CopyCmdExecuted, this.CopyCmdCanExecute);
             this.lstRequestHeaders.CommandBindings.Add(cb);
             this.lstResponseHeaders.CommandBindings.Add(cb);
             this.txtRedirectionUrl.Text = ApplicationData.Instance.RedirectionUrl;
             this.StartRelayEngine();
+
+            ApplicationEngine.Requests.CollectionChanged += this.Requests_CollectionChanged;
         }
 
         /// <summary>
-        /// Gets the instance.
+        /// Handles the CollectionChanged event of the Requests control.
         /// </summary>
-        internal static MainWindow Instance { get; private set; }
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="System.Collections.Specialized.NotifyCollectionChangedEventArgs"/> instance containing the event data.</param>
+        private void Requests_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+        {
+            this.Dispatcher.Invoke(() =>
+            {
+                if (e.Action == System.Collections.Specialized.NotifyCollectionChangedAction.Add)
+                {
+                    foreach (var item in e.NewItems)
+                    {
+                        this.lstRequests.Items.Insert(0, item);
+                    }
+                }
+                else if (e.Action == System.Collections.Specialized.NotifyCollectionChangedAction.Remove)
+                {
+                    foreach (var item in e.OldItems)
+                    {
+                        this.lstRequests.Items.Remove(item);
+                    }
+                }
+                else if (e.Action == System.Collections.Specialized.NotifyCollectionChangedAction.Reset)
+                {
+                    int selectedIndex = this.lstRequests.SelectedIndex;
+                    this.lstRequests.Items.Refresh();
+                    this.lstRequests.SelectedIndex = selectedIndex;
+                    this.lstResponseHeaders.Items.Refresh();
+                    this.txtResponseBody.UpdateLayout();
+                }
+            });
+        }
 
         /// <summary>Executes copy command on list view.</summary>
         /// <param name="target">The target.</param>
