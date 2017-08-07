@@ -112,7 +112,7 @@ namespace TunnelRelay.Plugins
                     webRequest.Headers.Remove(headerToAdd.Key);
                 }
 
-                webRequest.Headers.TryAddWithoutValidation(headerToAdd.Key, headerToAdd.Value);
+                bool val = webRequest.Headers.TryAddWithoutValidation(headerToAdd.Key, headerToAdd.Value);
             }
 
             return Task.FromResult(webRequest);

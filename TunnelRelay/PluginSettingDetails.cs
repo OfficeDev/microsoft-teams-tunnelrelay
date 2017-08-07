@@ -46,6 +46,14 @@ namespace TunnelRelay
             set
             {
                 this.PropertyDetails.SetValue(this.PluginInstance, value);
+
+                if (!ApplicationData.Instance.PluginSettingsMap.TryGetValue(this.PluginInstance.GetType().FullName, out Dictionary<string, string> pluginSettings))
+                {
+                    pluginSettings = new Dictionary<string, string>();
+                    ApplicationData.Instance.PluginSettingsMap[this.PluginInstance.GetType().FullName] = pluginSettings;
+                }
+
+                pluginSettings[this.PropertyDetails.Name] = value;
             }
         }
     }

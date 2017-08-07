@@ -102,12 +102,27 @@ namespace TunnelRelay
 
                 foreach (var setting in settingProperties)
                 {
-                    pluginDetails.PluginSettings.Add(new PluginSettingDetails
+                    if (!setting.PropertyType.IsEquivalentTo(typeof(string)))
+                    {
+                        throw new InvalidDataException("Plugin settings can only be of string datatype");
+                    }
+
+                    var pluginSetting = new PluginSettingDetails
                     {
                         AttributeData = setting.GetCustomAttribute<PluginSetting>(),
                         PluginInstance = plugin,
                         PropertyDetails = setting,
-                    });
+                    };
+
+                    if (ApplicationData.Instance.PluginSettingsMap.TryGetValue(pluginDetails.PluginInstance.GetType().FullName, out Dictionary<string, string> pluginSettingsVal))
+                    {
+                        if (pluginSettingsVal.TryGetValue(pluginSetting.PropertyDetails.Name, out string propertyValue))
+                        {
+                            pluginSetting.Value = propertyValue;
+                        }
+                    }
+
+                    pluginDetails.PluginSettings.Add(pluginSetting);
                 }
 
                 Plugins.Add(pluginDetails);

@@ -58,7 +58,8 @@ namespace TunnelRelay
         /// </summary>
         public ApplicationData()
         {
-            this.EnabledPlugins = new List<string>();
+            this.EnabledPlugins = new HashSet<string>();
+            this.PluginSettingsMap = new Dictionary<string, Dictionary<string, string>>();
         }
 
         /// <summary>
@@ -86,12 +87,6 @@ namespace TunnelRelay
         }
 
         /// <summary>
-        /// Gets the overflow properties. Can be used to store plugin data.
-        /// </summary>
-        [JsonExtensionData(ReadData = true, WriteData = true)]
-        public Dictionary<string, JToken> Properties { get; internal set; }
-
-        /// <summary>
         /// Gets or sets the service bus URL.
         /// </summary>
         [JsonProperty(PropertyName = "ServiceBusUrl")]
@@ -113,16 +108,12 @@ namespace TunnelRelay
         /// Gets or sets the list of enabled plugins.
         /// </summary>
         [JsonProperty(PropertyName = "EnabledPlugins")]
-        internal List<string> EnabledPlugins { get; set; }
+        internal HashSet<string> EnabledPlugins { get; set; }
 
         /// <summary>
-        /// Stores the application data. Can be used to store plugin data.
+        /// Gets or sets the plugin settings map.
         /// </summary>
-        /// <param name="keyName">Name of the key.</param>
-        /// <param name="value">The value.</param>
-        public static void StoreApplicationData(string keyName, string value)
-        {
-            Instance.Properties[keyName] = value;
-        }
+        [JsonProperty(PropertyName = "PluginSettingsMap")]
+        internal Dictionary<string, Dictionary<string, string>> PluginSettingsMap { get; set; }
     }
 }
