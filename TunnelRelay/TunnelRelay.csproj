@@ -110,18 +110,11 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="ApplicationData.cs" />
-    <Compile Include="ApplicationEngine.cs" />
-    <Compile Include="AwareObservableCollection.cs" />
-    <Compile Include="HeaderDetails.cs" />
     <Compile Include="IValueConvertors\BooleanInvertorConvertor.cs" />
     <Compile Include="IValueConvertors\RequestStatusConvertor.cs" />
-    <Compile Include="PluginDetails.cs" />
-    <Compile Include="PluginSettingDetails.cs" />
     <Compile Include="UIPages\LoginToAzure.xaml.cs">
       <DependentUpon>LoginToAzure.xaml</DependentUpon>
     </Compile>
-    <Compile Include="RequestDetails.cs" />
     <Compile Include="UIPages\PluginManagement.xaml.cs">
       <DependentUpon>PluginManagement.xaml</DependentUpon>
     </Compile>
@@ -131,7 +124,6 @@
     <Compile Include="Startup.xaml.cs">
       <DependentUpon>Startup.xaml</DependentUpon>
     </Compile>
-    <Compile Include="WCFContract.cs" />
     <Page Include="UIPages\LoginToAzure.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -144,7 +136,6 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Helpers.cs" />
     <Compile Include="UIPages\MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
@@ -179,6 +170,10 @@
     <Analyzer Include="..\packages\StyleCop.Analyzers.1.1.0-beta001\analyzers\dotnet\cs\StyleCop.Analyzers.dll" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\TunnelRelay.Core\TunnelRelay.Core.csproj">
+      <Project>{165bb633-ee2d-473c-9d5c-be92e02fc5ca}</Project>
+      <Name>TunnelRelay.Core</Name>
+    </ProjectReference>
     <ProjectReference Include="..\TunnelRelay.Plugins\TunnelRelay.Plugins.csproj">
       <Project>{5eb32488-8c81-4e8f-acff-2c457f5f95f1}</Project>
       <Name>TunnelRelay.Plugins</Name>

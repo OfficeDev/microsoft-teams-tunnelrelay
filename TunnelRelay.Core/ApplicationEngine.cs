@@ -47,7 +47,7 @@ namespace TunnelRelay
     /// <summary>
     /// Application engine or serving all critical operation.
     /// </summary>
-    internal class ApplicationEngine
+    public class ApplicationEngine
     {
         /// <summary>
         /// Used to establish sync calls.
@@ -137,17 +137,32 @@ namespace TunnelRelay
         /// <summary>
         /// Gets or sets the requests.
         /// </summary>
-        internal static AwareObservableCollection<RequestDetails> Requests { get; set; }
+        public static AwareObservableCollection<RequestDetails> Requests { get; internal set; }
 
         /// <summary>
         /// Gets or sets the plugins.
         /// </summary>
-        internal static ObservableCollection<PluginDetails> Plugins { get; set; }
+        public static ObservableCollection<PluginDetails> Plugins { get; internal set; }
+
+        /// <summary>
+        /// Stops the azure relay engine.
+        /// </summary>
+        public static void StopTunnelRelayEngine()
+        {
+            if (ApplicationEngine.ServiceHost != null)
+            {
+                // Serialize settings back to json.
+                File.WriteAllText("appSettings.json", JsonConvert.SerializeObject(ApplicationData.Instance, Formatting.Indented));
+
+                // Shutdown the Relay.
+                ApplicationEngine.ServiceHost.Close();
+            }
+        }
 
         /// <summary>
         /// Starts the azure relay engine.
         /// </summary>
-        internal static void StartAzureRelayEngine()
+        public static void StartTunnelRelayEngine()
         {
             ServiceHost = new WebServiceHost(typeof(WCFContract));
             ServiceHost.AddServiceEndpoint(

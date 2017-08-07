@@ -27,7 +27,7 @@ namespace TunnelRelay
     /// <summary>
     /// Header details to store header information for UI.
     /// </summary>
-    internal class HeaderDetails
+    public class HeaderDetails
     {
         /// <summary>
         /// Gets or sets the name of the header.

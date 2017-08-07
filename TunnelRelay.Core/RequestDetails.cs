@@ -32,7 +32,7 @@ namespace TunnelRelay
     /// <summary>
     /// Request Details for UI.
     /// </summary>
-    internal class RequestDetails : INotifyPropertyChanged
+    public class RequestDetails : INotifyPropertyChanged
     {
         private string statusCode;
 

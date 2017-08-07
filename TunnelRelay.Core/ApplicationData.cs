@@ -72,7 +72,7 @@ namespace TunnelRelay
         /// Gets the redirection URL.
         /// </summary>
         [JsonProperty(PropertyName = "RedirectionUrl")]
-        public string RedirectionUrl { get; internal set; }
+        public string RedirectionUrl { get; set; }
 
         /// <summary>
         /// Gets the proxy base URL.
@@ -90,19 +90,19 @@ namespace TunnelRelay
         /// Gets or sets the service bus URL.
         /// </summary>
         [JsonProperty(PropertyName = "ServiceBusUrl")]
-        internal string ServiceBusUrl { get; set; }
+        public string ServiceBusUrl { get; set; }
 
         /// <summary>
         /// Gets or sets the name of the service bus key.
         /// </summary>
         [JsonProperty(PropertyName = "ServiceBusKeyName")]
-        internal string ServiceBusKeyName { get; set; }
+        public string ServiceBusKeyName { internal get; set; }
 
         /// <summary>
         /// Gets or sets the service bus shared key.
         /// </summary>
         [JsonProperty(PropertyName = "ServiceBusSharedKey")]
-        internal string ServiceBusSharedKey { get; set; }
+        public string ServiceBusSharedKey { internal get; set; }
 
         /// <summary>
         /// Gets or sets the list of enabled plugins.
@@ -115,5 +115,13 @@ namespace TunnelRelay
         /// </summary>
         [JsonProperty(PropertyName = "PluginSettingsMap")]
         internal Dictionary<string, Dictionary<string, string>> PluginSettingsMap { get; set; }
+
+        /// <summary>
+        /// Logouts this instance.
+        /// </summary>
+        public void Logout()
+        {
+            Instance = new ApplicationData();
+        }
     }
 }

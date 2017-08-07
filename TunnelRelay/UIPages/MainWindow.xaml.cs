@@ -116,7 +116,7 @@ namespace TunnelRelay
             {
                 try
                 {
-                    ApplicationEngine.StartAzureRelayEngine();
+                    ApplicationEngine.StartTunnelRelayEngine();
 
                     this.Dispatcher.Invoke(new Action(() =>
                     {
@@ -180,9 +180,7 @@ namespace TunnelRelay
         /// <param name="e">The <see cref="RoutedEventArgs"/> instance containing the event data.</param>
         private void BtnLogout_Click(object sender, RoutedEventArgs e)
         {
-            ApplicationData.Instance.ServiceBusKeyName = string.Empty;
-            ApplicationData.Instance.ServiceBusSharedKey = string.Empty;
-            ApplicationData.Instance.ServiceBusUrl = string.Empty;
+            ApplicationData.Instance.Logout();
 
             MessageBox.Show("Logout Complete. Application will now close to complete cleanup. Open again to login");
             Application.Current.Shutdown();

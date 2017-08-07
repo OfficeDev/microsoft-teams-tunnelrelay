@@ -39,14 +39,7 @@ namespace TunnelRelay
         /// <param name="e">An <see cref="ExitEventArgs" /> that contains the event data.</param>
         protected override void OnExit(ExitEventArgs e)
         {
-            if (ApplicationEngine.ServiceHost != null)
-            {
-                // Serialize settings back to json.
-                File.WriteAllText("appSettings.json", JsonConvert.SerializeObject(ApplicationData.Instance, Formatting.Indented));
-
-                // Shutdown the Relay.
-                ApplicationEngine.ServiceHost.Close();
-            }
+            ApplicationEngine.StopTunnelRelayEngine();
         }
     }
 }
