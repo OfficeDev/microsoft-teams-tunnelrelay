@@ -44,6 +44,11 @@ namespace TunnelRelay
         private bool? isEnabled;
 
         /// <summary>
+        /// The instance is initialized
+        /// </summary>
+        private bool isInitialized;
+
+        /// <summary>
         /// Gets or sets a value indicating whether this instance is enabled.
         /// </summary>
         /// <value>
@@ -85,5 +90,17 @@ namespace TunnelRelay
         /// Gets the plugin settings.
         /// </summary>
         public ObservableCollection<PluginSettingDetails> PluginSettings { get; internal set; }
+
+        /// <summary>
+        /// Initializes the plugin.
+        /// </summary>
+        public void InitializePlugin()
+        {
+            if (!this.isInitialized)
+            {
+                this.PluginInstance.Initialize();
+                this.isInitialized = true;
+            }
+        }
     }
 }

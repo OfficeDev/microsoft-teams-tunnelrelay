@@ -80,7 +80,7 @@ namespace TunnelRelay
                 "https://management.azure.com/",
                 "1950a258-227b-4e31-a9cf-717495945fc2",
                 new Uri("urn:ietf:wg:oauth:2.0:oob"),
-                PromptBehavior.Auto);
+                PromptBehavior.RefreshSession);
 
             SelectServiceBus selectServiceBus = new SelectServiceBus(azureToken);
             selectServiceBus.Left = this.Left;

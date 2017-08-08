@@ -39,14 +39,14 @@ namespace TunnelRelay.PluginEngine
         string PluginName { get; }
 
         /// <summary>
-        /// Gets or sets the plugin data.
-        /// </summary>
-        string PluginData { get; set; }
-
-        /// <summary>
         /// Gets the help text.
         /// </summary>
         string HelpText { get; }
+
+        /// <summary>
+        /// Initializes this instance.
+        /// </summary>
+        void Initialize();
 
         /// <summary>
         /// Performes required processing before request is made to service asynchronously.

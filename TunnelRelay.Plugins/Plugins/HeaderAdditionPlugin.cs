@@ -85,6 +85,13 @@ namespace TunnelRelay.Plugins
         public string HelpText => "Adds or replaces header. Headers should be separated by newline and should be in format \r\n HeaderName: HeaderValue";
 
         /// <summary>
+        /// Initializes this instance.
+        /// </summary>
+        public void Initialize()
+        {
+        }
+
+        /// <summary>
         /// Performes required processing after response is received from service asynchronously.
         /// </summary>
         /// <param name="webResponse">The web response.</param>

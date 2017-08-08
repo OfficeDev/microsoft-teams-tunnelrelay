@@ -37,12 +37,30 @@ namespace TunnelRelay
         where T : INotifyPropertyChanged
     {
         /// <summary>
+        /// The locker object.
+        /// </summary>
+        private object lockerObject = new object();
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="AwareObservableCollection{T}"/> class.
         /// </summary>
         public AwareObservableCollection()
             : base()
         {
             this.CollectionChanged += this.ObservableCollectionEx_CollectionChanged;
+        }
+
+        /// <summary>
+        /// Inserts an element into the <see cref="T:System.Collections.ObjectModel.Collection`1" /> at the specified index.
+        /// </summary>
+        /// <param name="index">The zero-based index at which <paramref name="item" /> should be inserted.</param>
+        /// <param name="item">The object to insert. The value can be null for reference types.</param>
+        public new void Insert(int index, T item)
+        {
+            lock (this.lockerObject)
+            {
+                base.Insert(index, item);
+            }
         }
 
         /// <summary>
@@ -77,7 +95,10 @@ namespace TunnelRelay
         /// <param name="e">The <see cref="PropertyChangedEventArgs"/> instance containing the event data.</param>
         private void EntityViewModelPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-            this.OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
+            lock (this.lockerObject)
+            {
+                this.OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
+            }
         }
     }
 }

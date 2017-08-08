@@ -83,6 +83,13 @@ namespace TunnelRelay.Plugins
         }
 
         /// <summary>
+        /// Initializes this instance.
+        /// </summary>
+        public void Initialize()
+        {
+        }
+
+        /// <summary>
         /// Performes required processing after response is received from service asynchronously.
         /// </summary>
         /// <param name="webResponse">The web response.</param>

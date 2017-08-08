@@ -53,5 +53,16 @@ namespace TunnelRelay
             this.lstPluginList.ItemsSource = ApplicationEngine.Plugins;
             this.lstPluginList.SelectedIndex = 0;
         }
+
+        /// <summary>
+        /// Raises the <see cref="E:System.Windows.Window.Closed" /> event.
+        /// </summary>
+        /// <param name="e">An <see cref="T:System.EventArgs" /> that contains the event data.</param>
+        protected override void OnClosed(EventArgs e)
+        {
+            Parallel.ForEach(ApplicationEngine.Plugins.Where(plugin => plugin.IsEnabled), (plugin) => plugin.InitializePlugin());
+
+            base.OnClosed(e);
+        }
     }
 }

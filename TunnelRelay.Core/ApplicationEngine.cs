@@ -50,11 +50,6 @@ namespace TunnelRelay
     public class ApplicationEngine
     {
         /// <summary>
-        /// Used to establish sync calls.
-        /// </summary>
-        private static object locker = new object();
-
-        /// <summary>
         /// The HTTP client.
         /// </summary>
         private static HttpClient httpClient = new HttpClient();
@@ -67,8 +62,8 @@ namespace TunnelRelay
             Requests = new AwareObservableCollection<RequestDetails>();
             Plugins = new ObservableCollection<PluginDetails>();
             var pluginInstances = new List<IRedirectionPlugin>();
-            pluginInstances.Add(new HeaderAdditionPlugin());
-            pluginInstances.Add(new HeaderRemovalPlugin());
+            ////pluginInstances.Add(new HeaderAdditionPlugin());
+            ////pluginInstances.Add(new HeaderRemovalPlugin());
             string pluginDirectory = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Plugins");
 
             if (Directory.Exists(pluginDirectory))
@@ -125,24 +120,29 @@ namespace TunnelRelay
                     pluginDetails.PluginSettings.Add(pluginSetting);
                 }
 
+                if (pluginDetails.IsEnabled)
+                {
+                    pluginDetails.InitializePlugin();
+                }
+
                 Plugins.Add(pluginDetails);
             });
         }
 
         /// <summary>
+        /// Gets or sets the requests.
+        /// </summary>
+        public static AwareObservableCollection<RequestDetails> Requests { get; set; }
+
+        /// <summary>
+        /// Gets the plugins.
+        /// </summary>
+        public static ObservableCollection<PluginDetails> Plugins { get; internal set; }
+
+        /// <summary>
         /// Gets or sets the service host.
         /// </summary>
         internal static WebServiceHost ServiceHost { get; set; }
-
-        /// <summary>
-        /// Gets or sets the requests.
-        /// </summary>
-        public static AwareObservableCollection<RequestDetails> Requests { get; internal set; }
-
-        /// <summary>
-        /// Gets or sets the plugins.
-        /// </summary>
-        public static ObservableCollection<PluginDetails> Plugins { get; internal set; }
 
         /// <summary>
         /// Stops the azure relay engine.
@@ -211,10 +211,7 @@ namespace TunnelRelay
 
             try
             {
-                lock (locker)
-                {
-                    Requests.Insert(0, requestDetails);
-                }
+                Requests.Insert(0, requestDetails);
 
                 // Url Creation
                 // Url comes as https://servicebusnamespace.servicebus.windows.net/MachineName/ActualPath
