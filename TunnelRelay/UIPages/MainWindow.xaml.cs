@@ -186,10 +186,25 @@ namespace TunnelRelay
             Application.Current.Shutdown();
         }
 
+        /// <summary>
+        /// Handles the Click event of the PluginManagement control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="RoutedEventArgs"/> instance containing the event data.</param>
         private void PluginManagement_Click(object sender, RoutedEventArgs e)
         {
             PluginManagement pluginMangement = new PluginManagement();
             pluginMangement.Show();
+        }
+
+        /// <summary>
+        /// Handles the Click event of the CoptoClipboard control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="RoutedEventArgs"/> instance containing the event data.</param>
+        private void CoptoClipboard_Click(object sender, RoutedEventArgs e)
+        {
+            Clipboard.SetText(this.txtProxyDetails.Text);
         }
     }
 }

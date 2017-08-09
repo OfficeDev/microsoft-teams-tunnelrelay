@@ -23,6 +23,7 @@
             <RowDefinition Height="10" />
             <RowDefinition Height="30" />
             <RowDefinition Height="10" />
+            <RowDefinition Height="60" />
             <RowDefinition Height="*" />
             <RowDefinition Height="10" />
             <RowDefinition Height="10" />
@@ -39,7 +40,7 @@
         <Grid Grid.Column="1" Grid.Row="1" Grid.ColumnSpan="2" Grid.RowSpan="3">
             <Grid.RowDefinitions>
                 <RowDefinition Height="*" />
-                <RowDefinition Height="30" />
+                <RowDefinition Height="25" />
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
@@ -47,18 +48,19 @@
                 <ColumnDefinition Width="150" />
             </Grid.ColumnDefinitions>
             <Button Name="btnLogout" Content="Sign out" Grid.Column="1" Grid.Row="0" Click="BtnLogout_Click" />
-            <Button Grid.Column="1" Grid.Row="1" Content="Plugin Management" Click="PluginManagement_Click"/>
+            <Button Grid.Column="1" Grid.Row="2" Content="Plugin Management" Click="PluginManagement_Click"/>
 
             <StackPanel Grid.Column="0" Grid.Row="0" Orientation="Horizontal">
-                <Label Content="Azure Proxy is running on " FontWeight="Bold"/>
-                <TextBox Name="txtProxyDetails" Text="Starting!!!!" Grid.Column="0" Grid.Row="0" Width="400" VerticalAlignment="Center" TextAlignment="Left" BorderThickness="0" IsReadOnly="True"/>
+                <Label Content="Listening on " FontWeight="Bold" FontSize="15" Margin="-3,0,0,0"/>
+                <TextBox Name="txtProxyDetails" Text="Starting!!!!" FontSize="15" Grid.Column="0" Grid.Row="0" Width="500" VerticalAlignment="Center" TextAlignment="Left" BorderThickness="0" IsReadOnly="True"/>
+                <Button Content="Copy To Clipboard"  Margin="10,0,0,0" Click="CoptoClipboard_Click"/>
             </StackPanel>
-            <Label Content="Redirecting incoming requests to " Grid.Column="0" Grid.Row="1" FontSize="10" HorizontalAlignment="Left" VerticalAlignment="Bottom"/>
-            <TextBox Name="txtRedirectionUrl" Grid.Column="0" Grid.Row="2" TextChanged="TxtRedirectionUrl_TextChanged" FontWeight="SemiBold" TextAlignment="Left" Width="400" HorizontalAlignment="Left"/>
+            <Label Margin="-3,0,0,0" Content="Redirecting incoming requests to " Grid.Column="0" Grid.Row="1" FontSize="12" HorizontalAlignment="Left" HorizontalContentAlignment="Left" VerticalAlignment="Bottom"/>
+            <TextBox Name="txtRedirectionUrl" Grid.Column="0" Grid.Row="2" TextChanged="TxtRedirectionUrl_TextChanged" FontWeight="SemiBold" TextAlignment="Left" Width="400" HorizontalAlignment="Left" VerticalContentAlignment="Center"/>
         </Grid>
 
         <!-- Left Hand Side -->
-        <Grid Grid.Row="5" Grid.Column="1" Name="leftSideGrid">
+        <Grid Grid.Row="5" Grid.RowSpan="2" Grid.Column="1" Name="leftSideGrid">
             <Grid.RowDefinitions>
                 <RowDefinition Height="30" />
                 <RowDefinition Height="10" />
@@ -114,7 +116,7 @@
         </Grid>
 
         <!-- Right hand side -->
-        <Grid Grid.Row="5" Grid.Column="2">
+        <Grid Grid.Row="6" Grid.Column="2">
             <Grid.RowDefinitions>
                 <RowDefinition Height="60" />
                 <RowDefinition Height="10" />
