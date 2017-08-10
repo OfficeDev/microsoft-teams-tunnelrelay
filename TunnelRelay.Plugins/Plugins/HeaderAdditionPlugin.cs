@@ -87,8 +87,10 @@ namespace TunnelRelay.Plugins
         /// <summary>
         /// Initializes this instance.
         /// </summary>
-        public void Initialize()
+        /// <returns>Task tracking operation.</returns>
+        public Task Initialize()
         {
+            return Task.FromResult(0);
         }
 
         /// <summary>

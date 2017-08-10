@@ -62,8 +62,8 @@ namespace TunnelRelay
             Requests = new AwareObservableCollection<RequestDetails>();
             Plugins = new ObservableCollection<PluginDetails>();
             var pluginInstances = new List<IRedirectionPlugin>();
-            ////pluginInstances.Add(new HeaderAdditionPlugin());
-            ////pluginInstances.Add(new HeaderRemovalPlugin());
+            pluginInstances.Add(new HeaderAdditionPlugin());
+            pluginInstances.Add(new HeaderRemovalPlugin());
             string pluginDirectory = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Plugins");
 
             if (Directory.Exists(pluginDirectory))

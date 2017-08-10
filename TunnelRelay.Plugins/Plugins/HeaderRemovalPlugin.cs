@@ -57,6 +57,7 @@ namespace TunnelRelay.Plugins
         /// <summary>
         /// Gets or sets the plugin data.
         /// </summary>
+        [PluginSetting("HeadersToRemove", "Comma separated header named to removed.")]
         public string PluginData
         {
             get
@@ -67,7 +68,7 @@ namespace TunnelRelay.Plugins
             set
             {
                 this.pluginData = value;
-                this.headersToRemove = this.pluginData.Split(new string[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries).ToList();
+                this.headersToRemove = this.pluginData.Split(new string[] { "," }, StringSplitOptions.RemoveEmptyEntries).Select(str => str.Trim()).ToList();
             }
         }
 
@@ -85,8 +86,10 @@ namespace TunnelRelay.Plugins
         /// <summary>
         /// Initializes this instance.
         /// </summary>
-        public void Initialize()
+        /// <returns>Task tracking operation.</returns>
+        public Task Initialize()
         {
+            return Task.FromResult(0);
         }
 
         /// <summary>

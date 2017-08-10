@@ -46,7 +46,8 @@ namespace TunnelRelay.PluginEngine
         /// <summary>
         /// Initializes this instance.
         /// </summary>
-        void Initialize();
+        /// <returns>Task tracking operation.</returns>
+        Task Initialize();
 
         /// <summary>
         /// Performes required processing before request is made to service asynchronously.

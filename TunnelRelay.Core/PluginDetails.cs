@@ -98,7 +98,7 @@ namespace TunnelRelay
         {
             if (!this.isInitialized)
             {
-                this.PluginInstance.Initialize();
+                Task.Run(() => this.PluginInstance.Initialize());
                 this.isInitialized = true;
             }
         }
