@@ -38,6 +38,7 @@ namespace TunnelRelay
     using System.Windows.Media;
     using System.Windows.Media.Imaging;
     using System.Windows.Shapes;
+    using TunnelRelay.Core;
 
     /// <summary>
     /// Interaction logic for PluginManagement.xaml

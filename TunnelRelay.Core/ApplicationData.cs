@@ -22,7 +22,7 @@
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-namespace TunnelRelay
+namespace TunnelRelay.Core
 {
     using System;
     using System.Collections.Generic;
@@ -69,7 +69,7 @@ namespace TunnelRelay
         public static ApplicationData Instance { get; internal set; }
 
         /// <summary>
-        /// Gets the redirection URL.
+        /// Gets or sets the redirection URL.
         /// </summary>
         [JsonProperty(PropertyName = "RedirectionUrl")]
         public string RedirectionUrl { get; set; }
@@ -93,13 +93,13 @@ namespace TunnelRelay
         public string ServiceBusUrl { get; set; }
 
         /// <summary>
-        /// Gets or sets the name of the service bus key.
+        /// Sets the name of the service bus key.
         /// </summary>
         [JsonProperty(PropertyName = "ServiceBusKeyName")]
         public string ServiceBusKeyName { internal get; set; }
 
         /// <summary>
-        /// Gets or sets the service bus shared key.
+        /// Sets the service bus shared key.
         /// </summary>
         [JsonProperty(PropertyName = "ServiceBusSharedKey")]
         public string ServiceBusSharedKey { internal get; set; }

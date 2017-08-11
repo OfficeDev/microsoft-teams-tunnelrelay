@@ -22,7 +22,7 @@
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-namespace TunnelRelay
+namespace TunnelRelay.Core
 {
     using System;
     using System.Collections.Generic;
@@ -59,7 +59,7 @@ namespace TunnelRelay
         /// </summary>
         static ApplicationEngine()
         {
-            Requests = new AwareObservableCollection<RequestDetails>();
+            ////Requests = new AwareObservableCollection<RequestDetails>();
             Plugins = new ObservableCollection<PluginDetails>();
             var pluginInstances = new List<IRedirectionPlugin>();
             pluginInstances.Add(new HeaderAdditionPlugin());
@@ -130,9 +130,21 @@ namespace TunnelRelay
         }
 
         /// <summary>
-        /// Gets or sets the requests.
+        /// Request event handler.
         /// </summary>
-        public static AwareObservableCollection<RequestDetails> Requests { get; set; }
+        /// <param name="sender">The sender.</param>
+        /// <param name="e">The <see cref="RequestEventArgs"/> instance containing the event data.</param>
+        public delegate void RequestEventHandler(object sender, RequestEventArgs e);
+
+        /// <summary>
+        /// Occurs when request is received.
+        /// </summary>
+        public static event RequestEventHandler RequestReceived;
+
+        /// <summary>
+        /// Occurs when request is updated.
+        /// </summary>
+        public static event RequestEventHandler RequestUpdated;
 
         /// <summary>
         /// Gets the plugins.
@@ -199,19 +211,22 @@ namespace TunnelRelay
             {
                 Method = incomingReq.Method,
                 Url = incomingReq.UriTemplateMatch.RequestUri.PathAndQuery.Replace(incomingReq.UriTemplateMatch.RequestUri.Segments[1], string.Empty),
-                RequestHeaders = new ObservableCollection<HeaderDetails>(headerMap.GetUIHeaderMap()),
+                RequestHeaders = new List<HeaderDetails>(headerMap.GetUIHeaderMap()),
                 Timestamp = DateTime.Now.ToString("O"),
                 RequestReceiveTime = DateTime.Now,
                 RequestData = string.Empty,
                 ResponseData = string.Empty,
-                ResponseHeaders = new ObservableCollection<HeaderDetails>(),
+                ResponseHeaders = new List<HeaderDetails>(),
                 StatusCode = "Active",
                 Duration = "Active",
             };
 
             try
             {
-                Requests.Insert(0, requestDetails);
+                ApplicationEngine.RequestReceived?.Invoke(ApplicationData.Instance.ProxyBaseUrl, new RequestEventArgs
+                {
+                    Request = requestDetails,
+                });
 
                 // Url Creation
                 // Url comes as https://servicebusnamespace.servicebus.windows.net/MachineName/ActualPath
@@ -261,6 +276,11 @@ namespace TunnelRelay
                     requestMessage.Content = new StringContent(data);
                     requestMessage.CopyContentHeaders(headerMap);
                 }
+
+                ApplicationEngine.RequestUpdated?.Invoke(ApplicationData.Instance.ProxyBaseUrl, new RequestEventArgs
+                {
+                    Request = requestDetails,
+                });
 
                 foreach (PluginDetails plugin in Plugins)
                 {
@@ -324,6 +344,13 @@ namespace TunnelRelay
                 Message exceptionMessage = WebOperationContext.Current.CreateTextResponse(ex.ToString());
                 WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.InternalServerError;
                 return exceptionMessage;
+            }
+            finally
+            {
+                ApplicationEngine.RequestUpdated?.Invoke(ApplicationData.Instance.ProxyBaseUrl, new RequestEventArgs
+                {
+                    Request = requestDetails,
+                });
             }
         }
     }

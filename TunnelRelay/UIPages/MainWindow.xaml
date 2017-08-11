@@ -112,6 +112,24 @@
                         </GridViewColumn>
                     </GridView>
                 </ListView.View>
+                <ListBox.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <VirtualizingStackPanel VerticalAlignment="Top"  Orientation="Vertical">
+                            <VirtualizingStackPanel.LayoutTransform>
+                                <ScaleTransform ScaleX="1" ScaleY="-1" />
+                            </VirtualizingStackPanel.LayoutTransform>
+                        </VirtualizingStackPanel>
+                    </ItemsPanelTemplate>
+                </ListBox.ItemsPanel>
+                <ListBox.ItemContainerStyle>
+                    <Style TargetType="ListBoxItem">
+                        <Setter Property="LayoutTransform">
+                            <Setter.Value>
+                                <ScaleTransform ScaleX="1" ScaleY="-1" />
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                </ListBox.ItemContainerStyle>
             </ListView>
         </Grid>
 

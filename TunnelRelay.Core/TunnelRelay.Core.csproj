@@ -11,6 +11,7 @@
     <AssemblyName>TunnelRelay.Core</AssemblyName>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
+    <DocumentationFile>bin\$(Configuration)\TunnelRelay.Core.xml</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -51,13 +52,13 @@
   <ItemGroup>
     <Compile Include="ApplicationData.cs" />
     <Compile Include="ApplicationEngine.cs" />
-    <Compile Include="AwareObservableCollection.cs" />
     <Compile Include="HeaderDetails.cs" />
     <Compile Include="Helpers.cs" />
     <Compile Include="PluginDetails.cs" />
     <Compile Include="PluginSettingDetails.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RequestDetails.cs" />
+    <Compile Include="RequestEventArgs.cs" />
     <Compile Include="WCFContract.cs" />
   </ItemGroup>
   <ItemGroup>

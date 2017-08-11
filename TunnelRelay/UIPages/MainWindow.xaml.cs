@@ -25,16 +25,25 @@
 namespace TunnelRelay
 {
     using System;
+    using System.Collections.Generic;
+    using System.Collections.ObjectModel;
     using System.Threading;
     using System.Windows;
     using System.Windows.Controls;
+    using System.Windows.Data;
     using System.Windows.Input;
+    using TunnelRelay.Core;
 
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
     internal partial class MainWindow : Window
     {
+        /// <summary>
+        /// The request map. Request ID => Index.
+        /// </summary>
+        private Dictionary<string, RequestDetails> requestMap = new Dictionary<string, RequestDetails>();
+
         /// <summary>
         /// Initializes a new instance of the <see cref="MainWindow"/> class.
         /// </summary>
@@ -43,14 +52,63 @@ namespace TunnelRelay
             this.InitializeComponent();
 
             this.txtProxyDetails.Text = "Starting Azure Proxy";
-            ////this.lstRequests.ItemsSource = ApplicationEngine.Requests;
+            this.lstRequests.ItemsSource = this.requestMap.Values;
             CommandBinding cb = new CommandBinding(ApplicationCommands.Copy, this.CopyCmdExecuted, this.CopyCmdCanExecute);
             this.lstRequestHeaders.CommandBindings.Add(cb);
             this.lstResponseHeaders.CommandBindings.Add(cb);
             this.txtRedirectionUrl.Text = ApplicationData.Instance.RedirectionUrl;
             this.StartRelayEngine();
 
-            ApplicationEngine.Requests.CollectionChanged += this.Requests_CollectionChanged;
+            ApplicationEngine.RequestReceived += this.ApplicationEngine_RequestReceived;
+            ApplicationEngine.RequestUpdated += this.ApplicationEngine_RequestUpdated;
+        }
+
+        /// <summary>
+        /// Handles the RequestUpdated event of the ApplicationEngine control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="RequestEventArgs"/> instance containing the event data.</param>
+        private void ApplicationEngine_RequestUpdated(object sender, RequestEventArgs e)
+        {
+            this.Dispatcher.Invoke(() =>
+            {
+                if (this.requestMap.ContainsKey(e.Request.RequestId))
+                {
+                    try
+                    {
+                        this.requestMap[e.Request.RequestId] = e.Request;
+                    }
+                    catch
+                    {
+                    }
+
+                    this.RefershUIItems();
+                }
+            });
+        }
+
+        /// <summary>
+        /// Handles the RequestReceived event of the ApplicationEngine control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="RequestEventArgs"/> instance containing the event data.</param>
+        private void ApplicationEngine_RequestReceived(object sender, RequestEventArgs e)
+        {
+            this.Dispatcher.Invoke(() =>
+            {
+                this.requestMap.Add(e.Request.RequestId, e.Request);
+                this.RefershUIItems();
+            });
+        }
+
+        /// <summary>
+        /// Refershes the UI items.
+        /// </summary>
+        private void RefershUIItems()
+        {
+            this.lstRequests.Items.Refresh();
+            this.lstRequestHeaders.Items.Refresh();
+            this.lstRequestHeaders.Items.Refresh();
         }
 
         /// <summary>
@@ -160,7 +218,8 @@ namespace TunnelRelay
         /// <param name="e">The <see cref="RoutedEventArgs"/> instance containing the event data.</param>
         private void BtnClearAllRequests_Click(object sender, RoutedEventArgs e)
         {
-            this.lstRequests.Items.Clear();
+            this.requestMap.Clear();
+            this.RefershUIItems();
         }
 
         /// <summary>

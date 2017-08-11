@@ -22,9 +22,10 @@
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-namespace TunnelRelay
+namespace TunnelRelay.Core
 {
     using System;
+    using System.Collections.Generic;
     using System.Collections.ObjectModel;
     using System.ComponentModel;
     using System.Net;
@@ -32,31 +33,21 @@ namespace TunnelRelay
     /// <summary>
     /// Request Details for UI.
     /// </summary>
-    public class RequestDetails : INotifyPropertyChanged
+    public class RequestDetails
     {
-        private string statusCode;
-
-        private bool exceptionHit;
-
-        private string requestData;
-
-        private string responseData;
-
-        private string duration;
-
         /// <summary>
         /// Initializes a new instance of the <see cref="RequestDetails"/> class.
         /// </summary>
         public RequestDetails()
         {
-            this.ResponseHeaders = new ObservableCollection<HeaderDetails>();
-            this.ResponseHeaders.CollectionChanged += this.ResponseHeaders_CollectionChanged;
+            this.ResponseHeaders = new List<HeaderDetails>();
+            this.RequestId = Guid.NewGuid().ToString();
         }
 
         /// <summary>
-        /// Occurs when a property value changes.
+        /// Gets the request identifier.
         /// </summary>
-        public event PropertyChangedEventHandler PropertyChanged;
+        public string RequestId { get; private set; }
 
         /// <summary>
         /// Gets or sets the HTTP method.
@@ -71,36 +62,12 @@ namespace TunnelRelay
         /// <summary>
         /// Gets or sets the status code.
         /// </summary>
-        public string StatusCode
-        {
-            get
-            {
-                return this.statusCode;
-            }
-
-            internal set
-            {
-                this.statusCode = value;
-                this.OnPropertyChanged(nameof(this.StatusCode));
-            }
-        }
+        public string StatusCode { get; set; }
 
         /// <summary>
         /// Gets or sets a value indicating whether exception was hit during exeution.
         /// </summary>
-        public bool ExceptionHit
-        {
-            get
-            {
-                return this.exceptionHit;
-            }
-
-            internal set
-            {
-                this.exceptionHit = value;
-                this.OnPropertyChanged(nameof(this.ExceptionHit));
-            }
-        }
+        public bool ExceptionHit { get; set; }
 
         /// <summary>
         /// Gets or sets the timestamp.
@@ -115,24 +82,12 @@ namespace TunnelRelay
         /// <summary>
         /// Gets or sets the request headers.
         /// </summary>
-        public ObservableCollection<HeaderDetails> RequestHeaders { get; set; }
+        public List<HeaderDetails> RequestHeaders { get; set; }
 
         /// <summary>
         /// Gets or sets the request data.
         /// </summary>
-        public string RequestData
-        {
-            get
-            {
-                return this.requestData;
-            }
-
-            set
-            {
-                this.requestData = value;
-                this.OnPropertyChanged(nameof(this.RequestData));
-            }
-        }
+        public string RequestData { get; set; }
 
         /// <summary>
         /// Gets or sets the request sender.
@@ -142,59 +97,16 @@ namespace TunnelRelay
         /// <summary>
         /// Gets or sets the response headers.
         /// </summary>
-        public ObservableCollection<HeaderDetails> ResponseHeaders { get; set; }
+        public List<HeaderDetails> ResponseHeaders { get; set; }
 
         /// <summary>
         /// Gets or sets the response data.
         /// </summary>
-        public string ResponseData
-        {
-            get
-            {
-                return this.responseData;
-            }
-
-            set
-            {
-                this.responseData = value;
-                this.OnPropertyChanged(nameof(this.ResponseData));
-            }
-        }
+        public string ResponseData { get; set; }
 
         /// <summary>
         /// Gets or sets the duration.
         /// </summary>
-        public string Duration
-        {
-            get
-            {
-                return this.duration;
-            }
-
-            set
-            {
-                this.duration = value;
-                this.OnPropertyChanged(this.Duration);
-            }
-        }
-
-        /// <summary>
-        /// Called when property changed.
-        /// </summary>
-        /// <param name="name">The name.</param>
-        protected void OnPropertyChanged(string name)
-        {
-            this.PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
-        }
-
-        /// <summary>
-        /// Handles the CollectionChanged event of the ResponseHeaders control.
-        /// </summary>
-        /// <param name="sender">The source of the event.</param>
-        /// <param name="e">The <see cref="System.Collections.Specialized.NotifyCollectionChangedEventArgs"/> instance containing the event data.</param>
-        private void ResponseHeaders_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
-        {
-            this.OnPropertyChanged(nameof(this.ResponseHeaders));
-        }
+        public string Duration { get; set; }
     }
 }

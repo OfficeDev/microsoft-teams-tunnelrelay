@@ -36,6 +36,7 @@ namespace TunnelRelay
     using Microsoft.Azure.Management.ServiceBus.Fluent.Models;
     using Microsoft.IdentityModel.Clients.ActiveDirectory;
     using Microsoft.Rest;
+    using TunnelRelay.Core;
     using RM = Microsoft.Azure.Management.ResourceManager.Fluent;
 
     /// <summary>

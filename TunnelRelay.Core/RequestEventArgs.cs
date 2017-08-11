@@ -1,4 +1,4 @@
-﻿// <copyright file="App.xaml.cs" company="Microsoft">
+﻿// <copyright file="RequestEventArgs.cs" company="Microsoft">
 // Copyright (c) Microsoft. All rights reserved.
 // </copyright>
 // Licensed under the MIT license.
@@ -22,25 +22,19 @@
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-namespace TunnelRelay
+namespace TunnelRelay.Core
 {
-    using System.IO;
-    using System.Windows;
-    using Newtonsoft.Json;
-    using TunnelRelay.Core;
+    using System;
 
     /// <summary>
-    /// Interaction logic for App.xaml
+    /// Request received event arguments.
     /// </summary>
-    internal partial class App : Application
+    /// <seealso cref="System.EventArgs" />
+    public class RequestEventArgs : EventArgs
     {
         /// <summary>
-        /// Raises the <see cref="System.Windows.Application.Exit" /> event.
+        /// Gets the request.
         /// </summary>
-        /// <param name="e">An <see cref="ExitEventArgs" /> that contains the event data.</param>
-        protected override void OnExit(ExitEventArgs e)
-        {
-            ApplicationEngine.StopTunnelRelayEngine();
-        }
+        public RequestDetails Request { get; internal set; }
     }
 }

@@ -33,6 +33,7 @@ namespace TunnelRelay
     using System.Threading.Tasks;
     using System.Windows.Data;
     using System.Windows.Media;
+    using TunnelRelay.Core;
 
     /// <summary>
     /// Decides the color of row in secret management.
