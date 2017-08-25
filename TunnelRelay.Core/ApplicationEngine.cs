@@ -300,11 +300,12 @@ namespace TunnelRelay.Core
                     }
                 }
 
-                string responseData = string.Empty;
+                Stream readableStream = null;
                 if (response.Content != null)
                 {
-                    responseData = await response.Content.ReadAsStringAsync();
-                    requestDetails.ResponseData = responseData;
+                    readableStream = await response.Content.ReadAsStreamAsync();
+                    requestDetails.ResponseData = await new StreamReader(readableStream).ReadToEndAsync();
+                    readableStream.Seek(0, SeekOrigin.Begin);
                 }
                 else
                 {
@@ -317,9 +318,19 @@ namespace TunnelRelay.Core
                 stopWatch.Start();
                 requestDetails.Duration = stopWatch.ElapsedMilliseconds.ToString() + "ms";
 
-                Message responseMessage = string.IsNullOrEmpty(responseData) || response.Content.Headers.ContentType == null ?
-                    operationContext.CreateTextResponse(responseData) :
-                    operationContext.CreateTextResponse(responseData, response.Content.Headers.ContentType.ToString());
+                Message responseMessage;
+
+                if (response.Content == null)
+                {
+                    responseMessage = operationContext.CreateTextResponse(string.Empty);
+                }
+                else
+                {
+                    responseMessage = response.Content.Headers.ContentType == null ?
+                        operationContext.CreateStreamResponse(readableStream, "text/plain; charset=us-ascii") :
+                        operationContext.CreateStreamResponse(readableStream, response.Content.Headers.ContentType.ToString());
+                }
+
                 operationContext.OutgoingResponse.StatusCode = response.StatusCode;
                 foreach (var header in response.Headers)
                 {
