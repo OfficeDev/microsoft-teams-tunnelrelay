@@ -42,10 +42,12 @@ namespace TunnelRelay.Core
         {
             if (File.Exists("appSettings.json"))
             {
+                Logger.LogInfo(CallInfo.Site(), "Loading existing settings");
                 Instance = JsonConvert.DeserializeObject<ApplicationData>(File.ReadAllText("appSettings.json"));
             }
             else
             {
+                Logger.LogInfo(CallInfo.Site(), "Appsettings don't exist. Creating new one.");
                 Instance = new ApplicationData
                 {
                     RedirectionUrl = "https://localhost/",
@@ -121,6 +123,7 @@ namespace TunnelRelay.Core
         /// </summary>
         public void Logout()
         {
+            Logger.LogInfo(CallInfo.Site(), "Logging out");
             Instance = new ApplicationData();
         }
     }

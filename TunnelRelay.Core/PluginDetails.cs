@@ -98,6 +98,7 @@ namespace TunnelRelay.Core
         {
             if (!this.isInitialized)
             {
+                Logger.LogInfo(CallInfo.Site(), "Initializing '{0}'.", this.PluginInstance.PluginName);
                 Task.Run(() => this.PluginInstance.Initialize());
                 this.isInitialized = true;
             }

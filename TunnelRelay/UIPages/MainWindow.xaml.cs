@@ -49,18 +49,26 @@ namespace TunnelRelay
         /// </summary>
         public MainWindow()
         {
-            this.InitializeComponent();
+            try
+            {
+                this.InitializeComponent();
 
-            this.txtProxyDetails.Text = "Starting Azure Proxy";
-            this.lstRequests.ItemsSource = this.requestMap.Values;
-            CommandBinding cb = new CommandBinding(ApplicationCommands.Copy, this.CopyCmdExecuted, this.CopyCmdCanExecute);
-            this.lstRequestHeaders.CommandBindings.Add(cb);
-            this.lstResponseHeaders.CommandBindings.Add(cb);
-            this.txtRedirectionUrl.Text = ApplicationData.Instance.RedirectionUrl;
-            this.StartRelayEngine();
+                this.txtProxyDetails.Text = "Starting Azure Proxy";
+                this.lstRequests.ItemsSource = this.requestMap.Values;
+                CommandBinding cb = new CommandBinding(ApplicationCommands.Copy, this.CopyCmdExecuted, this.CopyCmdCanExecute);
+                this.lstRequestHeaders.CommandBindings.Add(cb);
+                this.lstResponseHeaders.CommandBindings.Add(cb);
+                this.txtRedirectionUrl.Text = ApplicationData.Instance.RedirectionUrl;
+                this.StartRelayEngine();
 
-            ApplicationEngine.RequestReceived += this.ApplicationEngine_RequestReceived;
-            ApplicationEngine.RequestUpdated += this.ApplicationEngine_RequestUpdated;
+                TunnelRelayEngine.RequestReceived += this.ApplicationEngine_RequestReceived;
+                TunnelRelayEngine.RequestUpdated += this.ApplicationEngine_RequestUpdated;
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(CallInfo.Site(), ex);
+                MessageBox.Show("Failed to start Tunnel relay!!", "Engine start failure", MessageBoxButton.OKCancel, MessageBoxImage.Error);
+            }
         }
 
         /// <summary>
@@ -72,6 +80,8 @@ namespace TunnelRelay
         {
             this.Dispatcher.Invoke(() =>
             {
+                Logger.LogVerbose(CallInfo.Site(), "Updating request with Id '{0}'", e.Request.RequestId);
+
                 if (this.requestMap.ContainsKey(e.Request.RequestId))
                 {
                     try
@@ -96,6 +106,7 @@ namespace TunnelRelay
         {
             this.Dispatcher.Invoke(() =>
             {
+                Logger.LogVerbose(CallInfo.Site(), "Received request with Id '{0}'", e.Request.RequestId);
                 this.requestMap.Add(e.Request.RequestId, e.Request);
                 this.RefershUIItems();
             });
@@ -109,40 +120,6 @@ namespace TunnelRelay
             this.lstRequests.Items.Refresh();
             this.lstRequestHeaders.Items.Refresh();
             this.lstRequestHeaders.Items.Refresh();
-        }
-
-        /// <summary>
-        /// Handles the CollectionChanged event of the Requests control.
-        /// </summary>
-        /// <param name="sender">The source of the event.</param>
-        /// <param name="e">The <see cref="System.Collections.Specialized.NotifyCollectionChangedEventArgs"/> instance containing the event data.</param>
-        private void Requests_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
-        {
-            this.Dispatcher.Invoke(() =>
-            {
-                if (e.Action == System.Collections.Specialized.NotifyCollectionChangedAction.Add)
-                {
-                    foreach (var item in e.NewItems)
-                    {
-                        this.lstRequests.Items.Insert(0, item);
-                    }
-                }
-                else if (e.Action == System.Collections.Specialized.NotifyCollectionChangedAction.Remove)
-                {
-                    foreach (var item in e.OldItems)
-                    {
-                        this.lstRequests.Items.Remove(item);
-                    }
-                }
-                else if (e.Action == System.Collections.Specialized.NotifyCollectionChangedAction.Reset)
-                {
-                    int selectedIndex = this.lstRequests.SelectedIndex;
-                    this.lstRequests.Items.Refresh();
-                    this.lstRequests.SelectedIndex = selectedIndex;
-                    this.lstResponseHeaders.Items.Refresh();
-                    this.txtResponseBody.UpdateLayout();
-                }
-            });
         }
 
         /// <summary>Executes copy command on list view.</summary>
@@ -174,7 +151,7 @@ namespace TunnelRelay
             {
                 try
                 {
-                    ApplicationEngine.StartTunnelRelayEngine();
+                    TunnelRelayEngine.StartTunnelRelayEngine();
 
                     this.Dispatcher.Invoke(new Action(() =>
                     {
@@ -218,6 +195,7 @@ namespace TunnelRelay
         /// <param name="e">The <see cref="RoutedEventArgs"/> instance containing the event data.</param>
         private void BtnClearAllRequests_Click(object sender, RoutedEventArgs e)
         {
+            Logger.LogVerbose(CallInfo.Site(), "Clearing all requests");
             this.requestMap.Clear();
             this.RefershUIItems();
         }
@@ -229,6 +207,7 @@ namespace TunnelRelay
         /// <param name="e">The <see cref="TextChangedEventArgs"/> instance containing the event data.</param>
         private void TxtRedirectionUrl_TextChanged(object sender, TextChangedEventArgs e)
         {
+            Logger.LogVerbose(CallInfo.Site(), "Updating redirection url");
             ApplicationData.Instance.RedirectionUrl = (sender as TextBox).Text;
         }
 
@@ -252,6 +231,7 @@ namespace TunnelRelay
         /// <param name="e">The <see cref="RoutedEventArgs"/> instance containing the event data.</param>
         private void PluginManagement_Click(object sender, RoutedEventArgs e)
         {
+            Logger.LogVerbose(CallInfo.Site(), "Starting plugin management");
             PluginManagement pluginMangement = new PluginManagement();
             pluginMangement.Show();
         }

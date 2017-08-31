@@ -51,14 +51,19 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ApplicationData.cs" />
-    <Compile Include="ApplicationEngine.cs" />
+    <Compile Include="Logger.cs" />
+    <Compile Include="TunnelRelayEngine.RelayManagement.cs" />
+    <Compile Include="TunnelRelayEngine.RequestManagement.cs" />
+    <Compile Include="CallInfo.cs" />
     <Compile Include="HeaderDetails.cs" />
     <Compile Include="Helpers.cs" />
+    <Compile Include="ILogger.cs" />
     <Compile Include="PluginDetails.cs" />
     <Compile Include="PluginSettingDetails.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RequestDetails.cs" />
     <Compile Include="RequestEventArgs.cs" />
+    <Compile Include="TextLogger.cs" />
     <Compile Include="WCFContract.cs" />
   </ItemGroup>
   <ItemGroup>

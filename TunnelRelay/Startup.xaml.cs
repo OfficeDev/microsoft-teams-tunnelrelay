@@ -53,11 +53,13 @@ namespace TunnelRelay
 
             if (string.IsNullOrEmpty(ApplicationData.Instance.ServiceBusUrl))
             {
+                Logger.LogInfo(CallInfo.Site(), "Starting welcome experiance");
                 LoginToAzure gettingStarted = new LoginToAzure();
                 gettingStarted.Show();
             }
             else
             {
+                Logger.LogInfo(CallInfo.Site(), "User is logged in already. Starting app directly");
                 new MainWindow().Show();
             }
 

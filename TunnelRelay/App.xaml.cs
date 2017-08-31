@@ -35,12 +35,20 @@ namespace TunnelRelay
     internal partial class App : Application
     {
         /// <summary>
-        /// Raises the <see cref="System.Windows.Application.Exit" /> event.
+        /// Initializes a new instance of the <see cref="App"/> class.
+        /// </summary>
+        public App()
+        {
+            Logger.RegisterLogger(new TextLogger());
+        }
+
+        /// <summary>
+        /// Raises the <see cref="Application.Exit" /> event.
         /// </summary>
         /// <param name="e">An <see cref="ExitEventArgs" /> that contains the event data.</param>
         protected override void OnExit(ExitEventArgs e)
         {
-            ApplicationEngine.StopTunnelRelayEngine();
+            TunnelRelayEngine.StopTunnelRelayEngine();
         }
     }
 }
