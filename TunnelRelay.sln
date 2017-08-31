@@ -1,0 +1,34 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.26430.16
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TunnelRelay", "TunnelRelay\TunnelRelay.csproj", "{1D6E50C4-1F9F-4F8A-8916-D3AEABA4A8E0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TunnelRelay.Plugins", "TunnelRelay.Plugins\TunnelRelay.Plugins.csproj", "{5EB32488-8C81-4E8F-ACFF-2C457F5F95F1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TunnelRelay.Core", "TunnelRelay.Core\TunnelRelay.Core.csproj", "{165BB633-EE2D-473C-9D5C-BE92E02FC5CA}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{1D6E50C4-1F9F-4F8A-8916-D3AEABA4A8E0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1D6E50C4-1F9F-4F8A-8916-D3AEABA4A8E0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1D6E50C4-1F9F-4F8A-8916-D3AEABA4A8E0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1D6E50C4-1F9F-4F8A-8916-D3AEABA4A8E0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5EB32488-8C81-4E8F-ACFF-2C457F5F95F1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5EB32488-8C81-4E8F-ACFF-2C457F5F95F1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5EB32488-8C81-4E8F-ACFF-2C457F5F95F1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5EB32488-8C81-4E8F-ACFF-2C457F5F95F1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{165BB633-EE2D-473C-9D5C-BE92E02FC5CA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{165BB633-EE2D-473C-9D5C-BE92E02FC5CA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{165BB633-EE2D-473C-9D5C-BE92E02FC5CA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{165BB633-EE2D-473C-9D5C-BE92E02FC5CA}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
