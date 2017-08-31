@@ -42,6 +42,7 @@ namespace TunnelRelay
     using Microsoft.Azure.Management.ResourceManager.Fluent;
     using Microsoft.IdentityModel.Clients.ActiveDirectory;
     using Microsoft.Rest;
+    using TunnelRelay.Core;
 
     /// <summary>
     /// Interaction logic for LoginToAzure.xaml
@@ -73,21 +74,32 @@ namespace TunnelRelay
         /// <param name="e">The <see cref="RoutedEventArgs"/> instance containing the event data.</param>
         private void LoginToAzure_Click(object sender, RoutedEventArgs e)
         {
-            AuthenticationContext authContext = new AuthenticationContext("https://login.microsoftonline.com/common", false, TokenCache.DefaultShared);
+            try
+            {
+                Logger.LogInfo(CallInfo.Site(), "Starting Azure login.");
+                AuthenticationContext authContext = new AuthenticationContext("https://login.microsoftonline.com/common", false, TokenCache.DefaultShared);
 
-            // Get Azure Token.
-            var azureToken = authContext.AcquireToken(
-                "https://management.azure.com/",
-                "1950a258-227b-4e31-a9cf-717495945fc2",
-                new Uri("urn:ietf:wg:oauth:2.0:oob"),
-                PromptBehavior.RefreshSession);
+                // Get Azure Token.
+                var azureToken = authContext.AcquireToken(
+                    "https://management.azure.com/",
+                    "1950a258-227b-4e31-a9cf-717495945fc2",
+                    new Uri("urn:ietf:wg:oauth:2.0:oob"),
+                    PromptBehavior.RefreshSession);
 
-            SelectServiceBus selectServiceBus = new SelectServiceBus(azureToken);
-            selectServiceBus.Left = this.Left;
-            selectServiceBus.Top = this.Top;
+                Logger.LogInfo(CallInfo.Site(), "Token acquire complete.");
 
-            selectServiceBus.Show();
-            this.Close();
+                SelectServiceBus selectServiceBus = new SelectServiceBus(azureToken);
+                selectServiceBus.Left = this.Left;
+                selectServiceBus.Top = this.Top;
+
+                selectServiceBus.Show();
+                this.Close();
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(CallInfo.Site(), ex, "Failed to Login into Azure");
+                MessageBox.Show("Failed to log you in!!", "Login failure", MessageBoxButton.OKCancel, MessageBoxImage.Error);
+            }
         }
     }
 }

@@ -85,33 +85,47 @@ namespace TunnelRelay
             this.comboServiceBusList.ItemsSource = this.serviceBuses;
         }
 
-        // DisplayMemberPath="DisplayName" SelectedValuePath="Id";
+        /// <summary>
+        /// Handles the ContentRendered event of the Window control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
         private void Window_ContentRendered(object sender, EventArgs e)
         {
             this.progressBar.Visibility = Visibility.Visible;
 
             Thread subscriptionThread = new Thread(new ThreadStart(() =>
             {
-                TokenCredentials tokenCredentials = new TokenCredentials(this.authResult.AccessToken);
-                RM.SubscriptionClient subsClient = new RM.SubscriptionClient(tokenCredentials);
-
-                List<RM.Models.SubscriptionInner> subscriptionList = new List<RM.Models.SubscriptionInner>();
-
-                var resp = subsClient.Subscriptions.List();
-                subscriptionList.AddRange(resp);
-
-                while (!string.IsNullOrEmpty(resp.NextPageLink))
+                try
                 {
-                    resp = subsClient.Subscriptions.ListNext(resp.NextPageLink);
+                    TokenCredentials tokenCredentials = new TokenCredentials(this.authResult.AccessToken);
+                    RM.SubscriptionClient subsClient = new RM.SubscriptionClient(tokenCredentials);
+
+                    List<RM.Models.SubscriptionInner> subscriptionList = new List<RM.Models.SubscriptionInner>();
+
+                    var resp = subsClient.Subscriptions.List();
                     subscriptionList.AddRange(resp);
-                }
 
-                this.Dispatcher.Invoke(() =>
+                    while (!string.IsNullOrEmpty(resp.NextPageLink))
+                    {
+                        resp = subsClient.Subscriptions.ListNext(resp.NextPageLink);
+                        subscriptionList.AddRange(resp);
+                    }
+
+                    this.Dispatcher.Invoke(() =>
+                    {
+                        this.subscriptions.Clear();
+                        subscriptionList.ForEach(sub => this.subscriptions.Add(sub));
+                        this.progressBar.Visibility = Visibility.Hidden;
+                    });
+                }
+                catch (Exception ex)
                 {
-                    this.subscriptions.Clear();
-                    subscriptionList.ForEach(sub => this.subscriptions.Add(sub));
-                    this.progressBar.Visibility = Visibility.Hidden;
-                });
+                    Logger.LogError(CallInfo.Site(), ex, "Failed to get user subscriptions");
+
+                    this.Dispatcher.Invoke(() => MessageBox.Show("Failed to get list of subscriptons!! Exiting", "Azure Error", MessageBoxButton.OKCancel, MessageBoxImage.Error));
+                    Application.Current.Shutdown();
+                }
             }));
 
             subscriptionThread.Start();
@@ -131,28 +145,38 @@ namespace TunnelRelay
 
             Thread serviceBusThread = new Thread(new ThreadStart(() =>
             {
-                TokenCredentials tokenCredentials = new TokenCredentials(this.authResult.AccessToken);
-                ServiceBusManagementClient serviceBusManagementClient = new ServiceBusManagementClient(tokenCredentials);
-
-                serviceBusManagementClient.SubscriptionId = selectedSubscription.SubscriptionId;
-
-                List<NamespaceModelInner> serviceBusList = new List<NamespaceModelInner>();
-                var resp = serviceBusManagementClient.Namespaces.List();
-                serviceBusList.AddRange(resp);
-
-                while (!string.IsNullOrEmpty(resp.NextPageLink))
+                try
                 {
-                    resp = serviceBusManagementClient.Namespaces.ListNext(resp.NextPageLink);
+                    TokenCredentials tokenCredentials = new TokenCredentials(this.authResult.AccessToken);
+                    ServiceBusManagementClient serviceBusManagementClient = new ServiceBusManagementClient(tokenCredentials);
+
+                    serviceBusManagementClient.SubscriptionId = selectedSubscription.SubscriptionId;
+
+                    List<NamespaceModelInner> serviceBusList = new List<NamespaceModelInner>();
+                    var resp = serviceBusManagementClient.Namespaces.List();
                     serviceBusList.AddRange(resp);
-                }
 
-                this.Dispatcher.Invoke(() =>
+                    while (!string.IsNullOrEmpty(resp.NextPageLink))
+                    {
+                        resp = serviceBusManagementClient.Namespaces.ListNext(resp.NextPageLink);
+                        serviceBusList.AddRange(resp);
+                    }
+
+                    this.Dispatcher.Invoke(() =>
+                    {
+                        this.serviceBuses.Clear();
+                        this.serviceBuses.Add(newServiceBus);
+                        serviceBusList.ForEach(sub => this.serviceBuses.Add(sub));
+                        this.progressBar.Visibility = Visibility.Hidden;
+                    });
+                }
+                catch (Exception ex)
                 {
-                    this.serviceBuses.Clear();
-                    this.serviceBuses.Add(newServiceBus);
-                    serviceBusList.ForEach(sub => this.serviceBuses.Add(sub));
-                    this.progressBar.Visibility = Visibility.Hidden;
-                });
+                    Logger.LogError(CallInfo.Site(), ex, "Failed to get list of Service bus namespaces");
+
+                    this.Dispatcher.Invoke(() => MessageBox.Show("Failed to get list of Service bus namespaces!!. Exiting", "Azure Error", MessageBoxButton.OKCancel, MessageBoxImage.Error));
+                    Application.Current.Shutdown();
+                }
             }));
 
             serviceBusThread.Start();
@@ -215,116 +239,134 @@ namespace TunnelRelay
             // Case 1. When user used existing service bus.
             Thread existingServiceBusThread = new Thread(new ThreadStart(() =>
             {
-                var resp = serviceBusManagementClient.Namespaces.ListAuthorizationRules(rgName, selectedServiceBus.Name);
-                serviceBusList.AddRange(resp);
-
-                while (!string.IsNullOrEmpty(resp.NextPageLink))
+                try
                 {
-                    resp = serviceBusManagementClient.Namespaces.ListAuthorizationRulesNext(resp.NextPageLink);
+                    var resp = serviceBusManagementClient.Namespaces.ListAuthorizationRules(rgName, selectedServiceBus.Name);
                     serviceBusList.AddRange(resp);
-                }
 
-                var selectedAuthRule = serviceBusList.FirstOrDefault(rule => rule.Rights != null && rule.Rights.Contains(AccessRights.Listen) && rule.Rights.Contains(AccessRights.Manage) && rule.Rights.Contains(AccessRights.Send));
-
-                if (selectedAuthRule == null)
-                {
-                    MessageBox.Show("Failed to find a suitable Authorization rule to use. Please create an Authorization rule with Listen, Manage and Send rights and retry the operation");
-                    this.Dispatcher.Invoke(() =>
+                    while (!string.IsNullOrEmpty(resp.NextPageLink))
                     {
-                        this.progressBar.Visibility = Visibility.Hidden;
-                        this.btnDone.IsEnabled = true;
-                    });
-                    return;
-                }
-                else
-                {
-                    serviceBusManagementClient.Namespaces.ListKeys(rgName, selectedServiceBus.Name, selectedAuthRule.Name);
+                        resp = serviceBusManagementClient.Namespaces.ListAuthorizationRulesNext(resp.NextPageLink);
+                        serviceBusList.AddRange(resp);
+                    }
 
-                    ApplicationData.Instance.ServiceBusSharedKey = serviceBusManagementClient.Namespaces.ListKeys(rgName, selectedServiceBus.Name, selectedAuthRule.Name).PrimaryKey;
-                    ApplicationData.Instance.ServiceBusKeyName = serviceBusManagementClient.Namespaces.ListKeys(rgName, selectedServiceBus.Name, selectedAuthRule.Name).KeyName;
-                    ApplicationData.Instance.ServiceBusUrl = selectedServiceBus.ServiceBusEndpoint;
+                    var selectedAuthRule = serviceBusList.FirstOrDefault(rule => rule.Rights != null && rule.Rights.Contains(AccessRights.Listen) && rule.Rights.Contains(AccessRights.Manage) && rule.Rights.Contains(AccessRights.Send));
 
-                    this.Dispatcher.Invoke(() =>
+                    if (selectedAuthRule == null)
                     {
-                        MainWindow mainWindow = new MainWindow();
-                        mainWindow.Show();
-                        this.Close();
-                    });
+                        MessageBox.Show("Failed to find a suitable Authorization rule to use. Please create an Authorization rule with Listen, Manage and Send rights and retry the operation");
+                        this.Dispatcher.Invoke(() =>
+                        {
+                            this.progressBar.Visibility = Visibility.Hidden;
+                            this.btnDone.IsEnabled = true;
+                        });
+                        return;
+                    }
+                    else
+                    {
+                        serviceBusManagementClient.Namespaces.ListKeys(rgName, selectedServiceBus.Name, selectedAuthRule.Name);
+
+                        ApplicationData.Instance.ServiceBusSharedKey = serviceBusManagementClient.Namespaces.ListKeys(rgName, selectedServiceBus.Name, selectedAuthRule.Name).PrimaryKey;
+                        ApplicationData.Instance.ServiceBusKeyName = serviceBusManagementClient.Namespaces.ListKeys(rgName, selectedServiceBus.Name, selectedAuthRule.Name).KeyName;
+                        ApplicationData.Instance.ServiceBusUrl = selectedServiceBus.ServiceBusEndpoint;
+
+                        this.Dispatcher.Invoke(() =>
+                        {
+                            MainWindow mainWindow = new MainWindow();
+                            mainWindow.Show();
+                            this.Close();
+                        });
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogError(CallInfo.Site(), ex, "Failed to connect to service bus namespace");
+
+                    this.Dispatcher.Invoke(() => MessageBox.Show("Failed to connect to service bus namespace!!", "Azure Error", MessageBoxButton.OKCancel, MessageBoxImage.Error));
                 }
             }));
 
             // Case 2. When user created a new service bus.
             Thread newServiceBusThread = new Thread(new ThreadStart(() =>
             {
-                RM.ResourceManagementClient resourceManagementClient = new RM.ResourceManagementClient(tokenCredentials);
-                resourceManagementClient.SubscriptionId = selectedSubscription.SubscriptionId;
-
-                RM.Models.ResourceGroupInner resourceGroup = null;
-
                 try
                 {
-                    resourceGroup = resourceManagementClient.ResourceGroups.Get("TunnelRelay");
-                }
-                catch (Microsoft.Rest.Azure.CloudException httpEx)
-                {
-                    if (httpEx.Response.StatusCode == System.Net.HttpStatusCode.NotFound)
+                    RM.ResourceManagementClient resourceManagementClient = new RM.ResourceManagementClient(tokenCredentials);
+                    resourceManagementClient.SubscriptionId = selectedSubscription.SubscriptionId;
+
+                    RM.Models.ResourceGroupInner resourceGroup = null;
+
+                    try
                     {
-                        resourceGroup = resourceManagementClient.ResourceGroups.CreateOrUpdate("TunnelRelay", new RM.Models.ResourceGroupInner
+                        resourceGroup = resourceManagementClient.ResourceGroups.Get("TunnelRelay");
+                    }
+                    catch (Microsoft.Rest.Azure.CloudException httpEx)
+                    {
+                        if (httpEx.Response.StatusCode == System.Net.HttpStatusCode.NotFound)
                         {
-                            Location = "WestUS",
-                            Name = "TunnelRelay",
-                            Tags = newServiceBus.Tags,
+                            resourceGroup = resourceManagementClient.ResourceGroups.CreateOrUpdate("TunnelRelay", new RM.Models.ResourceGroupInner
+                            {
+                                Location = "WestUS",
+                                Name = "TunnelRelay",
+                                Tags = newServiceBus.Tags,
+                            });
+                        }
+                    }
+
+                    rgName = resourceGroup.Name;
+
+                    if (string.IsNullOrEmpty(newBusName))
+                    {
+                        MessageBox.Show("Please enter the name for service bus.");
+                    }
+
+                    selectedServiceBus = serviceBusManagementClient.Namespaces.CreateOrUpdate(rgName, newBusName, new NamespaceModelInner
+                    {
+                        Location = selectedServiceBus.Location,
+                        Sku = selectedServiceBus.Sku,
+                        Tags = selectedServiceBus.Tags,
+                    });
+
+                    var resp = serviceBusManagementClient.Namespaces.ListAuthorizationRules(rgName, selectedServiceBus.Name);
+                    serviceBusList.AddRange(resp);
+
+                    while (!string.IsNullOrEmpty(resp.NextPageLink))
+                    {
+                        resp = serviceBusManagementClient.Namespaces.ListAuthorizationRulesNext(resp.NextPageLink);
+                        serviceBusList.AddRange(resp);
+                    }
+
+                    var selectedAuthRule = serviceBusList.FirstOrDefault(rule => rule.Rights != null && rule.Rights.Contains(AccessRights.Listen) && rule.Rights.Contains(AccessRights.Manage) && rule.Rights.Contains(AccessRights.Send));
+
+                    if (selectedAuthRule == null)
+                    {
+                        MessageBox.Show("Failed to find a suitable Authorization rule to use. Please create an Authorization rule with Listen, Manage and Send rights and retry the operation");
+                        this.Dispatcher.Invoke(() =>
+                        {
+                            this.progressBar.Visibility = Visibility.Hidden;
+                            this.btnDone.IsEnabled = true;
+                        });
+                        return;
+                    }
+                    else
+                    {
+                        ApplicationData.Instance.ServiceBusSharedKey = serviceBusManagementClient.Namespaces.ListKeys(rgName, selectedServiceBus.Name, selectedAuthRule.Name).PrimaryKey;
+                        ApplicationData.Instance.ServiceBusKeyName = serviceBusManagementClient.Namespaces.ListKeys(rgName, selectedServiceBus.Name, selectedAuthRule.Name).KeyName;
+                        ApplicationData.Instance.ServiceBusUrl = selectedServiceBus.ServiceBusEndpoint;
+
+                        this.Dispatcher.Invoke(() =>
+                        {
+                            MainWindow mainWindow = new MainWindow();
+                            mainWindow.Show();
+                            this.Close();
                         });
                     }
                 }
-
-                rgName = resourceGroup.Name;
-
-                if (string.IsNullOrEmpty(newBusName))
+                catch (Exception ex)
                 {
-                    MessageBox.Show("Please enter the name for service bus.");
-                }
+                    Logger.LogError(CallInfo.Site(), ex, "Failed to create new service bus namespace");
 
-                selectedServiceBus = serviceBusManagementClient.Namespaces.CreateOrUpdate(rgName, newBusName, new NamespaceModelInner
-                {
-                    Location = selectedServiceBus.Location,
-                    Sku = selectedServiceBus.Sku,
-                    Tags = selectedServiceBus.Tags,
-                });
-
-                var resp = serviceBusManagementClient.Namespaces.ListAuthorizationRules(rgName, selectedServiceBus.Name);
-                serviceBusList.AddRange(resp);
-
-                while (!string.IsNullOrEmpty(resp.NextPageLink))
-                {
-                    resp = serviceBusManagementClient.Namespaces.ListAuthorizationRulesNext(resp.NextPageLink);
-                    serviceBusList.AddRange(resp);
-                }
-
-                var selectedAuthRule = serviceBusList.FirstOrDefault(rule => rule.Rights != null && rule.Rights.Contains(AccessRights.Listen) && rule.Rights.Contains(AccessRights.Manage) && rule.Rights.Contains(AccessRights.Send));
-
-                if (selectedAuthRule == null)
-                {
-                    MessageBox.Show("Failed to find a suitable Authorization rule to use. Please create an Authorization rule with Listen, Manage and Send rights and retry the operation");
-                    this.Dispatcher.Invoke(() =>
-                    {
-                        this.progressBar.Visibility = Visibility.Hidden;
-                        this.btnDone.IsEnabled = true;
-                    });
-                    return;
-                }
-                else
-                {
-                    ApplicationData.Instance.ServiceBusSharedKey = serviceBusManagementClient.Namespaces.ListKeys(rgName, selectedServiceBus.Name, selectedAuthRule.Name).PrimaryKey;
-                    ApplicationData.Instance.ServiceBusKeyName = serviceBusManagementClient.Namespaces.ListKeys(rgName, selectedServiceBus.Name, selectedAuthRule.Name).KeyName;
-                    ApplicationData.Instance.ServiceBusUrl = selectedServiceBus.ServiceBusEndpoint;
-
-                    this.Dispatcher.Invoke(() =>
-                    {
-                        MainWindow mainWindow = new MainWindow();
-                        mainWindow.Show();
-                        this.Close();
-                    });
+                    this.Dispatcher.Invoke(() => MessageBox.Show("Failed to create new service bus namespace!!", "Azure Error", MessageBoxButton.OKCancel, MessageBoxImage.Error));
                 }
             }));
 

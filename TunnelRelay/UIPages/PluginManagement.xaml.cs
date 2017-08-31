@@ -51,7 +51,7 @@ namespace TunnelRelay
         public PluginManagement()
         {
             this.InitializeComponent();
-            this.lstPluginList.ItemsSource = ApplicationEngine.Plugins;
+            this.lstPluginList.ItemsSource = TunnelRelayEngine.Plugins;
             this.lstPluginList.SelectedIndex = 0;
         }
 
@@ -61,7 +61,15 @@ namespace TunnelRelay
         /// <param name="e">An <see cref="T:System.EventArgs" /> that contains the event data.</param>
         protected override void OnClosed(EventArgs e)
         {
-            Parallel.ForEach(ApplicationEngine.Plugins.Where(plugin => plugin.IsEnabled), (plugin) => plugin.InitializePlugin());
+            try
+            {
+                Parallel.ForEach(TunnelRelayEngine.Plugins.Where(plugin => plugin.IsEnabled), (plugin) => plugin.InitializePlugin());
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(CallInfo.Site(), ex);
+                MessageBox.Show("Plugin initialization failed!!", "Plugin management", MessageBoxButton.OKCancel, MessageBoxImage.Error);
+            }
 
             base.OnClosed(e);
         }

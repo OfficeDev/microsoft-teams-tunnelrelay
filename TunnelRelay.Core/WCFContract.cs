@@ -52,7 +52,7 @@ namespace TunnelRelay.Core
         [WebGet(UriTemplate = "*")]
         private async Task<Message> GetRequest()
         {
-            return await ApplicationEngine.GetResponse(WebOperationContext.Current);
+            return await TunnelRelayEngine.GetResponse(WebOperationContext.Current);
         }
 
         /// <summary>
@@ -64,7 +64,7 @@ namespace TunnelRelay.Core
         [WebInvoke(UriTemplate = "*", Method = "POST", BodyStyle = WebMessageBodyStyle.Bare)]
         private async Task<Message> PostRequest(Stream pStream)
         {
-            return await ApplicationEngine.GetResponse(WebOperationContext.Current, pStream);
+            return await TunnelRelayEngine.GetResponse(WebOperationContext.Current, pStream);
         }
 
         /// <summary>
@@ -76,7 +76,7 @@ namespace TunnelRelay.Core
         [WebInvoke(UriTemplate = "*", Method = "OPTIONS")]
         private async Task<Message> OptionsRequest(Stream pStream)
         {
-            return await ApplicationEngine.GetResponse(WebOperationContext.Current);
+            return await TunnelRelayEngine.GetResponse(WebOperationContext.Current);
         }
 
         /// <summary>
@@ -88,7 +88,7 @@ namespace TunnelRelay.Core
         [WebInvoke(UriTemplate = "*", Method = "PUT", BodyStyle = WebMessageBodyStyle.Bare)]
         private async Task<Message> PutRequest(Stream pStream)
         {
-            return await ApplicationEngine.GetResponse(WebOperationContext.Current, pStream);
+            return await TunnelRelayEngine.GetResponse(WebOperationContext.Current, pStream);
         }
 
         /// <summary>
@@ -99,7 +99,7 @@ namespace TunnelRelay.Core
         [WebInvoke(UriTemplate = "*", Method = "DELETE")]
         private async Task<Message> DeleteRequest()
         {
-            return await ApplicationEngine.GetResponse(WebOperationContext.Current);
+            return await TunnelRelayEngine.GetResponse(WebOperationContext.Current);
         }
     }
 }
