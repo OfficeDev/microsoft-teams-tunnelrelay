@@ -51,7 +51,7 @@ namespace TunnelRelay
         /// </returns>
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            RequestDetails requestData = value as RequestDetails;
+            RequestDetails requestData = ((KeyValuePair<string, RequestDetails>)value).Value;
 
             if (!Enum.TryParse(requestData?.StatusCode, out HttpStatusCode statusCode))
             {

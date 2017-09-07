@@ -24,10 +24,12 @@
 
 namespace TunnelRelay
 {
+    using Newtonsoft.Json.Linq;
     using System;
     using System.Collections.Generic;
     using System.Collections.ObjectModel;
     using System.Threading;
+    using System.Threading.Tasks;
     using System.Windows;
     using System.Windows.Controls;
     using System.Windows.Data;
@@ -42,7 +44,7 @@ namespace TunnelRelay
         /// <summary>
         /// The request map. Request ID => Index.
         /// </summary>
-        private Dictionary<string, RequestDetails> requestMap = new Dictionary<string, RequestDetails>();
+        private ObservableDictionary<string, RequestDetails> requestMap = new ObservableDictionary<string, RequestDetails>();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MainWindow"/> class.
@@ -54,7 +56,7 @@ namespace TunnelRelay
                 this.InitializeComponent();
 
                 this.txtProxyDetails.Text = "Starting Azure Proxy";
-                this.lstRequests.ItemsSource = this.requestMap.Values;
+                this.lstRequests.ItemsSource = this.requestMap;
                 CommandBinding cb = new CommandBinding(ApplicationCommands.Copy, this.CopyCmdExecuted, this.CopyCmdCanExecute);
                 this.lstRequestHeaders.CommandBindings.Add(cb);
                 this.lstResponseHeaders.CommandBindings.Add(cb);
@@ -86,13 +88,11 @@ namespace TunnelRelay
                 {
                     try
                     {
-                        this.requestMap[e.Request.RequestId] = e.Request;
+                        this.requestMap[e.Request.RequestId] = JObject.FromObject(e.Request).ToObject<RequestDetails>();
                     }
-                    catch
+                    catch (Exception ex)
                     {
                     }
-
-                    this.RefershUIItems();
                 }
             });
         }
@@ -107,19 +107,10 @@ namespace TunnelRelay
             this.Dispatcher.Invoke(() =>
             {
                 Logger.LogVerbose(CallInfo.Site(), "Received request with Id '{0}'", e.Request.RequestId);
-                this.requestMap.Add(e.Request.RequestId, e.Request);
-                this.RefershUIItems();
-            });
-        }
 
-        /// <summary>
-        /// Refershes the UI items.
-        /// </summary>
-        private void RefershUIItems()
-        {
-            this.lstRequests.Items.Refresh();
-            this.lstRequestHeaders.Items.Refresh();
-            this.lstRequestHeaders.Items.Refresh();
+                KeyValuePair<string, RequestDetails> requestItem = new KeyValuePair<string, RequestDetails>(e.Request.RequestId, e.Request);
+                this.requestMap.Add(requestItem);
+            });
         }
 
         /// <summary>Executes copy command on list view.</summary>
@@ -197,7 +188,6 @@ namespace TunnelRelay
         {
             Logger.LogVerbose(CallInfo.Site(), "Clearing all requests");
             this.requestMap.Clear();
-            this.RefershUIItems();
         }
 
         /// <summary>

@@ -3,6 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:w="clr-namespace:System.Windows.Workarounds"
         xmlns:local="clr-namespace:TunnelRelay"
         mc:Ignorable="d"
         x:ClassModifier="internal"
@@ -72,41 +73,41 @@
                 <Button Content="Clear Requests" HorizontalAlignment="Right" Name="btnClearAllRequests" Width="100" BorderBrush="LightSlateGray" Background="White" Click="BtnClearAllRequests_Click"/>
             </Grid>
 
-            <ListView Name="lstRequests" x:FieldModifier="public" Grid.Row="2" BorderThickness="0" ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+            <ListView Name="lstRequests" x:FieldModifier="public" Grid.Row="2" BorderThickness="0" ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.HorizontalScrollBarVisibility="Disabled" w:ListBox.AutoScroll="True">
                 <ListView.View>
                     <GridView ColumnHeaderContainerStyle="{StaticResource hiddenHeaderStyle}">
                         <GridViewColumn Header="Method" Width="60">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
-                                    <TextBlock Text="{Binding Method}" Foreground="{Binding Converter={StaticResource requestColor}}" TextAlignment="Left" HorizontalAlignment="Left"/>
+                                    <TextBlock Text="{Binding Value.Method}" Foreground="{Binding Converter={StaticResource requestColor}}" TextAlignment="Left" HorizontalAlignment="Left"/>
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>
                         <GridViewColumn Header="Url" Width="250">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
-                                    <TextBlock Text="{Binding Url}" Foreground="{Binding Converter={StaticResource requestColor}}" TextAlignment="Justify" HorizontalAlignment="Stretch"/>
+                                    <TextBlock Text="{Binding Value.Url}" Foreground="{Binding Converter={StaticResource requestColor}}" TextAlignment="Justify" HorizontalAlignment="Stretch"/>
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>
                         <GridViewColumn Header="Status Code" Width="150">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
-                                    <TextBlock Text="{Binding StatusCode}" Foreground="{Binding Converter={StaticResource requestColor}}" TextAlignment="Center" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="{Binding Value.StatusCode}" Foreground="{Binding Converter={StaticResource requestColor}}" TextAlignment="Center" HorizontalAlignment="Center"/>
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>
                         <GridViewColumn Header="Start time" Width="220">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
-                                    <TextBlock Text="{Binding Timestamp}" Foreground="{Binding Converter={StaticResource requestColor}}" TextAlignment="Center" HorizontalAlignment="Center" />
+                                    <TextBlock Text="{Binding Value.Timestamp}" Foreground="{Binding Converter={StaticResource requestColor}}" TextAlignment="Center" HorizontalAlignment="Center" />
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>
                         <GridViewColumn Header="Duration" Width="100">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
-                                    <TextBlock Text="{Binding Duration}" Foreground="{Binding Converter={StaticResource requestColor}}" TextAlignment="Right" HorizontalAlignment="Right" />
+                                    <TextBlock Text="{Binding Value.Duration}" Foreground="{Binding Converter={StaticResource requestColor}}" TextAlignment="Right" HorizontalAlignment="Right" />
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>
@@ -148,16 +149,16 @@
                     <RowDefinition Height="*" />
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
-                <Label Content="{Binding ElementName=lstRequests, Path=SelectedItem.Timestamp}" Grid.Row="0"/>
-                <TextBox Text="{Binding ElementName=lstRequests, Path=SelectedItem.Url}" Grid.Row="1" IsReadOnly="True" BorderThickness="0"/>
+                <Label Content="{Binding ElementName=lstRequests, Path=SelectedItem.Value.Timestamp}" Grid.Row="0"/>
+                <TextBox Text="{Binding ElementName=lstRequests, Path=SelectedItem.Value.Url}" Grid.Row="1" IsReadOnly="True" BorderThickness="0"/>
             </Grid>
 
             <TabControl Grid.Row="2">
                 <TabItem Header="Request Body">
-                    <TextBox IsReadOnly="True" Name="txtRequestBody" TextWrapping="Wrap" ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.CanContentScroll="True" Text="{Binding ElementName=lstRequests, Path=SelectedItem.RequestData}"/>
+                    <TextBox IsReadOnly="True" Name="txtRequestBody" TextWrapping="Wrap" ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.CanContentScroll="True" Text="{Binding ElementName=lstRequests, Path=SelectedItem.Value.RequestData}"/>
                 </TabItem>
                 <TabItem Header="Request Headers">
-                    <ListView ItemsSource="{Binding ElementName=lstRequests, Path=SelectedItem.RequestHeaders}" Name="lstRequestHeaders">
+                    <ListView ItemsSource="{Binding ElementName=lstRequests, Path=SelectedItem.Value.RequestHeaders}" Name="lstRequestHeaders">
                         <ListView.View>
                             <GridView ColumnHeaderContainerStyle="{StaticResource hiddenHeaderStyle}">
                                 <GridViewColumn Width="Auto">
@@ -182,10 +183,10 @@
 
             <TabControl Grid.Row="4">
                 <TabItem Header="Response Body">
-                    <TextBox IsReadOnly="True" Name="txtResponseBody" TextWrapping="Wrap" ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.CanContentScroll="True" Text="{Binding ElementName=lstRequests, Path=SelectedItem.ResponseData}"/>
+                    <TextBox IsReadOnly="True" Name="txtResponseBody" TextWrapping="Wrap" ScrollViewer.HorizontalScrollBarVisibility="Auto" ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.CanContentScroll="True" Text="{Binding ElementName=lstRequests, Path=SelectedItem.Value.ResponseData}"/>
                 </TabItem>
                 <TabItem Header="Response Headers">
-                    <ListView ItemsSource="{Binding ElementName=lstRequests, Path=SelectedItem.ResponseHeaders}" Name="lstResponseHeaders">
+                    <ListView ItemsSource="{Binding ElementName=lstRequests, Path=SelectedItem.Value.ResponseHeaders}" Name="lstResponseHeaders">
                         <ListView.View>
                             <GridView ColumnHeaderContainerStyle="{StaticResource hiddenHeaderStyle}">
                                 <GridViewColumn Width="Auto">
