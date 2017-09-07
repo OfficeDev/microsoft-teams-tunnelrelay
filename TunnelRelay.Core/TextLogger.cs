@@ -69,7 +69,7 @@ namespace TunnelRelay.Core
         /// </summary>
         public TextLogger()
         {
-            this.streamWriter = new StreamWriter(string.Format("TR{0}.Log", DateTime.Now.ToLongDateString()));
+            this.streamWriter = new StreamWriter(string.Format("TR{0}.Log", DateTime.Now.ToString("yyyyMMddHHmmss")));
         }
 
         /// <summary>
@@ -85,6 +85,15 @@ namespace TunnelRelay.Core
         /// </summary>
         public void Initialize()
         {
+        }
+
+        /// <summary>
+        /// Uninitializes this instance.
+        /// </summary>
+        public void Uninitialize()
+        {
+            this.streamWriter.Flush();
+            this.streamWriter.Close();
         }
 
         /// <summary>

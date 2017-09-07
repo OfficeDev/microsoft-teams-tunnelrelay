@@ -63,5 +63,10 @@ namespace TunnelRelay.Core
         /// Initializes this instance.
         /// </summary>
         void Initialize();
+
+        /// <summary>
+        /// Uninitializes this instance.
+        /// </summary>
+        void Uninitialize();
     }
 }

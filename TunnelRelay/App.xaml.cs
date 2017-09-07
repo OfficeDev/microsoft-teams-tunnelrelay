@@ -48,7 +48,9 @@ namespace TunnelRelay
         /// <param name="e">An <see cref="ExitEventArgs" /> that contains the event data.</param>
         protected override void OnExit(ExitEventArgs e)
         {
+            Logger.LogInfo(CallInfo.Site(), "Exiting the application with exit code '{0}'", e.ApplicationExitCode);
             TunnelRelayEngine.StopTunnelRelayEngine();
+            Logger.Close();
         }
     }
 }

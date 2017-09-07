@@ -116,6 +116,17 @@ namespace TunnelRelay.Core
         }
 
         /// <summary>
+        /// Closes this instance.
+        /// </summary>
+        public static void Close()
+        {
+            foreach (var logger in loggers)
+            {
+                logger.Uninitialize();
+            }
+        }
+
+        /// <summary>
         /// Logs the specified inmessageion.
         /// </summary>
         /// <param name="callInfo">The call inmessageion.</param>
