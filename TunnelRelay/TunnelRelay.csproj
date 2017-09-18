@@ -53,6 +53,12 @@
   <PropertyGroup>
     <ApplicationIcon>TRLogo.ico</ApplicationIcon>
   </PropertyGroup>
+  <PropertyGroup>
+    <SignAssembly>true</SignAssembly>
+  </PropertyGroup>
+  <PropertyGroup>
+    <AssemblyOriginatorKeyFile>..\TRSnkKey.snk</AssemblyOriginatorKeyFile>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="Microsoft.Azure.Management.ResourceManager.Fluent, Version=1.0.0.60, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.Azure.Management.ResourceManager.Fluent.1.1.3\lib\net452\Microsoft.Azure.Management.ResourceManager.Fluent.dll</HintPath>
