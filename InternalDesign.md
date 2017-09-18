@@ -1,8 +1,8 @@
-# Tunnel Relay Internal Working
+# Tunnel Relay Internals
 
-This document explains how the request is processed by Tunnel Relay internally. This does not cover any operations done by external components. Refer to following documents for detailed description for respective topics
+This document explains how Tunnel Relay processes the request internally. This does not cover any operations done by external components. Refer to following documents for detailed description for respective topics
 
-- [RequestHandling](RequestHandling.md)
+- [Request Handling](RequestHandling.md)
 - [Understanding Plugins](PluginManagement.md)
 
 ## High level design
@@ -12,12 +12,12 @@ On a high level Tunnel Relay can be split into 3 components
 - Tunnel Relay Core engine
 - Tunnel Relay UI
 
-Out of these 3 WCF Relay and Core engine work together closely and UI is run on event driven model
-
 ## Understanding components
 
 ### Tunnel Relay WCF relay
-Main functionality of this component is to run a [ServiceHost](https://msdn.microsoft.com/en-us/library/bb332338.aspx) which is built to accept request with any url pattern and HTTP method. Trace is the only HTTP method which is not supported. WCF relay is started as part of the application start and is closed only when application exits. All received requests are forwarded to Tunnel Relay Core engine for processing and response is sent back to caller.
+Main functionality of this component is to run a [ServiceHost](https://msdn.microsoft.com/en-us/library/bb332338.aspx) which is built to accept request with any URL pattern and HTTP method. HTTP Trace method is not supported at this point. 
+
+WCF relay is started as part of the application start and is closed only when application exits. Received request is forwarded to Tunnel Relay Core engine for processing and response is sent back to caller.
 
 ### Tunnel Relay Core engine
 Tunnel relay core engine is the request processor component of Tunnel Relay. It processes requests received from WCF relay and calls other components where needed to perform required operations before sending response back to WCF relay.
