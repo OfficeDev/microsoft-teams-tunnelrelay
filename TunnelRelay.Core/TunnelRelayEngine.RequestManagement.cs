@@ -45,7 +45,7 @@ namespace TunnelRelay.Core
         /// <summary>
         /// The HTTP client.
         /// </summary>
-        private static HttpClient httpClient = new HttpClient();
+        private static HttpClient httpClient = new HttpClient(new HttpClientHandler() { UseCookies = false });
 
         /// <summary>
         /// Request event handler.

@@ -50,7 +50,7 @@ namespace TunnelRelay.Core
                 Logger.LogInfo(CallInfo.Site(), "Appsettings don't exist. Creating new one.");
                 Instance = new ApplicationData
                 {
-                    RedirectionUrl = "https://localhost/",
+                    RedirectionUrl = "http://localhost:3979/",
                 };
             }
         }
