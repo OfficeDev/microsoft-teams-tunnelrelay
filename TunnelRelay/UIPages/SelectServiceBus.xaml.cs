@@ -83,6 +83,10 @@ namespace TunnelRelay
             this.authResult = authResult;
             this.comboSubscriptionList.ItemsSource = this.subscriptions;
             this.comboServiceBusList.ItemsSource = this.serviceBuses;
+
+            // Disable controls to begin with.
+            this.comboSubscriptionList.IsEnabled = false;
+            this.comboServiceBusList.IsEnabled = false;
         }
 
         /// <summary>
@@ -116,6 +120,7 @@ namespace TunnelRelay
                     {
                         this.subscriptions.Clear();
                         subscriptionList.ForEach(sub => this.subscriptions.Add(sub));
+                        this.comboSubscriptionList.IsEnabled = true;
                         this.progressBar.Visibility = Visibility.Hidden;
                     });
                 }
@@ -167,6 +172,7 @@ namespace TunnelRelay
                         this.serviceBuses.Clear();
                         this.serviceBuses.Add(newServiceBus);
                         serviceBusList.ForEach(sub => this.serviceBuses.Add(sub));
+                        this.comboServiceBusList.IsEnabled = true;
                         this.progressBar.Visibility = Visibility.Hidden;
                     });
                 }

@@ -26,11 +26,14 @@ namespace TunnelRelay.Core
 {
     using System;
     using System.Collections.Generic;
+    using System.IO;
     using System.Linq;
     using System.Net;
     using System.Net.Http;
     using System.Net.Http.Headers;
     using System.ServiceModel.Web;
+    using System.Text;
+    using System.Threading.Tasks;
 
     /// <summary>
     /// Helper routines.
@@ -90,12 +93,12 @@ namespace TunnelRelay.Core
         /// Copies the valid headers.
         /// </summary>
         /// <param name="request">The request.</param>
-        /// <param name="incomingRequest">The incoming request.</param>
-        public static void CopyRequestHeaders(this HttpRequestMessage request, IncomingWebRequestContext incomingRequest)
+        /// <param name="headerMap">The incoming request header map.</param>
+        public static void CopyRequestHeaders(this HttpRequestMessage request, Dictionary<string, string> headerMap)
         {
-            foreach (string header in incomingRequest.Headers.AllKeys)
+            foreach (var header in headerMap)
             {
-                request.Headers.TryAddWithoutValidation(header, incomingRequest.Headers[header]);
+                request.Headers.TryAddWithoutValidation(header.Key, header.Value);
             }
         }
 
@@ -135,6 +138,27 @@ namespace TunnelRelay.Core
                 headerMap.ContainsKey("Last-Modified") ?
                     DateTimeOffset.Parse(headerMap["Last-Modified"]) :
                     httpRequest.Content.Headers.LastModified;
+        }
+
+        /// <summary>
+        /// Reads the stream to end asynchronously. Position of the stream will be at the end.
+        /// </summary>
+        /// <param name="stream">The stream.</param>
+        /// <returns>String contents.</returns>
+        public static async Task<string> ReadToEndAsync(this Stream stream)
+        {
+            if (stream.CanSeek)
+            {
+                stream.Seek(0, SeekOrigin.Begin);
+            }
+
+            // 1 KB minimum buffer. Why? http://referencesource.microsoft.com/#mscorlib/system/io/streamreader.cs,5ec557d618369c7b
+            StreamReader streamReader = new StreamReader(stream, Encoding.Default, true, 1 * 1024, true);
+
+            string contents = await streamReader.ReadToEndAsync();
+            streamReader.Close();
+
+            return contents;
         }
     }
 }

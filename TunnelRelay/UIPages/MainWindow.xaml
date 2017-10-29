@@ -60,6 +60,8 @@
             <TextBox Name="txtRedirectionUrl" Grid.Column="0" Grid.Row="2" TextChanged="TxtRedirectionUrl_TextChanged" FontWeight="SemiBold" TextAlignment="Left" Width="400" HorizontalAlignment="Left" VerticalContentAlignment="Center"/>
         </Grid>
 
+        <Button Grid.Row="5" Grid.Column="2" Name="btnExportSettings" Content="Export Settings" Height="30" Width="150" HorizontalAlignment="Right" Click="BtnExportSettings_Click" />
+
         <!-- Left Hand Side -->
         <Grid Grid.Row="5" Grid.RowSpan="2" Grid.Column="1" Name="leftSideGrid">
             <Grid.RowDefinitions>
@@ -113,7 +115,7 @@
                         </GridViewColumn>
                     </GridView>
                 </ListView.View>
-                <ListBox.ItemsPanel>
+                <!--<ListBox.ItemsPanel>
                     <ItemsPanelTemplate>
                         <VirtualizingStackPanel VerticalAlignment="Top"  Orientation="Vertical">
                             <VirtualizingStackPanel.LayoutTransform>
@@ -130,7 +132,7 @@
                             </Setter.Value>
                         </Setter>
                     </Style>
-                </ListBox.ItemContainerStyle>
+                </ListBox.ItemContainerStyle>-->
             </ListView>
         </Grid>
 

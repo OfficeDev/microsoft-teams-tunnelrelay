@@ -50,7 +50,7 @@
     <Compile Include="..\SharedAssemblyInfo.cs">
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
-    <Compile Include="IRedirectionPlugin.cs" />
+    <Compile Include="ITunnelRelayPlugin.cs" />
     <Compile Include="PluginSetting.cs" />
     <Compile Include="Plugins\HeaderAdditionPlugin.cs" />
     <Compile Include="Plugins\HeaderRemovalPlugin.cs" />

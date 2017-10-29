@@ -63,6 +63,5 @@ namespace System.Windows.Workarounds
                 instance.SetValue(AutoScrollHandlerProperty, new AutoScrollHandler(instance));
             }
         }
-
     }
 }

@@ -36,6 +36,12 @@ namespace TunnelRelay.Core
     public class ApplicationData
     {
         /// <summary>
+        /// Gets or sets the service bus shared key encrypted.
+        /// </summary>
+        [JsonProperty(PropertyName = "ServiceBusSharedKey")]
+        private byte[] serviceBusSharedKeyBytes;
+
+        /// <summary>
         /// Initializes static members of the <see cref="ApplicationData"/> class.
         /// </summary>
         static ApplicationData()
@@ -103,8 +109,19 @@ namespace TunnelRelay.Core
         /// <summary>
         /// Sets the service bus shared key.
         /// </summary>
-        [JsonProperty(PropertyName = "ServiceBusSharedKey")]
-        public string ServiceBusSharedKey { internal get; set; }
+        [JsonIgnore]
+        public string ServiceBusSharedKey
+        {
+            internal get
+            {
+                return Convert.ToBase64String(DataProtection.Unprotect(this.serviceBusSharedKeyBytes));
+            }
+
+            set
+            {
+                this.serviceBusSharedKeyBytes = DataProtection.Protect(Convert.FromBase64String(value));
+            }
+        }
 
         /// <summary>
         /// Gets or sets the list of enabled plugins.
@@ -121,10 +138,39 @@ namespace TunnelRelay.Core
         /// <summary>
         /// Logouts this instance.
         /// </summary>
-        public void Logout()
+        public static void Logout()
         {
             Logger.LogInfo(CallInfo.Site(), "Logging out");
             Instance = new ApplicationData();
+        }
+
+        /// <summary>
+        /// Gets the exported settings.
+        /// </summary>
+        /// <returns>Settings which can be moved in between machines.</returns>
+        public static string GetExportedSettings()
+        {
+            // Clone the current object into a new one.
+            ApplicationData applicationData = JObject.FromObject(ApplicationData.Instance).ToObject<ApplicationData>();
+
+            // Unprotect the data before exporting.
+            applicationData.serviceBusSharedKeyBytes = DataProtection.Unprotect(applicationData.serviceBusSharedKeyBytes);
+
+            return JsonConvert.SerializeObject(applicationData);
+        }
+
+        /// <summary>
+        /// Imports the settings.
+        /// </summary>
+        /// <param name="serializedSettings">The serialized settings.</param>
+        public static void ImportSettings(string serializedSettings)
+        {
+            ApplicationData applicationData = JsonConvert.DeserializeObject<ApplicationData>(serializedSettings);
+
+            // Encrypt the data with DPAPI.
+            applicationData.serviceBusSharedKeyBytes = DataProtection.Protect(applicationData.serviceBusSharedKeyBytes);
+
+            ApplicationData.Instance = applicationData;
         }
     }
 }

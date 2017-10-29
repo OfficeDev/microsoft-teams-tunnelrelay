@@ -13,9 +13,9 @@
             <RowDefinition Height="40"/>
             <RowDefinition Height="30"/>
             <RowDefinition Height="30"/>
-            <RowDefinition Height="30"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="30"/>
+            <RowDefinition Height="15"/>
             <RowDefinition Height="30"/>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
@@ -43,6 +43,26 @@
                 </Hyperlink>.
         </TextBlock>
 
-        <Button HorizontalAlignment="Right" Content="Login To Azure" Grid.Row="7" Margin="0,0,10,0" Grid.Column="1" Click="LoginToAzure_Click"/>
+        <Button HorizontalAlignment="Right" Content="Login To Azure" Grid.Row="6" Margin="0,0,10,0" Grid.Column="1" Click="LoginToAzure_Click"/>
+
+        <Button HorizontalAlignment="Right" Content="or Import Settings" Grid.Row="7" Margin="0,5,10,0" FontSize="8" Grid.Column="1" Click="BtnImportSettings_Click">
+            <Button.Template>
+                <ControlTemplate TargetType="Button">
+                    <TextBlock TextDecorations="Underline">
+                <ContentPresenter />
+                    </TextBlock>
+                </ControlTemplate>
+            </Button.Template>
+            <Button.Style>
+                <Style TargetType="Button">
+                    <Setter Property="Foreground" Value="Blue" />
+                    <Style.Triggers>
+                        <Trigger Property="IsMouseOver" Value="true">
+                            <Setter Property="Foreground" Value="Red" />
+                        </Trigger>
+                    </Style.Triggers>
+                </Style>
+            </Button.Style>
+        </Button>
     </Grid>
 </Window>
