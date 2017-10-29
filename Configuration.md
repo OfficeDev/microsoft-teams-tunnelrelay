@@ -11,6 +11,8 @@ Along with Service bus shared access key. We store the redirection url. Redirect
 
 Plugin data is also stored as a part of configuration along with the list of enabled plugins. This ensures that users don't have to enable or configure plugins every time they start the application. You can read about plugins more [here](PluginManagement.md).
 
+**Note:** Stored shared access key for the service bus is encrypted using [DPAPI](https://msdn.microsoft.com/en-us/library/ms995355.aspx) thus any one with access to the machine can decrypt it.
+
 ### How do I change selected service bus?
 Signing out of Tunnel Relay will remove the service bus information. You can restart the application to login again and select a service bus.
 

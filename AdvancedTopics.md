@@ -12,3 +12,5 @@ Default configuration for Tunnel Relay requires everyone has access to the servi
 6. Start Tunnel Relay and Startup Screen will appear. Click on __Import Settings__ option at the bottom of the page as shown below.
 ![Import Settings](ImportSettings.png)
 7. Tunnel Relay will establish connection to the Service Bus.
+
+**NOTE:** Exported settings have Service bus shared access key in plain text so make sure to discard the file once you are done using it.
