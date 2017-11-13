@@ -23,32 +23,6 @@
     <Compile Include="Product.wxs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\TunnelRelay.Core\TunnelRelay.Core.csproj">
-      <Name>TunnelRelay.Core</Name>
-      <Project>{165bb633-ee2d-473c-9d5c-be92e02fc5ca}</Project>
-      <Private>True</Private>
-      <DoNotHarvest>True</DoNotHarvest>
-      <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
-      <RefTargetDir>INSTALLFOLDER</RefTargetDir>
-    </ProjectReference>
-    <ProjectReference Include="..\..\TunnelRelay.Plugins\TunnelRelay.Plugins.csproj">
-      <Name>TunnelRelay.Plugins</Name>
-      <Project>{5eb32488-8c81-4e8f-acff-2c457f5f95f1}</Project>
-      <Private>True</Private>
-      <DoNotHarvest>True</DoNotHarvest>
-      <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
-      <RefTargetDir>INSTALLFOLDER</RefTargetDir>
-    </ProjectReference>
-    <ProjectReference Include="..\..\TunnelRelay\TunnelRelay.csproj">
-      <Name>TunnelRelay</Name>
-      <Project>{1d6e50c4-1f9f-4f8a-8916-d3aeaba4a8e0}</Project>
-      <Private>True</Private>
-      <DoNotHarvest>True</DoNotHarvest>
-      <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
-      <RefTargetDir>INSTALLFOLDER</RefTargetDir>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <WixExtension Include="WixUtilExtension">
       <HintPath>$(WixExtDir)\WixUtilExtension.dll</HintPath>
       <Name>WixUtilExtension</Name>
@@ -61,6 +35,32 @@
   <ItemGroup>
     <Content Include="License.rtf" />
     <Content Include="TRBannerTop.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\TunnelRelay.Core\TunnelRelay.Core.csproj">
+      <Name>TunnelRelay.Core</Name>
+      <Project>{165bb633-ee2d-473c-9d5c-be92e02fc5ca}</Project>
+      <Private>True</Private>
+      <DoNotHarvest>True</DoNotHarvest>
+      <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
+      <RefTargetDir>INSTALLFOLDER</RefTargetDir>
+    </ProjectReference>
+    <ProjectReference Include="..\TunnelRelay.Plugins\TunnelRelay.Plugins.csproj">
+      <Name>TunnelRelay.Plugins</Name>
+      <Project>{5eb32488-8c81-4e8f-acff-2c457f5f95f1}</Project>
+      <Private>True</Private>
+      <DoNotHarvest>True</DoNotHarvest>
+      <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
+      <RefTargetDir>INSTALLFOLDER</RefTargetDir>
+    </ProjectReference>
+    <ProjectReference Include="..\TunnelRelay\TunnelRelay.csproj">
+      <Name>TunnelRelay</Name>
+      <Project>{1d6e50c4-1f9f-4f8a-8916-d3aeaba4a8e0}</Project>
+      <Private>True</Private>
+      <DoNotHarvest>True</DoNotHarvest>
+      <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
+      <RefTargetDir>INSTALLFOLDER</RefTargetDir>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(WixTargetsPath)" Condition=" '$(WixTargetsPath)' != '' " />
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\WiX\v3.x\Wix.targets" Condition=" '$(WixTargetsPath)' == '' AND Exists('$(MSBuildExtensionsPath32)\Microsoft\WiX\v3.x\Wix.targets') " />

@@ -36,6 +36,7 @@ namespace TunnelRelay
     using Microsoft.Azure.Management.ServiceBus.Fluent.Models;
     using Microsoft.IdentityModel.Clients.ActiveDirectory;
     using Microsoft.Rest;
+    using Microsoft.Rest.Azure;
     using TunnelRelay.Core;
     using RM = Microsoft.Azure.Management.ResourceManager.Fluent;
 
@@ -324,6 +325,23 @@ namespace TunnelRelay
                     if (string.IsNullOrEmpty(newBusName))
                     {
                         MessageBox.Show("Please enter the name for service bus.");
+                        this.Dispatcher.Invoke(() =>
+                        {
+                            this.progressBar.Visibility = Visibility.Hidden;
+                            this.btnDone.IsEnabled = true;
+                        });
+                        return;
+                    }
+
+                    if (newBusName.Length < 6)
+                    {
+                        MessageBox.Show("Name of service bus must be at least 6 characters.");
+                        this.Dispatcher.Invoke(() =>
+                        {
+                            this.progressBar.Visibility = Visibility.Hidden;
+                            this.btnDone.IsEnabled = true;
+                        });
+                        return;
                     }
 
                     selectedServiceBus = serviceBusManagementClient.Namespaces.CreateOrUpdate(rgName, newBusName, new NamespaceModelInner
@@ -368,11 +386,27 @@ namespace TunnelRelay
                         });
                     }
                 }
+                catch (CloudException cloudEx)
+                {
+                    Logger.LogError(CallInfo.Site(), cloudEx, "Cloud exception while creating service bus namespace.");
+
+                    this.Dispatcher.Invoke(() =>
+                    {
+                        MessageBox.Show(cloudEx.Message, "Azure Error", MessageBoxButton.OKCancel, MessageBoxImage.Error);
+                        this.progressBar.Visibility = Visibility.Hidden;
+                        this.btnDone.IsEnabled = true;
+                    });
+                }
                 catch (Exception ex)
                 {
                     Logger.LogError(CallInfo.Site(), ex, "Failed to create new service bus namespace");
 
-                    this.Dispatcher.Invoke(() => MessageBox.Show("Failed to create new service bus namespace!!", "Azure Error", MessageBoxButton.OKCancel, MessageBoxImage.Error));
+                    this.Dispatcher.Invoke(() =>
+                    {
+                        MessageBox.Show("Failed to create new service bus namespace!!", "Azure Error", MessageBoxButton.OKCancel, MessageBoxImage.Error);
+                        this.progressBar.Visibility = Visibility.Hidden;
+                        this.btnDone.IsEnabled = true;
+                    });
                 }
             }));
 
