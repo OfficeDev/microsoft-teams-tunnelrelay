@@ -46,6 +46,7 @@
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.Security" />
     <Reference Include="System.ServiceModel" />
     <Reference Include="System.ServiceModel.Web" />
     <Reference Include="System.Xml.Linq" />
@@ -60,7 +61,9 @@
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="ApplicationData.cs" />
+    <Compile Include="DataProtection.cs" />
     <Compile Include="Logger.cs" />
+    <Compile Include="RequestContext.cs" />
     <Compile Include="TunnelRelayEngine.RelayManagement.cs" />
     <Compile Include="TunnelRelayEngine.RequestManagement.cs" />
     <Compile Include="CallInfo.cs" />

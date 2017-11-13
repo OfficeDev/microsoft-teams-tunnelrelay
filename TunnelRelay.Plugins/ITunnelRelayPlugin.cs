@@ -1,4 +1,4 @@
-﻿// <copyright file="IRedirectionPlugin.cs" company="Microsoft">
+﻿// <copyright file="ITunnelRelayPlugin.cs" company="Microsoft">
 // Copyright (c) Microsoft. All rights reserved.
 // </copyright>
 // Licensed under the MIT license.
@@ -31,7 +31,7 @@ namespace TunnelRelay.PluginEngine
     /// <summary>
     /// Interface for developing plugins.
     /// </summary>
-    public interface IRedirectionPlugin
+    public interface ITunnelRelayPlugin
     {
         /// <summary>
         /// Gets the name of the plugin.

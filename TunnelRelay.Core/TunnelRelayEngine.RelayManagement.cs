@@ -50,13 +50,76 @@ namespace TunnelRelay.Core
     public partial class TunnelRelayEngine
     {
         /// <summary>
-        /// Initializes static members of the <see cref="TunnelRelayEngine"/> class.
+        /// The plugin instances.
         /// </summary>
-        static TunnelRelayEngine()
+        private static List<ITunnelRelayPlugin> pluginInstances = new List<ITunnelRelayPlugin>();
+
+        /// <summary>
+        /// Gets the plugins.
+        /// </summary>
+        public static ObservableCollection<PluginDetails> Plugins { get; internal set; }
+
+        /// <summary>
+        /// Gets or sets the service host.
+        /// </summary>
+        internal static WebServiceHost ServiceHost { get; set; }
+
+        /// <summary>
+        /// Stops the azure relay engine.
+        /// </summary>
+        public static void StopTunnelRelayEngine()
         {
-            ////Requests = new AwareObservableCollection<RequestDetails>();
+            Logger.LogInfo(CallInfo.Site(), "Shutting down tunnel relay engine");
+
+            if (TunnelRelayEngine.ServiceHost != null)
+            {
+                // Serialize settings back to json.
+                File.WriteAllText("appSettings.json", JsonConvert.SerializeObject(ApplicationData.Instance, Formatting.Indented));
+
+                // Shutdown the Relay.
+                TunnelRelayEngine.ServiceHost.Close();
+            }
+        }
+
+        /// <summary>
+        /// Starts the azure relay engine.
+        /// </summary>
+        public static void StartTunnelRelayEngine()
+        {
+            try
+            {
+                TunnelRelayEngine.InitializePlugins();
+                ServiceHost = new WebServiceHost(typeof(WCFContract));
+                ServiceHost.AddServiceEndpoint(
+                    typeof(WCFContract),
+                    new WebHttpRelayBinding(
+                        EndToEndWebHttpSecurityMode.Transport,
+                        RelayClientAuthenticationType.None),
+                    ApplicationData.Instance.ProxyBaseUrl)
+                .EndpointBehaviors.Add(
+                    new TransportClientEndpointBehavior(
+                        TokenProvider.CreateSharedAccessSignatureTokenProvider(
+                            ApplicationData.Instance.ServiceBusKeyName,
+                            ApplicationData.Instance.ServiceBusSharedKey)));
+
+                ServiceHost.Open();
+
+                // Ignore all HTTPs cert errors. We wanna do this after the call to Azure is made so that if Azure call presents wrong cert we bail out.
+                ServicePointManager.ServerCertificateValidationCallback = new RemoteCertificateValidationCallback((sender, cert, chain, errs) => true);
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(CallInfo.Site(), ex, "Failed to start Service host");
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Initializes the plugins.
+        /// </summary>
+        private static void InitializePlugins()
+        {
             Plugins = new ObservableCollection<PluginDetails>();
-            var pluginInstances = new List<IRedirectionPlugin>();
             pluginInstances.Add(new HeaderAdditionPlugin());
             pluginInstances.Add(new HeaderRemovalPlugin());
             string pluginDirectory = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Plugins");
@@ -68,10 +131,10 @@ namespace TunnelRelay.Core
                     try
                     {
                         Assembly assembly = Assembly.LoadFrom(dll);
-                        foreach (Type pluginType in assembly.GetExportedTypes().Where(type => type.GetInterfaces().Contains(typeof(IRedirectionPlugin))))
+                        foreach (Type pluginType in assembly.GetExportedTypes().Where(type => type.GetInterfaces().Contains(typeof(ITunnelRelayPlugin))))
                         {
                             Logger.LogInfo(CallInfo.Site(), "Loading plugin '{0}'", pluginType.FullName);
-                            pluginInstances.Add(Activator.CreateInstance(pluginType) as IRedirectionPlugin);
+                            pluginInstances.Add(Activator.CreateInstance(pluginType) as ITunnelRelayPlugin);
                         }
                     }
                     catch (Exception ex)
@@ -131,65 +194,6 @@ namespace TunnelRelay.Core
 
                 Plugins.Add(pluginDetails);
             });
-        }
-
-        /// <summary>
-        /// Gets the plugins.
-        /// </summary>
-        public static ObservableCollection<PluginDetails> Plugins { get; internal set; }
-
-        /// <summary>
-        /// Gets or sets the service host.
-        /// </summary>
-        internal static WebServiceHost ServiceHost { get; set; }
-
-        /// <summary>
-        /// Stops the azure relay engine.
-        /// </summary>
-        public static void StopTunnelRelayEngine()
-        {
-            Logger.LogInfo(CallInfo.Site(), "Shutting down tunnel relay engine");
-
-            if (TunnelRelayEngine.ServiceHost != null)
-            {
-                // Serialize settings back to json.
-                File.WriteAllText("appSettings.json", JsonConvert.SerializeObject(ApplicationData.Instance, Formatting.Indented));
-
-                // Shutdown the Relay.
-                TunnelRelayEngine.ServiceHost.Close();
-            }
-        }
-
-        /// <summary>
-        /// Starts the azure relay engine.
-        /// </summary>
-        public static void StartTunnelRelayEngine()
-        {
-            try
-            {
-                ServiceHost = new WebServiceHost(typeof(WCFContract));
-                ServiceHost.AddServiceEndpoint(
-                    typeof(WCFContract),
-                    new WebHttpRelayBinding(
-                        EndToEndWebHttpSecurityMode.Transport,
-                        RelayClientAuthenticationType.None),
-                    ApplicationData.Instance.ProxyBaseUrl)
-                .EndpointBehaviors.Add(
-                    new TransportClientEndpointBehavior(
-                        TokenProvider.CreateSharedAccessSignatureTokenProvider(
-                            ApplicationData.Instance.ServiceBusKeyName,
-                            ApplicationData.Instance.ServiceBusSharedKey)));
-
-                ServiceHost.Open();
-
-                // Ignore all HTTPs cert errors. We wanna do this after the call to Azure is made so that if Azure call presents wrong cert we bail out.
-                ServicePointManager.ServerCertificateValidationCallback = new RemoteCertificateValidationCallback((sender, cert, chain, errs) => true);
-            }
-            catch (Exception ex)
-            {
-                Logger.LogError(CallInfo.Site(), ex, "Failed to start Service host");
-                throw;
-            }
         }
     }
 }

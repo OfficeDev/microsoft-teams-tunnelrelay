@@ -36,8 +36,8 @@ namespace TunnelRelay.Plugins
     /// <summary>
     /// Plugin to add or replace headers.
     /// </summary>
-    /// <seealso cref="TunnelRelay.PluginEngine.IRedirectionPlugin" />
-    public class HeaderAdditionPlugin : IRedirectionPlugin
+    /// <seealso cref="TunnelRelay.PluginEngine.ITunnelRelayPlugin" />
+    public class HeaderAdditionPlugin : ITunnelRelayPlugin
     {
         /// <summary>
         /// The headers to remove.

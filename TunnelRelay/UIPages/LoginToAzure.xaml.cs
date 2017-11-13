@@ -26,6 +26,7 @@ namespace TunnelRelay
 {
     using System;
     using System.Collections.Generic;
+    using System.IO;
     using System.Linq;
     using System.Text;
     using System.Threading;
@@ -42,6 +43,7 @@ namespace TunnelRelay
     using Microsoft.Azure.Management.ResourceManager.Fluent;
     using Microsoft.IdentityModel.Clients.ActiveDirectory;
     using Microsoft.Rest;
+    using Microsoft.Win32;
     using TunnelRelay.Core;
 
     /// <summary>
@@ -99,6 +101,31 @@ namespace TunnelRelay
             {
                 Logger.LogError(CallInfo.Site(), ex, "Failed to Login into Azure");
                 MessageBox.Show("Failed to log you in!!", "Login failure", MessageBoxButton.OKCancel, MessageBoxImage.Error);
+            }
+        }
+
+        /// <summary>
+        /// Handles the Click event of the BtnImportSettings control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="RoutedEventArgs"/> instance containing the event data.</param>
+        private void BtnImportSettings_Click(object sender, RoutedEventArgs e)
+        {
+            OpenFileDialog openFileDialog = new OpenFileDialog
+            {
+                CheckFileExists = true,
+                DefaultExt = ".trs",
+                Filter = "Tunnel Relay Settings Files(*.trs)|*.trs",
+            };
+
+            bool? dialogResult = openFileDialog.ShowDialog();
+
+            if (dialogResult == true)
+            {
+                ApplicationData.ImportSettings(File.ReadAllText(openFileDialog.FileName));
+
+                new MainWindow().Show();
+                this.Close();
             }
         }
     }

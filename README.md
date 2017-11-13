@@ -42,12 +42,13 @@ Q. I want to extend Tunnel Relay. How can I do so? </br>
 A. Tunnel Relay is released under [MIT License](https://opensource.org/licenses/MIT). Please look at the contributing section below if you want to contribute to this project.
 
 ## Understand how Tunnel Relay works
-Please refer to following options to learn more about Tunnel Relay and its internal workings
+Please refer to following articles to learn more about Tunnel Relay and its internal workings
 
 1. [Configuration](Configuration.md)
 2. [Request Handling](RequestHandling.md) 
 3. [Internal Design](InternalDesign.md)
 4. [Extending Tunnel Relay - Plugins](PluginManagement.md)
+5. [Advanced Functionality](AdvancedTopics.md)
 
 ## Issues, problems, feedback, questions?
 Please report them [here](https://github.com/OfficeDev/microsoft-teams-tunnelrelay/issues)

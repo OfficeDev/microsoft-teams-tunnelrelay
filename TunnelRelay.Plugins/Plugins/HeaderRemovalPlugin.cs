@@ -36,8 +36,8 @@ namespace TunnelRelay.Plugins
     /// <summary>
     /// Removed unrequired headers.
     /// </summary>
-    /// <seealso cref="TunnelRelay.PluginEngine.IRedirectionPlugin" />
-    public class HeaderRemovalPlugin : IRedirectionPlugin
+    /// <seealso cref="TunnelRelay.PluginEngine.ITunnelRelayPlugin" />
+    public class HeaderRemovalPlugin : ITunnelRelayPlugin
     {
         /// <summary>
         /// The headers to remove.

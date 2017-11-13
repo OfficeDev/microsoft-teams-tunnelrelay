@@ -84,7 +84,7 @@ namespace TunnelRelay.Core
         /// <summary>
         /// Gets the plugin instance.
         /// </summary>
-        public IRedirectionPlugin PluginInstance { get; internal set; }
+        public ITunnelRelayPlugin PluginInstance { get; internal set; }
 
         /// <summary>
         /// Gets the plugin settings.

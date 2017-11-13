@@ -72,18 +72,29 @@ namespace TunnelRelay.Core
         /// <returns>Response from underlying service.</returns>
         internal static async Task<Message> GetResponse(WebOperationContext operationContext, Stream stream = null)
         {
-            Stopwatch stopWatch = Stopwatch.StartNew();
-            var incomingReq = operationContext.IncomingRequest;
-            Dictionary<string, string> headerMap = incomingReq.Headers.GetHeadersMap();
+            // Buffer the request contents into memory.
+            MemoryStream memoryStream = null;
 
-            var requestDetails = new RequestDetails()
+            if (stream != null)
             {
-                Method = incomingReq.Method,
-                Url = incomingReq.UriTemplateMatch.RequestUri.PathAndQuery.Replace(incomingReq.UriTemplateMatch.RequestUri.Segments[1], string.Empty),
-                RequestHeaders = new List<HeaderDetails>(headerMap.GetUIHeaderMap()),
+                memoryStream = new MemoryStream();
+                await stream.CopyToAsync(memoryStream);
+            }
+
+            var activeRequestContext = new RequestContext
+            {
+                IncomingRequestStream = memoryStream,
+                IncomingWebRequest = operationContext.IncomingRequest,
+            };
+
+            activeRequestContext.UIRequestDescription = new RequestDetails
+            {
+                Method = activeRequestContext.IncomingWebRequest.Method,
+                Url = activeRequestContext.IncomingWebRequest.UriTemplateMatch.RequestUri.PathAndQuery.Replace(activeRequestContext.IncomingWebRequest.UriTemplateMatch.RequestUri.Segments[1], string.Empty),
+                RequestHeaders = new List<HeaderDetails>(activeRequestContext.IncomingRequestHeaders.GetUIHeaderMap()),
                 Timestamp = DateTime.Now.ToString("O"),
                 RequestReceiveTime = DateTime.Now,
-                RequestData = string.Empty,
+                RequestData = activeRequestContext.IncomingRequestStream != null ? await activeRequestContext.IncomingRequestStream.ReadToEndAsync() : string.Empty,
                 ResponseData = string.Empty,
                 ResponseHeaders = new List<HeaderDetails>(),
                 StatusCode = "Active",
@@ -92,135 +103,48 @@ namespace TunnelRelay.Core
 
             try
             {
+                // Fire event for request received.
                 TunnelRelayEngine.RequestReceived?.Invoke(ApplicationData.Instance.ProxyBaseUrl, new RequestEventArgs
                 {
-                    Request = requestDetails,
+                    Request = activeRequestContext.UIRequestDescription,
                 });
 
-                // Url Creation
-                // Url comes as https://servicebusnamespace.servicebus.windows.net/MachineName/ActualPath
-                // incomingReq.UriTemplateMatch.RequestUri.PathAndQuery gives us MachineName/ActualPath
-                // incomingReq.UriTemplateMatch.RequestUri.Segment[0] is / and Segment[1] is MachineName+/ we replace segment[1] with empty string.
-                // add the local redirection e.g. https://localhost to it. Thus making https://localhost/ActualPath
-                string newUrl = ApplicationData.Instance.RedirectionUrl.TrimEnd('/') + incomingReq.UriTemplateMatch.RequestUri.PathAndQuery.Replace(incomingReq.UriTemplateMatch.RequestUri.Segments[1], string.Empty);
+                // Get new Request.
+                HttpRequestMessage requestMessage = TunnelRelayEngine.GetInternalRequest(ref activeRequestContext);
 
-                HttpMethod httpMethod;
+                // Execute the request + call plugins.
+                DateTime hostedServiceRequestStartTime = DateTime.Now;
+                HttpResponseMessage response = await TunnelRelayEngine.ExecuteInternalRequestAsync(requestMessage);
+                activeRequestContext.UIRequestDescription.Duration = (DateTime.Now - hostedServiceRequestStartTime).TotalMilliseconds + "ms";
 
-                if (incomingReq.Method.Equals("POST", StringComparison.OrdinalIgnoreCase))
-                {
-                    httpMethod = HttpMethod.Post;
-                }
-                else if (incomingReq.Method.Equals("GET", StringComparison.OrdinalIgnoreCase))
-                {
-                    httpMethod = HttpMethod.Get;
-                }
-                else if (incomingReq.Method.Equals("OPTIONS", StringComparison.OrdinalIgnoreCase))
-                {
-                    httpMethod = HttpMethod.Options;
-                }
-                else if (incomingReq.Method.Equals("PUT", StringComparison.OrdinalIgnoreCase))
-                {
-                    httpMethod = HttpMethod.Put;
-                }
-                else if (incomingReq.Method.Equals("DELETE", StringComparison.OrdinalIgnoreCase))
-                {
-                    httpMethod = HttpMethod.Delete;
-                }
-                else
-                {
-                    throw new NotSupportedException("TunnelRelay does not support this HTTP method at this time.");
-                }
-
-                HttpRequestMessage requestMessage = new HttpRequestMessage(httpMethod, newUrl);
-                requestMessage.CopyRequestHeaders(incomingReq);
-                requestMessage.Headers.Host = new Uri(newUrl).Authority;
-
-                if (stream != null)
-                {
-                    StreamReader stringReader = new StreamReader(stream);
-                    string data = stringReader.ReadToEnd();
-                    requestDetails.RequestData = data;
-                    stringReader.Close();
-
-                    requestMessage.Content = new StringContent(data);
-                    requestMessage.CopyContentHeaders(headerMap);
-                }
-
-                TunnelRelayEngine.RequestUpdated?.Invoke(ApplicationData.Instance.ProxyBaseUrl, new RequestEventArgs
-                {
-                    Request = requestDetails,
-                });
-
-                foreach (PluginDetails plugin in Plugins)
-                {
-                    if (plugin.IsEnabled)
-                    {
-                        requestMessage = await plugin.PluginInstance.PreProcessRequestToServiceAsync(requestMessage);
-                    }
-                }
-
-                HttpResponseMessage response = await httpClient.SendAsync(requestMessage, HttpCompletionOption.ResponseContentRead);
-
-                foreach (PluginDetails plugin in Plugins)
-                {
-                    if (plugin.IsEnabled)
-                    {
-                        response = await plugin.PluginInstance.PostProcessResponseFromServiceAsync(response);
-                    }
-                }
-
+                // Copy data from response and populate UI elements.
                 Stream readableStream = null;
                 if (response.Content != null)
                 {
                     readableStream = await response.Content.ReadAsStreamAsync();
-                    requestDetails.ResponseData = await new StreamReader(readableStream).ReadToEndAsync();
+                    activeRequestContext.UIRequestDescription.ResponseData = await new StreamReader(readableStream).ReadToEndAsync();
                     readableStream.Seek(0, SeekOrigin.Begin);
                 }
                 else
                 {
-                    requestDetails.ResponseData = string.Empty;
+                    activeRequestContext.UIRequestDescription.ResponseData = string.Empty;
                 }
 
-                response.Headers.GetUIHeaderMap().ForEach(header => requestDetails.ResponseHeaders.Add(header));
+                response.Headers.GetUIHeaderMap().ForEach(header => activeRequestContext.UIRequestDescription.ResponseHeaders.Add(header));
 
-                requestDetails.StatusCode = response.StatusCode.ToString();
-                stopWatch.Start();
-                requestDetails.Duration = stopWatch.ElapsedMilliseconds.ToString() + "ms";
+                activeRequestContext.UIRequestDescription.StatusCode = response.StatusCode.ToString();
 
-                Message responseMessage;
-
-                if (response.Content == null)
-                {
-                    responseMessage = operationContext.CreateTextResponse(string.Empty);
-                }
-                else
-                {
-                    responseMessage = response.Content.Headers.ContentType == null ?
-                        operationContext.CreateStreamResponse(readableStream, "text/plain; charset=us-ascii") :
-                        operationContext.CreateStreamResponse(readableStream, response.Content.Headers.ContentType.ToString());
-                }
-
-                operationContext.OutgoingResponse.StatusCode = response.StatusCode;
-                foreach (var header in response.Headers)
-                {
-                    header.Value.ToList().ForEach(headerVal =>
-                        operationContext.OutgoingResponse.Headers.Add(header.Key, headerVal));
-                }
-
-                foreach (var header in response.Content.Headers)
-                {
-                    header.Value.ToList().ForEach(headerVal =>
-                        operationContext.OutgoingResponse.Headers.Add(header.Key, headerVal));
-                }
+                // Get the Serializable response to be sent back over the wire. This response needs to be serializable by WCF standards.
+                Message responseMessage = TunnelRelayEngine.GetOutgoingResponse(operationContext, response, readableStream);
 
                 return responseMessage;
             }
             catch (Exception ex)
             {
-                requestDetails.StatusCode = "Exception!!";
-                requestDetails.ExceptionHit = true;
-                requestDetails.ResponseData = JsonConvert.SerializeObject(ex, Formatting.Indented);
-                requestDetails.Duration = (DateTime.Now - requestDetails.RequestReceiveTime).TotalMilliseconds.ToString() + "ms";
+                activeRequestContext.UIRequestDescription.StatusCode = "Exception!!";
+                activeRequestContext.UIRequestDescription.ExceptionHit = true;
+                activeRequestContext.UIRequestDescription.ResponseData = JsonConvert.SerializeObject(ex, Formatting.Indented);
+                activeRequestContext.UIRequestDescription.Duration = (DateTime.Now - activeRequestContext.UIRequestDescription.RequestReceiveTime).TotalMilliseconds.ToString() + "ms";
                 Message exceptionMessage = WebOperationContext.Current.CreateTextResponse(ex.ToString());
                 WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.InternalServerError;
                 return exceptionMessage;
@@ -229,9 +153,148 @@ namespace TunnelRelay.Core
             {
                 TunnelRelayEngine.RequestUpdated?.Invoke(ApplicationData.Instance.ProxyBaseUrl, new RequestEventArgs
                 {
-                    Request = requestDetails,
+                    Request = activeRequestContext.UIRequestDescription,
                 });
             }
+        }
+
+        /// <summary>
+        /// Gets the internal request to be made to hosted service.
+        /// </summary>
+        /// <param name="requestContext">The request context.</param>
+        /// <returns>Request to be made to the hosted service.</returns>
+        /// <exception cref="NotSupportedException">HTTP Method is not supported</exception>
+        private static HttpRequestMessage GetInternalRequest(ref RequestContext requestContext)
+        {
+            // Url Creation
+            // Url comes as https://servicebusnamespace.servicebus.windows.net/MachineName/ActualPath
+            // activeRequestContext.IncomingWebRequest.UriTemplateMatch.RequestUri.PathAndQuery gives us MachineName/ActualPath
+            // activeRequestContext.IncomingWebRequest.UriTemplateMatch.RequestUri.Segment[0] is / and Segment[1] is MachineName+/ we replace segment[1] with empty string.
+            // add the local redirection e.g. https://localhost to it. Thus making https://localhost/ActualPath
+            string newUrl = ApplicationData.Instance.RedirectionUrl.TrimEnd('/') +
+                requestContext.IncomingWebRequest.UriTemplateMatch.RequestUri.PathAndQuery.Replace(requestContext.IncomingWebRequest.UriTemplateMatch.RequestUri.Segments[1], string.Empty);
+
+            HttpMethod httpMethod;
+
+            switch (requestContext.IncomingWebRequest.Method.ToUpper())
+            {
+                case "POST":
+                    {
+                        httpMethod = HttpMethod.Post;
+                        break;
+                    }
+
+                case "GET":
+                    {
+                        httpMethod = HttpMethod.Get;
+                        break;
+                    }
+
+                case "OPTIONS":
+                    {
+                        httpMethod = HttpMethod.Options;
+                        break;
+                    }
+
+                case "PUT":
+                    {
+                        httpMethod = HttpMethod.Put;
+                        break;
+                    }
+
+                case "DELETE":
+                    {
+                        httpMethod = HttpMethod.Delete;
+                        break;
+                    }
+
+                default:
+                    {
+                        throw new NotSupportedException("HTTP Method is not supported");
+                    }
+            }
+
+            HttpRequestMessage requestMessage = new HttpRequestMessage(httpMethod, newUrl);
+            requestMessage.CopyRequestHeaders(requestContext.IncomingRequestHeaders);
+
+            // Change the host header to the new Authority.
+            requestMessage.Headers.Host = new Uri(newUrl).Authority;
+
+            if (requestContext.IncomingRequestStream != null)
+            {
+                requestContext.IncomingRequestStream.Seek(0, SeekOrigin.Begin);
+
+                requestMessage.Content = new StreamContent(requestContext.IncomingRequestStream);
+                requestMessage.CopyContentHeaders(requestContext.IncomingRequestHeaders);
+            }
+
+            return requestMessage;
+        }
+
+        /// <summary>
+        /// Executes the internal request asynchronously.
+        /// </summary>
+        /// <param name="hostedServiceRequestMessage">The hosted service request message.</param>
+        /// <returns>Http response message to be sent back to caller.</returns>
+        private static async Task<HttpResponseMessage> ExecuteInternalRequestAsync(HttpRequestMessage hostedServiceRequestMessage)
+        {
+            foreach (PluginDetails plugin in Plugins)
+            {
+                if (plugin.IsEnabled)
+                {
+                    hostedServiceRequestMessage = await plugin.PluginInstance.PreProcessRequestToServiceAsync(hostedServiceRequestMessage);
+                }
+            }
+
+            HttpResponseMessage response = await httpClient.SendAsync(hostedServiceRequestMessage, HttpCompletionOption.ResponseContentRead);
+
+            foreach (PluginDetails plugin in Plugins)
+            {
+                if (plugin.IsEnabled)
+                {
+                    response = await plugin.PluginInstance.PostProcessResponseFromServiceAsync(response);
+                }
+            }
+
+            return response;
+        }
+
+        /// <summary>
+        /// Gets the outgoing response.
+        /// </summary>
+        /// <param name="operationContext">The operation context.</param>
+        /// <param name="response">The response.</param>
+        /// <param name="responseStream">The response stream.</param>
+        /// <returns>Outgoing response.</returns>
+        private static Message GetOutgoingResponse(WebOperationContext operationContext, HttpResponseMessage response, Stream responseStream)
+        {
+            Message responseMessage;
+
+            if (response.Content == null)
+            {
+                responseMessage = operationContext.CreateTextResponse(string.Empty);
+            }
+            else
+            {
+                responseMessage = response.Content.Headers.ContentType == null ?
+                    operationContext.CreateStreamResponse(responseStream, "text/plain; charset=us-ascii") :
+                    operationContext.CreateStreamResponse(responseStream, response.Content.Headers.ContentType.ToString());
+            }
+
+            operationContext.OutgoingResponse.StatusCode = response.StatusCode;
+            foreach (var header in response.Headers)
+            {
+                header.Value.ToList().ForEach(headerVal =>
+                    operationContext.OutgoingResponse.Headers.Add(header.Key, headerVal));
+            }
+
+            foreach (var header in response.Content.Headers)
+            {
+                header.Value.ToList().ForEach(headerVal =>
+                    operationContext.OutgoingResponse.Headers.Add(header.Key, headerVal));
+            }
+
+            return responseMessage;
         }
     }
 }

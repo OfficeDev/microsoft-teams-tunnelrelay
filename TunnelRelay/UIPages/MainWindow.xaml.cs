@@ -24,16 +24,18 @@
 
 namespace TunnelRelay
 {
-    using Newtonsoft.Json.Linq;
     using System;
     using System.Collections.Generic;
     using System.Collections.ObjectModel;
+    using System.IO;
     using System.Threading;
     using System.Threading.Tasks;
     using System.Windows;
     using System.Windows.Controls;
     using System.Windows.Data;
     using System.Windows.Input;
+    using Microsoft.Win32;
+    using Newtonsoft.Json.Linq;
     using TunnelRelay.Core;
 
     /// <summary>
@@ -61,6 +63,8 @@ namespace TunnelRelay
                 this.lstRequestHeaders.CommandBindings.Add(cb);
                 this.lstResponseHeaders.CommandBindings.Add(cb);
                 this.txtRedirectionUrl.Text = ApplicationData.Instance.RedirectionUrl;
+
+                this.btnExportSettings.IsEnabled = false;
                 this.StartRelayEngine();
 
                 TunnelRelayEngine.RequestReceived += this.ApplicationEngine_RequestReceived;
@@ -92,6 +96,7 @@ namespace TunnelRelay
                     }
                     catch (Exception ex)
                     {
+                        Logger.LogWarning(CallInfo.Site(), ex, "Hit exception while updating request with Id '{0}'.", e.Request.RequestId);
                     }
                 }
             });
@@ -147,6 +152,7 @@ namespace TunnelRelay
                     this.Dispatcher.Invoke(new Action(() =>
                     {
                         this.txtProxyDetails.Text = ApplicationData.Instance.ProxyBaseUrl;
+                        this.btnExportSettings.IsEnabled = true;
                     }));
                 }
                 catch (Exception)
@@ -154,6 +160,7 @@ namespace TunnelRelay
                     this.Dispatcher.Invoke(new Action(() =>
                     {
                         this.txtProxyDetails.Text = "FAILED TO START AZURE PROXY!!!!";
+                        this.btnExportSettings.IsEnabled = false;
                     }));
                 }
             }));
@@ -208,7 +215,7 @@ namespace TunnelRelay
         /// <param name="e">The <see cref="RoutedEventArgs"/> instance containing the event data.</param>
         private void BtnLogout_Click(object sender, RoutedEventArgs e)
         {
-            ApplicationData.Instance.Logout();
+            ApplicationData.Logout();
 
             MessageBox.Show("Logout Complete. Application will now close to complete cleanup. Open again to login");
             Application.Current.Shutdown();
@@ -234,6 +241,31 @@ namespace TunnelRelay
         private void CoptoClipboard_Click(object sender, RoutedEventArgs e)
         {
             Clipboard.SetText(this.txtProxyDetails.Text);
+        }
+
+        /// <summary>
+        /// Handles the Click event of the btnExportSettings control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="RoutedEventArgs"/> instance containing the event data.</param>
+        private void BtnExportSettings_Click(object sender, RoutedEventArgs e)
+        {
+            SaveFileDialog saveFileDialog = new SaveFileDialog
+            {
+                DefaultExt = ".trs",
+                Filter = "Tunnel Relay Settings Files(*.trs)|*.trs",
+                FileName = new Uri(ApplicationData.Instance.ServiceBusUrl).Authority,
+                OverwritePrompt = true,
+            };
+
+            bool? dialogResult = saveFileDialog.ShowDialog();
+
+            if (dialogResult == true)
+            {
+                string exportedSettingsFileName = saveFileDialog.FileName;
+
+                File.WriteAllText(exportedSettingsFileName, ApplicationData.GetExportedSettings());
+            }
         }
     }
 }
