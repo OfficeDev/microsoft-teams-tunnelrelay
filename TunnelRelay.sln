@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26430.16
+VisualStudioVersion = 15.0.26730.8
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TunnelRelay", "TunnelRelay\TunnelRelay.csproj", "{1D6E50C4-1F9F-4F8A-8916-D3AEABA4A8E0}"
 EndProject
@@ -9,26 +9,51 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TunnelRelay.Plugins", "Tunn
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TunnelRelay.Core", "TunnelRelay.Core\TunnelRelay.Core.csproj", "{165BB633-EE2D-473C-9D5C-BE92E02FC5CA}"
 EndProject
+Project("{930C7802-8A8C-48F9-8165-68863BCCD9DD}") = "TunnelRelayMSI", "Packager\TunnelRelayMSI.wixproj", "{EF5556A2-CA67-4117-8945-269E7EC0640C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
+		Debug|x86 = Debug|x86
 		Release|Any CPU = Release|Any CPU
+		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{1D6E50C4-1F9F-4F8A-8916-D3AEABA4A8E0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{1D6E50C4-1F9F-4F8A-8916-D3AEABA4A8E0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1D6E50C4-1F9F-4F8A-8916-D3AEABA4A8E0}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{1D6E50C4-1F9F-4F8A-8916-D3AEABA4A8E0}.Debug|x86.Build.0 = Debug|Any CPU
 		{1D6E50C4-1F9F-4F8A-8916-D3AEABA4A8E0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1D6E50C4-1F9F-4F8A-8916-D3AEABA4A8E0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1D6E50C4-1F9F-4F8A-8916-D3AEABA4A8E0}.Release|x86.ActiveCfg = Release|Any CPU
+		{1D6E50C4-1F9F-4F8A-8916-D3AEABA4A8E0}.Release|x86.Build.0 = Release|Any CPU
 		{5EB32488-8C81-4E8F-ACFF-2C457F5F95F1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{5EB32488-8C81-4E8F-ACFF-2C457F5F95F1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5EB32488-8C81-4E8F-ACFF-2C457F5F95F1}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{5EB32488-8C81-4E8F-ACFF-2C457F5F95F1}.Debug|x86.Build.0 = Debug|Any CPU
 		{5EB32488-8C81-4E8F-ACFF-2C457F5F95F1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5EB32488-8C81-4E8F-ACFF-2C457F5F95F1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5EB32488-8C81-4E8F-ACFF-2C457F5F95F1}.Release|x86.ActiveCfg = Release|Any CPU
+		{5EB32488-8C81-4E8F-ACFF-2C457F5F95F1}.Release|x86.Build.0 = Release|Any CPU
 		{165BB633-EE2D-473C-9D5C-BE92E02FC5CA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{165BB633-EE2D-473C-9D5C-BE92E02FC5CA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{165BB633-EE2D-473C-9D5C-BE92E02FC5CA}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{165BB633-EE2D-473C-9D5C-BE92E02FC5CA}.Debug|x86.Build.0 = Debug|Any CPU
 		{165BB633-EE2D-473C-9D5C-BE92E02FC5CA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{165BB633-EE2D-473C-9D5C-BE92E02FC5CA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{165BB633-EE2D-473C-9D5C-BE92E02FC5CA}.Release|x86.ActiveCfg = Release|Any CPU
+		{165BB633-EE2D-473C-9D5C-BE92E02FC5CA}.Release|x86.Build.0 = Release|Any CPU
+		{EF5556A2-CA67-4117-8945-269E7EC0640C}.Debug|Any CPU.ActiveCfg = Debug|x86
+		{EF5556A2-CA67-4117-8945-269E7EC0640C}.Debug|x86.ActiveCfg = Debug|x86
+		{EF5556A2-CA67-4117-8945-269E7EC0640C}.Debug|x86.Build.0 = Debug|x86
+		{EF5556A2-CA67-4117-8945-269E7EC0640C}.Release|Any CPU.ActiveCfg = Release|x86
+		{EF5556A2-CA67-4117-8945-269E7EC0640C}.Release|x86.ActiveCfg = Release|x86
+		{EF5556A2-CA67-4117-8945-269E7EC0640C}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {9A54A758-13AB-4B23-850F-8730A662F763}
 	EndGlobalSection
 EndGlobal
