@@ -9,6 +9,8 @@
     <OutputName>TunnelRelay</OutputName>
     <OutputType>Package</OutputType>
     <Name>TunnelRelayMSI</Name>
+    <WixInstallPath>$(MSBuildThisFileDirectory)..\Build\SDK\Wix311</WixInstallPath>
+    <WixTargetsPath>$(WixInstallPath)\wix.targets</WixTargetsPath>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
     <OutputPath>bin\$(Configuration)\</OutputPath>
@@ -24,11 +26,11 @@
   </ItemGroup>
   <ItemGroup>
     <WixExtension Include="WixUtilExtension">
-      <HintPath>$(WixExtDir)\WixUtilExtension.dll</HintPath>
+      <HintPath>$(WixInstallPath)\WixUtilExtension.dll</HintPath>
       <Name>WixUtilExtension</Name>
     </WixExtension>
     <WixExtension Include="WixUIExtension">
-      <HintPath>C:\Program Files (x86)\WiX Toolset v3.11\bin\WixUIExtension.dll</HintPath>
+      <HintPath>$(WixInstallPath)\WixUIExtension.dll</HintPath>
       <Name>WixUIExtension</Name>
     </WixExtension>
   </ItemGroup>
