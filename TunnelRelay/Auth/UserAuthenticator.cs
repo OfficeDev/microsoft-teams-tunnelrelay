@@ -93,12 +93,12 @@ namespace TunnelRelay
 
                 List<TenantIdDescription> tenantList = new List<TenantIdDescription>();
 
-                var tenantListResp = tenantClient.Tenants.List();
+                var tenantListResp = tenantClient.Tenants.ListAsync().ConfigureAwait(false).GetAwaiter().GetResult();
                 tenantList.AddRange(tenantListResp);
 
                 while (!string.IsNullOrEmpty(tenantListResp.NextPageLink))
                 {
-                    tenantListResp = tenantClient.Tenants.ListNext(tenantListResp.NextPageLink);
+                    tenantListResp = tenantClient.Tenants.ListNextAsync(tenantListResp.NextPageLink).ConfigureAwait(false).GetAwaiter().GetResult();
                     tenantList.AddRange(tenantListResp);
                 }
 
@@ -125,12 +125,12 @@ namespace TunnelRelay
                          TokenCredentials subsCreds = new TokenCredentials(this.tenantBasedTokenMap[tenant.TenantId].AccessToken);
                          SubscriptionClient subscriptionClient = new SubscriptionClient(subsCreds);
 
-                         var resp = subscriptionClient.Subscriptions.List();
+                         var resp = subscriptionClient.Subscriptions.ListAsync().ConfigureAwait(false).GetAwaiter().GetResult();
                          subscriptionList.AddRange(resp);
 
                          while (!string.IsNullOrEmpty(resp.NextPageLink))
                          {
-                             resp = subscriptionClient.Subscriptions.ListNext(resp.NextPageLink);
+                             resp = subscriptionClient.Subscriptions.ListNextAsync(resp.NextPageLink).ConfigureAwait(false).GetAwaiter().GetResult();
                              subscriptionList.AddRange(resp);
                          }
 
@@ -166,20 +166,20 @@ namespace TunnelRelay
             {
                 if (userIdentifier == null)
                 {
-                    return new AuthenticationContext(AADLoginAuthority + tenantId, false, TokenCache.DefaultShared).AcquireToken(
+                    return new AuthenticationContext(AADLoginAuthority + tenantId, false, TokenCache.DefaultShared).AcquireTokenAsync(
                         AzureAADResource,
                         PSClientId,
                         PSRedirectUrl,
-                        promptBehavior);
+                        new PlatformParameters(promptBehavior)).ConfigureAwait(false).GetAwaiter().GetResult();
                 }
                 else
                 {
-                    return new AuthenticationContext(AADLoginAuthority + tenantId, false, TokenCache.DefaultShared).AcquireToken(
+                    return new AuthenticationContext(AADLoginAuthority + tenantId, false, TokenCache.DefaultShared).AcquireTokenAsync(
                         AzureAADResource,
                         PSClientId,
                         PSRedirectUrl,
-                        promptBehavior,
-                        userIdentifier);
+                        new PlatformParameters(promptBehavior),
+                        userIdentifier).ConfigureAwait(false).GetAwaiter().GetResult();
                 }
             }
             catch (Exception ex)
