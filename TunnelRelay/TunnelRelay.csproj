@@ -130,6 +130,7 @@
     <Compile Include="Startup.xaml.cs">
       <DependentUpon>Startup.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Auth\UserAuthenticator.cs" />
     <Page Include="UIPages\LoginToAzure.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

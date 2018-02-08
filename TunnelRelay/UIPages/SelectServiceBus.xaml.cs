@@ -59,9 +59,9 @@ namespace TunnelRelay
         };
 
         /// <summary>
-        /// The authentication result.
+        /// User authentication manager.
         /// </summary>
-        private AuthenticationResult authResult;
+        private UserAuthenticator userAuthenticator;
 
         /// <summary>
         /// List of Azure subscription.
@@ -76,12 +76,12 @@ namespace TunnelRelay
         /// <summary>
         /// Initializes a new instance of the <see cref="SelectServiceBus"/> class.
         /// </summary>
-        /// <param name="authResult">The authentication result.</param>
-        public SelectServiceBus(AuthenticationResult authResult)
+        /// <param name="authenticationDetails">The authentication details for the user.</param>
+        public SelectServiceBus(UserAuthenticator authenticationDetails)
         {
             this.ContentRendered += this.Window_ContentRendered;
             this.InitializeComponent();
-            this.authResult = authResult;
+            this.userAuthenticator = authenticationDetails;
             this.comboSubscriptionList.ItemsSource = this.subscriptions;
             this.comboServiceBusList.ItemsSource = this.serviceBuses;
 
@@ -103,19 +103,7 @@ namespace TunnelRelay
             {
                 try
                 {
-                    TokenCredentials tokenCredentials = new TokenCredentials(this.authResult.AccessToken);
-                    RM.SubscriptionClient subsClient = new RM.SubscriptionClient(tokenCredentials);
-
-                    List<RM.Models.SubscriptionInner> subscriptionList = new List<RM.Models.SubscriptionInner>();
-
-                    var resp = subsClient.Subscriptions.List();
-                    subscriptionList.AddRange(resp);
-
-                    while (!string.IsNullOrEmpty(resp.NextPageLink))
-                    {
-                        resp = subsClient.Subscriptions.ListNext(resp.NextPageLink);
-                        subscriptionList.AddRange(resp);
-                    }
+                    var subscriptionList = this.userAuthenticator.GetUserSubscriptions();
 
                     this.Dispatcher.Invoke(() =>
                     {
@@ -153,7 +141,7 @@ namespace TunnelRelay
             {
                 try
                 {
-                    TokenCredentials tokenCredentials = new TokenCredentials(this.authResult.AccessToken);
+                    TokenCredentials tokenCredentials = new TokenCredentials(this.userAuthenticator.GetSubscriptionSpecificUserToken(selectedSubscription).AccessToken);
                     ServiceBusManagementClient serviceBusManagementClient = new ServiceBusManagementClient(tokenCredentials);
 
                     serviceBusManagementClient.SubscriptionId = selectedSubscription.SubscriptionId;
@@ -237,7 +225,7 @@ namespace TunnelRelay
                 rgName = selectedServiceBus.Id.Substring(startIndex, selectedServiceBus.Id.IndexOf('/', startIndex) - startIndex);
             }
 
-            TokenCredentials tokenCredentials = new TokenCredentials(this.authResult.AccessToken);
+            TokenCredentials tokenCredentials = new TokenCredentials(this.userAuthenticator.GetSubscriptionSpecificUserToken(selectedSubscription).AccessToken);
             ServiceBusManagementClient serviceBusManagementClient = new ServiceBusManagementClient(tokenCredentials);
             serviceBusManagementClient.SubscriptionId = selectedSubscription.SubscriptionId;
 
