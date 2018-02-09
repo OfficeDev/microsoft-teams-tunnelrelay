@@ -141,7 +141,10 @@ namespace TunnelRelay.Core
         public static void Logout()
         {
             Logger.LogInfo(CallInfo.Site(), "Logging out");
-            Instance = new ApplicationData();
+            Instance = new ApplicationData
+            {
+                RedirectionUrl = "http://localhost:3979/",
+            };
         }
 
         /// <summary>

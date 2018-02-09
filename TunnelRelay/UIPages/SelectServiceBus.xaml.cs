@@ -59,9 +59,9 @@ namespace TunnelRelay
         };
 
         /// <summary>
-        /// The authentication result.
+        /// User authentication manager.
         /// </summary>
-        private AuthenticationResult authResult;
+        private UserAuthenticator userAuthenticator;
 
         /// <summary>
         /// List of Azure subscription.
@@ -76,12 +76,12 @@ namespace TunnelRelay
         /// <summary>
         /// Initializes a new instance of the <see cref="SelectServiceBus"/> class.
         /// </summary>
-        /// <param name="authResult">The authentication result.</param>
-        public SelectServiceBus(AuthenticationResult authResult)
+        /// <param name="authenticationDetails">The authentication details for the user.</param>
+        public SelectServiceBus(UserAuthenticator authenticationDetails)
         {
             this.ContentRendered += this.Window_ContentRendered;
             this.InitializeComponent();
-            this.authResult = authResult;
+            this.userAuthenticator = authenticationDetails;
             this.comboSubscriptionList.ItemsSource = this.subscriptions;
             this.comboServiceBusList.ItemsSource = this.serviceBuses;
 
@@ -103,19 +103,7 @@ namespace TunnelRelay
             {
                 try
                 {
-                    TokenCredentials tokenCredentials = new TokenCredentials(this.authResult.AccessToken);
-                    RM.SubscriptionClient subsClient = new RM.SubscriptionClient(tokenCredentials);
-
-                    List<RM.Models.SubscriptionInner> subscriptionList = new List<RM.Models.SubscriptionInner>();
-
-                    var resp = subsClient.Subscriptions.List();
-                    subscriptionList.AddRange(resp);
-
-                    while (!string.IsNullOrEmpty(resp.NextPageLink))
-                    {
-                        resp = subsClient.Subscriptions.ListNext(resp.NextPageLink);
-                        subscriptionList.AddRange(resp);
-                    }
+                    var subscriptionList = this.userAuthenticator.GetUserSubscriptions();
 
                     this.Dispatcher.Invoke(() =>
                     {
@@ -153,18 +141,18 @@ namespace TunnelRelay
             {
                 try
                 {
-                    TokenCredentials tokenCredentials = new TokenCredentials(this.authResult.AccessToken);
+                    TokenCredentials tokenCredentials = new TokenCredentials(this.userAuthenticator.GetSubscriptionSpecificUserToken(selectedSubscription).AccessToken);
                     ServiceBusManagementClient serviceBusManagementClient = new ServiceBusManagementClient(tokenCredentials);
 
                     serviceBusManagementClient.SubscriptionId = selectedSubscription.SubscriptionId;
 
                     List<NamespaceModelInner> serviceBusList = new List<NamespaceModelInner>();
-                    var resp = serviceBusManagementClient.Namespaces.List();
+                    var resp = serviceBusManagementClient.Namespaces.ListAsync().ConfigureAwait(false).GetAwaiter().GetResult();
                     serviceBusList.AddRange(resp);
 
                     while (!string.IsNullOrEmpty(resp.NextPageLink))
                     {
-                        resp = serviceBusManagementClient.Namespaces.ListNext(resp.NextPageLink);
+                        resp = serviceBusManagementClient.Namespaces.ListNextAsync(resp.NextPageLink).ConfigureAwait(false).GetAwaiter().GetResult();
                         serviceBusList.AddRange(resp);
                     }
 
@@ -237,7 +225,7 @@ namespace TunnelRelay
                 rgName = selectedServiceBus.Id.Substring(startIndex, selectedServiceBus.Id.IndexOf('/', startIndex) - startIndex);
             }
 
-            TokenCredentials tokenCredentials = new TokenCredentials(this.authResult.AccessToken);
+            TokenCredentials tokenCredentials = new TokenCredentials(this.userAuthenticator.GetSubscriptionSpecificUserToken(selectedSubscription).AccessToken);
             ServiceBusManagementClient serviceBusManagementClient = new ServiceBusManagementClient(tokenCredentials);
             serviceBusManagementClient.SubscriptionId = selectedSubscription.SubscriptionId;
 
@@ -248,42 +236,7 @@ namespace TunnelRelay
             {
                 try
                 {
-                    var resp = serviceBusManagementClient.Namespaces.ListAuthorizationRules(rgName, selectedServiceBus.Name);
-                    serviceBusList.AddRange(resp);
-
-                    while (!string.IsNullOrEmpty(resp.NextPageLink))
-                    {
-                        resp = serviceBusManagementClient.Namespaces.ListAuthorizationRulesNext(resp.NextPageLink);
-                        serviceBusList.AddRange(resp);
-                    }
-
-                    var selectedAuthRule = serviceBusList.FirstOrDefault(rule => rule.Rights != null && rule.Rights.Contains(AccessRights.Listen) && rule.Rights.Contains(AccessRights.Manage) && rule.Rights.Contains(AccessRights.Send));
-
-                    if (selectedAuthRule == null)
-                    {
-                        MessageBox.Show("Failed to find a suitable Authorization rule to use. Please create an Authorization rule with Listen, Manage and Send rights and retry the operation");
-                        this.Dispatcher.Invoke(() =>
-                        {
-                            this.progressBar.Visibility = Visibility.Hidden;
-                            this.btnDone.IsEnabled = true;
-                        });
-                        return;
-                    }
-                    else
-                    {
-                        serviceBusManagementClient.Namespaces.ListKeys(rgName, selectedServiceBus.Name, selectedAuthRule.Name);
-
-                        ApplicationData.Instance.ServiceBusSharedKey = serviceBusManagementClient.Namespaces.ListKeys(rgName, selectedServiceBus.Name, selectedAuthRule.Name).PrimaryKey;
-                        ApplicationData.Instance.ServiceBusKeyName = serviceBusManagementClient.Namespaces.ListKeys(rgName, selectedServiceBus.Name, selectedAuthRule.Name).KeyName;
-                        ApplicationData.Instance.ServiceBusUrl = selectedServiceBus.ServiceBusEndpoint;
-
-                        this.Dispatcher.Invoke(() =>
-                        {
-                            MainWindow mainWindow = new MainWindow();
-                            mainWindow.Show();
-                            this.Close();
-                        });
-                    }
+                    this.SetApplicationData(rgName, serviceBusManagementClient, selectedServiceBus);
                 }
                 catch (Exception ex)
                 {
@@ -305,18 +258,18 @@ namespace TunnelRelay
 
                     try
                     {
-                        resourceGroup = resourceManagementClient.ResourceGroups.Get("TunnelRelay");
+                        resourceGroup = resourceManagementClient.ResourceGroups.GetAsync("TunnelRelay").ConfigureAwait(false).GetAwaiter().GetResult();
                     }
                     catch (Microsoft.Rest.Azure.CloudException httpEx)
                     {
                         if (httpEx.Response.StatusCode == System.Net.HttpStatusCode.NotFound)
                         {
-                            resourceGroup = resourceManagementClient.ResourceGroups.CreateOrUpdate("TunnelRelay", new RM.Models.ResourceGroupInner
+                            resourceGroup = resourceManagementClient.ResourceGroups.CreateOrUpdateAsync("TunnelRelay", new RM.Models.ResourceGroupInner
                             {
                                 Location = "WestUS",
                                 Name = "TunnelRelay",
                                 Tags = newServiceBus.Tags,
-                            });
+                            }).ConfigureAwait(false).GetAwaiter().GetResult();
                         }
                     }
 
@@ -344,47 +297,14 @@ namespace TunnelRelay
                         return;
                     }
 
-                    selectedServiceBus = serviceBusManagementClient.Namespaces.CreateOrUpdate(rgName, newBusName, new NamespaceModelInner
+                    selectedServiceBus = serviceBusManagementClient.Namespaces.CreateOrUpdateAsync(rgName, newBusName, new NamespaceModelInner
                     {
                         Location = selectedServiceBus.Location,
                         Sku = selectedServiceBus.Sku,
                         Tags = selectedServiceBus.Tags,
-                    });
+                    }).ConfigureAwait(false).GetAwaiter().GetResult();
 
-                    var resp = serviceBusManagementClient.Namespaces.ListAuthorizationRules(rgName, selectedServiceBus.Name);
-                    serviceBusList.AddRange(resp);
-
-                    while (!string.IsNullOrEmpty(resp.NextPageLink))
-                    {
-                        resp = serviceBusManagementClient.Namespaces.ListAuthorizationRulesNext(resp.NextPageLink);
-                        serviceBusList.AddRange(resp);
-                    }
-
-                    var selectedAuthRule = serviceBusList.FirstOrDefault(rule => rule.Rights != null && rule.Rights.Contains(AccessRights.Listen) && rule.Rights.Contains(AccessRights.Manage) && rule.Rights.Contains(AccessRights.Send));
-
-                    if (selectedAuthRule == null)
-                    {
-                        MessageBox.Show("Failed to find a suitable Authorization rule to use. Please create an Authorization rule with Listen, Manage and Send rights and retry the operation");
-                        this.Dispatcher.Invoke(() =>
-                        {
-                            this.progressBar.Visibility = Visibility.Hidden;
-                            this.btnDone.IsEnabled = true;
-                        });
-                        return;
-                    }
-                    else
-                    {
-                        ApplicationData.Instance.ServiceBusSharedKey = serviceBusManagementClient.Namespaces.ListKeys(rgName, selectedServiceBus.Name, selectedAuthRule.Name).PrimaryKey;
-                        ApplicationData.Instance.ServiceBusKeyName = serviceBusManagementClient.Namespaces.ListKeys(rgName, selectedServiceBus.Name, selectedAuthRule.Name).KeyName;
-                        ApplicationData.Instance.ServiceBusUrl = selectedServiceBus.ServiceBusEndpoint;
-
-                        this.Dispatcher.Invoke(() =>
-                        {
-                            MainWindow mainWindow = new MainWindow();
-                            mainWindow.Show();
-                            this.Close();
-                        });
-                    }
+                    this.SetApplicationData(rgName, serviceBusManagementClient, selectedServiceBus);
                 }
                 catch (CloudException cloudEx)
                 {
@@ -445,6 +365,57 @@ namespace TunnelRelay
         private void Cancel_Click(object sender, RoutedEventArgs e)
         {
             Application.Current.Shutdown();
+        }
+
+        /// <summary>
+        /// Gets the auth rules for a service bus and writes Application data.
+        /// </summary>
+        /// <param name="rgName">Name of the rg.</param>
+        /// <param name="serviceBusManagementClient">The service bus management client.</param>
+        /// <param name="selectedServiceBus">The selected service bus.</param>
+        private void SetApplicationData(string rgName, ServiceBusManagementClient serviceBusManagementClient, NamespaceModelInner selectedServiceBus)
+        {
+            List<SharedAccessAuthorizationRuleInner> serviceBusAuthRuleList = new List<SharedAccessAuthorizationRuleInner>();
+            var resp = serviceBusManagementClient.Namespaces.ListAuthorizationRulesAsync(rgName, selectedServiceBus.Name).ConfigureAwait(false).GetAwaiter().GetResult();
+            serviceBusAuthRuleList.AddRange(resp);
+
+            while (!string.IsNullOrEmpty(resp.NextPageLink))
+            {
+                resp = serviceBusManagementClient.Namespaces.ListAuthorizationRulesNextAsync(resp.NextPageLink).ConfigureAwait(false).GetAwaiter().GetResult();
+                serviceBusAuthRuleList.AddRange(resp);
+            }
+
+            var selectedAuthRule = serviceBusAuthRuleList.FirstOrDefault(rule => rule.Rights != null && rule.Rights.Contains(AccessRights.Listen) && rule.Rights.Contains(AccessRights.Manage) && rule.Rights.Contains(AccessRights.Send));
+
+            if (selectedAuthRule == null)
+            {
+                MessageBox.Show("Failed to find a suitable Authorization rule to use. Please create an Authorization rule with Listen, Manage and Send rights and retry the operation");
+                this.Dispatcher.Invoke(() =>
+                {
+                    this.progressBar.Visibility = Visibility.Hidden;
+                    this.btnDone.IsEnabled = true;
+                });
+                return;
+            }
+            else
+            {
+                ApplicationData.Instance.ServiceBusSharedKey = serviceBusManagementClient.Namespaces.ListKeysAsync(
+                    rgName,
+                    selectedServiceBus.Name,
+                    selectedAuthRule.Name).ConfigureAwait(false).GetAwaiter().GetResult().PrimaryKey;
+                ApplicationData.Instance.ServiceBusKeyName = serviceBusManagementClient.Namespaces.ListKeysAsync(
+                    rgName,
+                    selectedServiceBus.Name,
+                    selectedAuthRule.Name).ConfigureAwait(false).GetAwaiter().GetResult().KeyName;
+                ApplicationData.Instance.ServiceBusUrl = selectedServiceBus.ServiceBusEndpoint;
+
+                this.Dispatcher.Invoke(() =>
+                {
+                    MainWindow mainWindow = new MainWindow();
+                    mainWindow.Show();
+                    this.Close();
+                });
+            }
         }
     }
 }

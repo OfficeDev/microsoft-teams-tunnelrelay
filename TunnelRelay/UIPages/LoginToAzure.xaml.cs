@@ -79,18 +79,14 @@ namespace TunnelRelay
             try
             {
                 Logger.LogInfo(CallInfo.Site(), "Starting Azure login.");
-                AuthenticationContext authContext = new AuthenticationContext("https://login.microsoftonline.com/common", false, TokenCache.DefaultShared);
 
-                // Get Azure Token.
-                var azureToken = authContext.AcquireToken(
-                    "https://management.azure.com/",
-                    "1950a258-227b-4e31-a9cf-717495945fc2",
-                    new Uri("urn:ietf:wg:oauth:2.0:oob"),
-                    PromptBehavior.RefreshSession);
+                var userAuthDetails = new UserAuthenticator();
 
+                // Raise Authentication prompt and log the user in.
+                userAuthDetails.AuthenticateUser();
                 Logger.LogInfo(CallInfo.Site(), "Token acquire complete.");
 
-                SelectServiceBus selectServiceBus = new SelectServiceBus(azureToken);
+                SelectServiceBus selectServiceBus = new SelectServiceBus(userAuthDetails);
                 selectServiceBus.Left = this.Left;
                 selectServiceBus.Top = this.Top;
 
