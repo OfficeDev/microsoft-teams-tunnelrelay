@@ -1,4 +1,4 @@
-﻿// <copyright file="AssemblyInfo.cs" company="Microsoft">
+﻿// <copyright file="HeaderDetails.cs" company="Microsoft">
 // Copyright (c) Microsoft. All rights reserved.
 // </copyright>
 // Licensed under the MIT license.
@@ -22,21 +22,21 @@
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-using System.Reflection;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
+namespace TunnelRelay.Core
+{
+    /// <summary>
+    /// Header details to store header information for UI.
+    /// </summary>
+    public class HeaderDetails
+    {
+        /// <summary>
+        /// Gets or sets the name of the header.
+        /// </summary>
+        public string HeaderName { get; set; }
 
-// General Information about an assembly is controlled through the following
-// set of attributes. Change these attribute values to modify the information
-// associated with an assembly.
-[assembly: AssemblyTitle("TunnelRelay.Plugins")]
-[assembly: AssemblyDescription("")]
-[assembly: AssemblyConfiguration("")]
-
-// Setting ComVisible to false makes the types in this assembly not visible
-// to COM components.  If you need to access a type in this assembly from
-// COM, set the ComVisible attribute to true on that type.
-[assembly: ComVisible(false)]
-
-// The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("5eb32488-8c81-4e8f-acff-2c457f5f95f1")]
+        /// <summary>
+        /// Gets or sets the header value.
+        /// </summary>
+        public string HeaderValue { get; set; }
+    }
+}

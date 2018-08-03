@@ -8,14 +8,11 @@ namespace TunnelRelay
     using System.Collections.Concurrent;
     using System.Collections.Generic;
     using System.Linq;
-    using System.Text;
     using System.Threading.Tasks;
     using Microsoft.Azure.Management.ResourceManager.Fluent;
     using Microsoft.Azure.Management.ResourceManager.Fluent.Models;
     using Microsoft.IdentityModel.Clients.ActiveDirectory;
     using Microsoft.Rest;
-    using Microsoft.Rest.Azure;
-    using TunnelRelay.Core;
 
     /// <summary>
     /// User authentication details.

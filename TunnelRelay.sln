@@ -5,13 +5,25 @@ VisualStudioVersion = 15.0.26730.8
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TunnelRelay", "TunnelRelay\TunnelRelay.csproj", "{1D6E50C4-1F9F-4F8A-8916-D3AEABA4A8E0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TunnelRelay.Plugins", "TunnelRelay.Plugins\TunnelRelay.Plugins.csproj", "{5EB32488-8C81-4E8F-ACFF-2C457F5F95F1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TunnelRelay.Plugins", "TunnelRelay.Plugins\TunnelRelay.Plugins.csproj", "{5EB32488-8C81-4E8F-ACFF-2C457F5F95F1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TunnelRelay.Core", "TunnelRelay.Core\TunnelRelay.Core.csproj", "{165BB633-EE2D-473C-9D5C-BE92E02FC5CA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TunnelRelay.Core", "TunnelRelay.Core\TunnelRelay.Core.csproj", "{165BB633-EE2D-473C-9D5C-BE92E02FC5CA}"
 EndProject
 Project("{930C7802-8A8C-48F9-8165-68863BCCD9DD}") = "TunnelRelayMSI", "Packager\TunnelRelayMSI.wixproj", "{EF5556A2-CA67-4117-8945-269E7EC0640C}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "UI", "UI", "{93A42E82-8F83-4AD0-96A5-D0CF6A30483B}"
+EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "TunnelRelay.Console.Shared", "UI\TunnelRelay.Console.Shared\TunnelRelay.Console.Shared.shproj", "{07D399AA-6A69-432B-9852-BC0B52DC4224}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TunnelRelay.Console.Core", "UI\TunnelRelay.Console.Core\TunnelRelay.Console.Core.csproj", "{F146DACB-41E4-4BBA-80DD-DB1C5CB8E159}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TunnelRelay.Console.Windows", "UI\TunnelRelay.Console.Windows\TunnelRelay.Console.Windows.csproj", "{A594E3A4-ABC9-49FB-B0CC-604C9FFE670F}"
+EndProject
 Global
+	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		UI\TunnelRelay.Console.Shared\TunnelRelay.Console.Shared.projitems*{07d399aa-6a69-432b-9852-bc0b52dc4224}*SharedItemsImports = 13
+		UI\TunnelRelay.Console.Shared\TunnelRelay.Console.Shared.projitems*{a594e3a4-abc9-49fb-b0cc-604c9ffe670f}*SharedItemsImports = 4
+	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Debug|x86 = Debug|x86
@@ -49,9 +61,30 @@ Global
 		{EF5556A2-CA67-4117-8945-269E7EC0640C}.Release|Any CPU.ActiveCfg = Release|x86
 		{EF5556A2-CA67-4117-8945-269E7EC0640C}.Release|x86.ActiveCfg = Release|x86
 		{EF5556A2-CA67-4117-8945-269E7EC0640C}.Release|x86.Build.0 = Release|x86
+		{F146DACB-41E4-4BBA-80DD-DB1C5CB8E159}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F146DACB-41E4-4BBA-80DD-DB1C5CB8E159}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F146DACB-41E4-4BBA-80DD-DB1C5CB8E159}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{F146DACB-41E4-4BBA-80DD-DB1C5CB8E159}.Debug|x86.Build.0 = Debug|Any CPU
+		{F146DACB-41E4-4BBA-80DD-DB1C5CB8E159}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F146DACB-41E4-4BBA-80DD-DB1C5CB8E159}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F146DACB-41E4-4BBA-80DD-DB1C5CB8E159}.Release|x86.ActiveCfg = Release|Any CPU
+		{F146DACB-41E4-4BBA-80DD-DB1C5CB8E159}.Release|x86.Build.0 = Release|Any CPU
+		{A594E3A4-ABC9-49FB-B0CC-604C9FFE670F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A594E3A4-ABC9-49FB-B0CC-604C9FFE670F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A594E3A4-ABC9-49FB-B0CC-604C9FFE670F}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{A594E3A4-ABC9-49FB-B0CC-604C9FFE670F}.Debug|x86.Build.0 = Debug|Any CPU
+		{A594E3A4-ABC9-49FB-B0CC-604C9FFE670F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A594E3A4-ABC9-49FB-B0CC-604C9FFE670F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A594E3A4-ABC9-49FB-B0CC-604C9FFE670F}.Release|x86.ActiveCfg = Release|Any CPU
+		{A594E3A4-ABC9-49FB-B0CC-604C9FFE670F}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{07D399AA-6A69-432B-9852-BC0B52DC4224} = {93A42E82-8F83-4AD0-96A5-D0CF6A30483B}
+		{F146DACB-41E4-4BBA-80DD-DB1C5CB8E159} = {93A42E82-8F83-4AD0-96A5-D0CF6A30483B}
+		{A594E3A4-ABC9-49FB-B0CC-604C9FFE670F} = {93A42E82-8F83-4AD0-96A5-D0CF6A30483B}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {9A54A758-13AB-4B23-850F-8730A662F763}

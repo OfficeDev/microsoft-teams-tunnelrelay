@@ -24,10 +24,7 @@
 
 namespace TunnelRelay
 {
-    using System.IO;
     using System.Windows;
-    using Newtonsoft.Json;
-    using TunnelRelay.Core;
 
     /// <summary>
     /// Interaction logic for App.xaml
