@@ -31,11 +31,13 @@ namespace TunnelRelay
     using System.Threading;
     using System.Windows;
     using System.Windows.Controls;
+    using Microsoft.Azure.Management.Relay.Fluent;
+    using Microsoft.Azure.Management.Relay.Fluent.Models;
     using Microsoft.Azure.Management.ResourceManager.Fluent;
-    using Microsoft.Azure.Management.ServiceBus.Fluent;
-    using Microsoft.Azure.Management.ServiceBus.Fluent.Models;
     using Microsoft.Rest;
     using Microsoft.Rest.Azure;
+    using TunnelRelay.Diagnostics;
+    using TunnelRelay.Engine;
     using RM = Microsoft.Azure.Management.ResourceManager.Fluent;
 
     /// <summary>
@@ -46,14 +48,10 @@ namespace TunnelRelay
         /// <summary>
         /// The new service bus template.
         /// </summary>
-        private static NamespaceModelInner newServiceBus = new NamespaceModelInner("WestUS", null, "Create a new Service Bus")
+        private static RelayNamespaceInner newServiceBus = new RelayNamespaceInner("WestUS", null, "Create a new Service Bus")
         {
-            Sku = new Sku
-            {
-                Name = "Basic",
-                Tier = "Basic",
-            },
-            Tags = new Dictionary<string, string>() { { "CreatedBy", "TunnelRelay" } },
+            Sku = new Sku(SkuTier.Standard),
+            Tags = new Dictionary<string, string>() { { "CreatedBy", "TunnelRelayv2" } },
         };
 
         /// <summary>
@@ -69,7 +67,7 @@ namespace TunnelRelay
         /// <summary>
         /// List of Azure service buses.
         /// </summary>
-        private ObservableCollection<NamespaceModelInner> serviceBuses = new ObservableCollection<NamespaceModelInner>();
+        private ObservableCollection<RelayNamespaceInner> serviceBuses = new ObservableCollection<RelayNamespaceInner>();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SelectServiceBus"/> class.
@@ -140,17 +138,17 @@ namespace TunnelRelay
                 try
                 {
                     TokenCredentials tokenCredentials = new TokenCredentials(this.userAuthenticator.GetSubscriptionSpecificUserToken(selectedSubscription).AccessToken);
-                    ServiceBusManagementClient serviceBusManagementClient = new ServiceBusManagementClient(tokenCredentials);
+                    RelayManagementClient relayManagementClient = new RelayManagementClient(tokenCredentials);
 
-                    serviceBusManagementClient.SubscriptionId = selectedSubscription.SubscriptionId;
+                    relayManagementClient.SubscriptionId = selectedSubscription.SubscriptionId;
 
-                    List<NamespaceModelInner> serviceBusList = new List<NamespaceModelInner>();
-                    var resp = serviceBusManagementClient.Namespaces.ListAsync().ConfigureAwait(false).GetAwaiter().GetResult();
+                    List<RelayNamespaceInner> serviceBusList = new List<RelayNamespaceInner>();
+                    var resp = relayManagementClient.Namespaces.ListAsync().ConfigureAwait(false).GetAwaiter().GetResult();
                     serviceBusList.AddRange(resp);
 
                     while (!string.IsNullOrEmpty(resp.NextPageLink))
                     {
-                        resp = serviceBusManagementClient.Namespaces.ListNextAsync(resp.NextPageLink).ConfigureAwait(false).GetAwaiter().GetResult();
+                        resp = relayManagementClient.Namespaces.ListNextAsync(resp.NextPageLink).ConfigureAwait(false).GetAwaiter().GetResult();
                         serviceBusList.AddRange(resp);
                     }
 
@@ -183,7 +181,7 @@ namespace TunnelRelay
         private void ServiceBusList_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             var selectedSubscription = (this.comboSubscriptionList as ComboBox).SelectedItem as RM.Models.SubscriptionInner;
-            var selectedServiceBus = (sender as ComboBox).SelectedItem as NamespaceModelInner;
+            var selectedServiceBus = (sender as ComboBox).SelectedItem as RelayNamespaceInner;
 
             if (selectedServiceBus.Id == null)
             {
@@ -213,7 +211,7 @@ namespace TunnelRelay
             this.progressBar.Visibility = Visibility.Visible;
             this.btnDone.IsEnabled = false;
             var selectedSubscription = (this.comboSubscriptionList as ComboBox).SelectedItem as RM.Models.SubscriptionInner;
-            var selectedServiceBus = (this.comboServiceBusList as ComboBox).SelectedItem as NamespaceModelInner;
+            var selectedServiceBus = (this.comboServiceBusList as ComboBox).SelectedItem as RelayNamespaceInner;
 
             string newBusName = this.txtServiceBusName.Text;
             string rgName = null;
@@ -224,17 +222,29 @@ namespace TunnelRelay
             }
 
             TokenCredentials tokenCredentials = new TokenCredentials(this.userAuthenticator.GetSubscriptionSpecificUserToken(selectedSubscription).AccessToken);
-            ServiceBusManagementClient serviceBusManagementClient = new ServiceBusManagementClient(tokenCredentials);
-            serviceBusManagementClient.SubscriptionId = selectedSubscription.SubscriptionId;
+            RelayManagementClient relayManagementClient = new RelayManagementClient(tokenCredentials);
+            relayManagementClient.SubscriptionId = selectedSubscription.SubscriptionId;
 
-            List<SharedAccessAuthorizationRuleInner> serviceBusList = new List<SharedAccessAuthorizationRuleInner>();
+            List<AuthorizationRuleInner> serviceBusList = new List<AuthorizationRuleInner>();
 
             // Case 1. When user used existing service bus.
             Thread existingServiceBusThread = new Thread(new ThreadStart(() =>
             {
                 try
                 {
-                    this.SetApplicationData(rgName, serviceBusManagementClient, selectedServiceBus);
+                    List<HybridConnectionInner> hybridConnections = new List<HybridConnectionInner>();
+                    hybridConnections.AddRange(relayManagementClient.HybridConnections.ListByNamespaceAsync(rgName, selectedServiceBus.Name).ConfigureAwait(false).GetAwaiter().GetResult());
+
+                    // Create the hybrid connection if one does not exist.
+                    if (!hybridConnections.Any(connection => connection.Name.Equals(Environment.MachineName, StringComparison.OrdinalIgnoreCase)))
+                    {
+                        relayManagementClient.HybridConnections.CreateOrUpdateAsync(rgName, selectedServiceBus.Name, Environment.MachineName, new HybridConnectionInner
+                        {
+                            RequiresClientAuthorization = false,
+                        }).ConfigureAwait(false).GetAwaiter().GetResult();
+                    }
+
+                    this.SetApplicationData(rgName, relayManagementClient, selectedServiceBus);
                 }
                 catch (Exception ex)
                 {
@@ -295,14 +305,19 @@ namespace TunnelRelay
                         return;
                     }
 
-                    selectedServiceBus = serviceBusManagementClient.Namespaces.CreateOrUpdateAsync(rgName, newBusName, new NamespaceModelInner
+                    selectedServiceBus = relayManagementClient.Namespaces.CreateOrUpdateAsync(rgName, newBusName, new RelayNamespaceInner
                     {
                         Location = selectedServiceBus.Location,
                         Sku = selectedServiceBus.Sku,
                         Tags = selectedServiceBus.Tags,
                     }).ConfigureAwait(false).GetAwaiter().GetResult();
 
-                    this.SetApplicationData(rgName, serviceBusManagementClient, selectedServiceBus);
+                    relayManagementClient.HybridConnections.CreateOrUpdateAsync(rgName, newBusName, Environment.MachineName, new HybridConnectionInner
+                    {
+                        RequiresClientAuthorization = false,
+                    }).ConfigureAwait(false).GetAwaiter().GetResult();
+
+                    this.SetApplicationData(rgName, relayManagementClient, selectedServiceBus);
                 }
                 catch (CloudException cloudEx)
                 {
@@ -369,17 +384,17 @@ namespace TunnelRelay
         /// Gets the auth rules for a service bus and writes Application data.
         /// </summary>
         /// <param name="rgName">Name of the rg.</param>
-        /// <param name="serviceBusManagementClient">The service bus management client.</param>
+        /// <param name="relayManagementClient">The service bus management client.</param>
         /// <param name="selectedServiceBus">The selected service bus.</param>
-        private void SetApplicationData(string rgName, ServiceBusManagementClient serviceBusManagementClient, NamespaceModelInner selectedServiceBus)
+        private void SetApplicationData(string rgName, RelayManagementClient relayManagementClient, RelayNamespaceInner selectedServiceBus)
         {
-            List<SharedAccessAuthorizationRuleInner> serviceBusAuthRuleList = new List<SharedAccessAuthorizationRuleInner>();
-            var resp = serviceBusManagementClient.Namespaces.ListAuthorizationRulesAsync(rgName, selectedServiceBus.Name).ConfigureAwait(false).GetAwaiter().GetResult();
+            List<AuthorizationRuleInner> serviceBusAuthRuleList = new List<AuthorizationRuleInner>();
+            var resp = relayManagementClient.Namespaces.ListAuthorizationRulesAsync(rgName, selectedServiceBus.Name).ConfigureAwait(false).GetAwaiter().GetResult();
             serviceBusAuthRuleList.AddRange(resp);
 
             while (!string.IsNullOrEmpty(resp.NextPageLink))
             {
-                resp = serviceBusManagementClient.Namespaces.ListAuthorizationRulesNextAsync(resp.NextPageLink).ConfigureAwait(false).GetAwaiter().GetResult();
+                resp = relayManagementClient.Namespaces.ListAuthorizationRulesNextAsync(resp.NextPageLink).ConfigureAwait(false).GetAwaiter().GetResult();
                 serviceBusAuthRuleList.AddRange(resp);
             }
 
@@ -397,15 +412,16 @@ namespace TunnelRelay
             }
             else
             {
-                ApplicationData.Instance.ServiceBusSharedKey = serviceBusManagementClient.Namespaces.ListKeysAsync(
+                ApplicationData.Instance.HybridConnectionSharedKey = relayManagementClient.Namespaces.ListKeysAsync(
                     rgName,
                     selectedServiceBus.Name,
                     selectedAuthRule.Name).ConfigureAwait(false).GetAwaiter().GetResult().PrimaryKey;
-                ApplicationData.Instance.ServiceBusKeyName = serviceBusManagementClient.Namespaces.ListKeysAsync(
+                ApplicationData.Instance.HybridConnectionKeyName = relayManagementClient.Namespaces.ListKeysAsync(
                     rgName,
                     selectedServiceBus.Name,
                     selectedAuthRule.Name).ConfigureAwait(false).GetAwaiter().GetResult().KeyName;
-                ApplicationData.Instance.ServiceBusUrl = selectedServiceBus.ServiceBusEndpoint;
+                ApplicationData.Instance.HybridConnectionUrl = selectedServiceBus.ServiceBusEndpoint;
+                ApplicationData.Instance.HybridConnectionName = Environment.MachineName;
 
                 this.Dispatcher.Invoke(() =>
                 {

@@ -28,6 +28,7 @@ namespace TunnelRelay
     using System.Linq;
     using System.Threading.Tasks;
     using System.Windows;
+    using TunnelRelay.Diagnostics;
 
     /// <summary>
     /// Interaction logic for PluginManagement.xaml
@@ -40,7 +41,7 @@ namespace TunnelRelay
         public PluginManagement()
         {
             this.InitializeComponent();
-            this.lstPluginList.ItemsSource = TunnelRelayEngine.Plugins;
+            ////this.lstPluginList.ItemsSource = TunnelRelayEngine.Plugins;
             this.lstPluginList.SelectedIndex = 0;
         }
 
@@ -52,7 +53,8 @@ namespace TunnelRelay
         {
             try
             {
-                Parallel.ForEach(TunnelRelayEngine.Plugins.Where(plugin => plugin.IsEnabled), (plugin) => plugin.InitializePlugin());
+                // TODO (ramjsing) : Enable Integration
+                ////Parallel.ForEach(TunnelRelayEngine.Plugins.Where(plugin => plugin.IsEnabled), (plugin) => plugin.InitializePlugin());
             }
             catch (Exception ex)
             {

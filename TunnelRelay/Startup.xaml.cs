@@ -25,6 +25,8 @@
 namespace TunnelRelay
 {
     using System.Windows;
+    using TunnelRelay.Diagnostics;
+    using TunnelRelay.Engine;
 
     /// <summary>
     /// Interaction logic for Startup.xaml
@@ -38,7 +40,7 @@ namespace TunnelRelay
         {
             this.InitializeComponent();
 
-            if (string.IsNullOrEmpty(ApplicationData.Instance.ServiceBusUrl))
+            if (string.IsNullOrEmpty(ApplicationData.Instance.HybridConnectionUrl))
             {
                 Logger.LogInfo(CallInfo.Site(), "Starting welcome experiance");
                 LoginToAzure gettingStarted = new LoginToAzure();

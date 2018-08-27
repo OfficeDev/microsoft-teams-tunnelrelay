@@ -1,5 +1,5 @@
-﻿// <copyright file="RelayRequestManager.cs" company="Microsoft">
-// Copyright (c) Microsoft. All rights reserved.
+﻿// <copyright file="RelayRequestManager.cs" company="Microsoft Corporation">
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 // </copyright>
 
@@ -185,6 +185,7 @@ namespace TunnelRelay.Core
                 HttpStatusCode = httpResponseMessage.StatusCode,
                 StatusDescription = httpResponseMessage.ReasonPhrase,
                 Headers = new WebHeaderCollection(),
+                RequestEndDateTime = DateTimeOffset.Now,
             };
 
             // Copy the response headers.

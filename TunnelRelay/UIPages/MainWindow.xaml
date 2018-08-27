@@ -102,7 +102,7 @@
                         <GridViewColumn Header="Start time" Width="220">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
-                                    <TextBlock Text="{Binding Value.Timestamp}" Foreground="{Binding Converter={StaticResource requestColor}}" TextAlignment="Center" HorizontalAlignment="Center" />
+                                    <TextBlock Text="{Binding Value.RequestReceiveTime}" Foreground="{Binding Converter={StaticResource requestColor}}" TextAlignment="Center" HorizontalAlignment="Center" />
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>

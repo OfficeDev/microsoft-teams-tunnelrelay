@@ -1,5 +1,5 @@
-﻿// <copyright file="RelayResponse.cs" company="Microsoft">
-// Copyright (c) Microsoft. All rights reserved.
+﻿// <copyright file="RelayResponse.cs" company="Microsoft Corporation">
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 // </copyright>
 
@@ -35,6 +35,11 @@ namespace TunnelRelay.Core
         public Stream OutputStream { get; internal set; }
 
         /// <summary>
+        /// Gets the time at which request ended.
+        /// </summary>
+        public DateTimeOffset RequestEndDateTime { get; internal set; }
+
+        /// <summary>
         /// Clones the current instance.
         /// </summary>
         /// <returns>Cloned instance.</returns>
@@ -46,6 +51,7 @@ namespace TunnelRelay.Core
                 StatusDescription = this.StatusDescription.Clone() as string,
                 Headers = this.Headers.Clone(),
                 OutputStream = this.OutputStream.Clone(),
+                RequestEndDateTime = new DateTimeOffset(this.RequestEndDateTime.DateTime),
             };
         }
     }

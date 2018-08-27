@@ -13,6 +13,9 @@
     <PackageTags>Teams; Microsoft; Azure; TunnelRelay;</PackageTags>
     <CodeAnalysisRuleSet>..\Build\Analyzers.ruleset</CodeAnalysisRuleSet>
     <DocumentationFile>bin\$(Configuration)\netstandard2.0\$(AssemblyName).xml</DocumentationFile>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>..\TRSnkKey.snk</AssemblyOriginatorKeyFile>
+    <DelaySign>false</DelaySign>
   </PropertyGroup>
 
   <ItemGroup>

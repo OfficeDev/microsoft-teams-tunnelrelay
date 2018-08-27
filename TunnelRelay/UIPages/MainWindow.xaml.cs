@@ -28,21 +28,32 @@ namespace TunnelRelay
     using System.Collections.Generic;
     using System.IO;
     using System.Threading;
+    using System.Threading.Tasks;
     using System.Windows;
     using System.Windows.Controls;
     using System.Windows.Input;
+    using Microsoft.Extensions.Options;
     using Microsoft.Win32;
     using Newtonsoft.Json.Linq;
+    using TunnelRelay.Core;
+    using TunnelRelay.Diagnostics;
+    using TunnelRelay.Engine;
+    using TunnelRelay.PluginEngine;
 
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
-    internal partial class MainWindow : Window
+    internal partial class MainWindow : Window, IRelayRequestEventListener
     {
         /// <summary>
         /// The request map. Request ID => Index.
         /// </summary>
         private ObservableDictionary<string, RequestDetails> requestMap = new ObservableDictionary<string, RequestDetails>();
+
+        /// <summary>
+        /// Hybrid connection manager.
+        /// </summary>
+        internal static HybridConnectionManager hybridConnectionManager;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MainWindow"/> class.
@@ -62,9 +73,6 @@ namespace TunnelRelay
 
                 this.btnExportSettings.IsEnabled = false;
                 this.StartRelayEngine();
-
-                TunnelRelayEngine.RequestReceived += this.ApplicationEngine_RequestReceived;
-                TunnelRelayEngine.RequestUpdated += this.ApplicationEngine_RequestUpdated;
             }
             catch (Exception ex)
             {
@@ -73,45 +81,55 @@ namespace TunnelRelay
             }
         }
 
-        /// <summary>
-        /// Handles the RequestUpdated event of the ApplicationEngine control.
-        /// </summary>
-        /// <param name="sender">The source of the event.</param>
-        /// <param name="e">The <see cref="RequestEventArgs"/> instance containing the event data.</param>
-        private void ApplicationEngine_RequestUpdated(object sender, RequestEventArgs e)
+        public Task RequestReceivedAsync(string requestId, RelayRequest relayRequest)
         {
             this.Dispatcher.Invoke(() =>
             {
-                Logger.LogVerbose(CallInfo.Site(), "Updating request with Id '{0}'", e.Request.RequestId);
+                Logger.LogVerbose(CallInfo.Site(), "Received request with Id '{0}'", requestId);
 
-                if (this.requestMap.ContainsKey(e.Request.RequestId))
+                KeyValuePair<string, RequestDetails> requestItem = new KeyValuePair<string, RequestDetails>(requestId, new RequestDetails
+                {
+                    Method = relayRequest.HttpMethod.Method,
+                    RequestHeaders = relayRequest.Headers.GetHeaderMap(),
+                    RequestData = (new StreamReader(relayRequest.InputStream)).ReadToEnd(),
+                    RequestReceiveTime = relayRequest.RequestStartDateTime.DateTime,
+                    Url = relayRequest.RelativeUrl,
+                    StatusCode = "Active",
+                });
+
+                this.requestMap.Add(requestItem);
+            });
+
+            return Task.CompletedTask;
+        }
+
+        public Task ResponseSentAsync(string requestId, RelayResponse relayResponse)
+        {
+            this.Dispatcher.Invoke(() =>
+            {
+                Logger.LogVerbose(CallInfo.Site(), "Updating request with Id '{0}'", requestId);
+
+                if (this.requestMap.ContainsKey(requestId))
                 {
                     try
                     {
-                        this.requestMap[e.Request.RequestId] = JObject.FromObject(e.Request).ToObject<RequestDetails>();
+                        RequestDetails requestDetails = this.requestMap[requestId];
+                        requestDetails.ResponseData = new StreamReader(relayResponse.OutputStream).ReadToEnd();
+                        requestDetails.ResponseHeaders = relayResponse.Headers.GetHeaderMap();
+                        requestDetails.StatusCode = relayResponse.HttpStatusCode.ToString();
+                        requestDetails.Duration = (relayResponse.RequestEndDateTime.DateTime - requestDetails.RequestReceiveTime).TotalMilliseconds + " ms";
+
+                        // For a Change event to fire we need to completely replace the object so we are cloning the object and replacing it.
+                        this.requestMap[requestId] = JObject.FromObject(requestDetails).ToObject<RequestDetails>();
                     }
                     catch (Exception ex)
                     {
-                        Logger.LogWarning(CallInfo.Site(), ex, "Hit exception while updating request with Id '{0}'.", e.Request.RequestId);
+                        Logger.LogWarning(CallInfo.Site(), ex, "Hit exception while updating request with Id '{0}'.", requestId);
                     }
                 }
             });
-        }
 
-        /// <summary>
-        /// Handles the RequestReceived event of the ApplicationEngine control.
-        /// </summary>
-        /// <param name="sender">The source of the event.</param>
-        /// <param name="e">The <see cref="RequestEventArgs"/> instance containing the event data.</param>
-        private void ApplicationEngine_RequestReceived(object sender, RequestEventArgs e)
-        {
-            this.Dispatcher.Invoke(() =>
-            {
-                Logger.LogVerbose(CallInfo.Site(), "Received request with Id '{0}'", e.Request.RequestId);
-
-                KeyValuePair<string, RequestDetails> requestItem = new KeyValuePair<string, RequestDetails>(e.Request.RequestId, e.Request);
-                this.requestMap.Add(requestItem);
-            });
+            return Task.CompletedTask;
         }
 
         /// <summary>Executes copy command on list view.</summary>
@@ -143,16 +161,39 @@ namespace TunnelRelay
             {
                 try
                 {
-                    TunnelRelayEngine.StartTunnelRelayEngine();
+                    HybridConnectionManagerOptions hybridConnectionManagerOptions = new HybridConnectionManagerOptions
+                    {
+                        ConnectionPath = ApplicationData.Instance.HybridConnectionName,
+                        ServiceBusKeyName = ApplicationData.Instance.HybridConnectionKeyName,
+                        ServiceBusSharedKey = ApplicationData.Instance.HybridConnectionSharedKey,
+                        ServiceBusUrl = ApplicationData.Instance.HybridConnectionUrl
+                    };
+
+                    // TODO (ramjsing) : Enable support for Plugins again.
+                    RelayRequestManager relayManager = new RelayRequestManager(
+                        Options.Create(new RelayRequestManagerOptions
+                        {
+                            InternalServiceUrl = new Uri(ApplicationData.Instance.RedirectionUrl),
+                        }),
+                        new List<ITunnelRelayPlugin>(),
+                        this);
+
+                    hybridConnectionManager = new HybridConnectionManager(
+                        Options.Create(hybridConnectionManagerOptions),
+                        relayManager);
+
+                    hybridConnectionManager.InitializeAsync(CancellationToken.None).ConfigureAwait(false).GetAwaiter().GetResult();
 
                     this.Dispatcher.Invoke(new Action(() =>
                     {
-                        this.txtProxyDetails.Text = ApplicationData.Instance.ProxyBaseUrl;
+                        this.txtProxyDetails.Text = ApplicationData.Instance.HybridConnectionUrl +  ApplicationData.Instance.HybridConnectionName;
                         this.btnExportSettings.IsEnabled = true;
                     }));
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
+                    Logger.LogError(CallInfo.Site(), ex, "Failed to establish connection to Azure Relay");
+
                     this.Dispatcher.Invoke(new Action(() =>
                     {
                         this.txtProxyDetails.Text = "FAILED TO START AZURE PROXY!!!!";
@@ -250,7 +291,7 @@ namespace TunnelRelay
             {
                 DefaultExt = ".trs",
                 Filter = "Tunnel Relay Settings Files(*.trs)|*.trs",
-                FileName = new Uri(ApplicationData.Instance.ServiceBusUrl).Authority,
+                FileName = new Uri(ApplicationData.Instance.HybridConnectionUrl).Authority,
                 OverwritePrompt = true,
             };
 

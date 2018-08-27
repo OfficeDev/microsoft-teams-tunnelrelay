@@ -24,7 +24,10 @@
 
 namespace TunnelRelay
 {
+    using System.Threading;
     using System.Windows;
+    using TunnelRelay.Diagnostics;
+    using TunnelRelay.Engine;
 
     /// <summary>
     /// Interaction logic for App.xaml
@@ -46,7 +49,13 @@ namespace TunnelRelay
         protected override void OnExit(ExitEventArgs e)
         {
             Logger.LogInfo(CallInfo.Site(), "Exiting the application with exit code '{0}'", e.ApplicationExitCode);
-            TunnelRelayEngine.StopTunnelRelayEngine();
+
+            ApplicationData.Instance.SaveSettings();
+            if (TunnelRelay.MainWindow.hybridConnectionManager != null)
+            {
+                TunnelRelay.MainWindow.hybridConnectionManager.CloseAsync(CancellationToken.None).Wait();
+            }
+
             Logger.Close();
         }
     }

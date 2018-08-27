@@ -1,5 +1,5 @@
-﻿// <copyright file="RelayRequest.cs" company="Microsoft">
-// Copyright (c) Microsoft. All rights reserved.
+﻿// <copyright file="RelayRequest.cs" company="Microsoft Corporation">
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 // </copyright>
 
@@ -36,6 +36,11 @@ namespace TunnelRelay.Core
         public string RelativeUrl { get; internal set; }
 
         /// <summary>
+        /// Gets the start time for the request.
+        /// </summary>
+        public DateTimeOffset RequestStartDateTime { get; internal set; }
+
+        /// <summary>
         /// Clones the current instance.
         /// </summary>
         /// <returns>Cloned instance.</returns>
@@ -47,6 +52,7 @@ namespace TunnelRelay.Core
                 Headers = this.Headers.Clone(),
                 InputStream = this.InputStream.Clone(),
                 RelativeUrl = this.RelativeUrl.Clone() as string,
+                RequestStartDateTime = new DateTimeOffset(this.RequestStartDateTime.DateTime),
             };
         }
     }

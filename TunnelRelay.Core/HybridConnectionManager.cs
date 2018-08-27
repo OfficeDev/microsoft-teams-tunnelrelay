@@ -1,5 +1,5 @@
-﻿// <copyright file="HybridConnectionManager.cs" company="Microsoft">
-// Copyright (c) Microsoft. All rights reserved.
+﻿// <copyright file="HybridConnectionManager.cs" company="Microsoft Corporation">
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 // </copyright>
 
@@ -48,6 +48,7 @@ namespace TunnelRelay.Core
 
             // Remove the / at the end.
             hybridConnectionManagerOptions.Value.ServiceBusUrl = hybridConnectionManagerOptions.Value.ServiceBusUrl.TrimEnd('/');
+            hybridConnectionManagerOptions.Value.ServiceBusUrl = hybridConnectionManagerOptions.Value.ServiceBusUrl.Replace("https://", string.Empty);
 
             if (string.IsNullOrEmpty(hybridConnectionManagerOptions.Value.ConnectionPath))
             {
@@ -116,6 +117,7 @@ namespace TunnelRelay.Core
                 HttpMethod = new HttpMethod(context.Request.HttpMethod),
                 InputStream = context.Request.InputStream,
                 RelativeUrl = context.Request.Url.AbsoluteUri.ToLowerInvariant().Replace(this.relayUrl, string.Empty),
+                RequestStartDateTime = DateTimeOffset.Now,
             };
 
             try

@@ -13,6 +13,7 @@ namespace TunnelRelay
     using Microsoft.Azure.Management.ResourceManager.Fluent.Models;
     using Microsoft.IdentityModel.Clients.ActiveDirectory;
     using Microsoft.Rest;
+    using TunnelRelay.Diagnostics;
 
     /// <summary>
     /// User authentication details.
@@ -40,19 +41,19 @@ namespace TunnelRelay
         private static readonly Uri PSRedirectUrl = new Uri("urn:ietf:wg:oauth:2.0:oob");
 
         /// <summary>
-        /// The user identifier.
-        /// </summary>
-        private UserIdentifier userIdentifier;
-
-        /// <summary>
         /// The tenant based token map. This stores tokens Tenant wise.
         /// </summary>
-        private ConcurrentDictionary<string, AuthenticationResult> tenantBasedTokenMap = new ConcurrentDictionary<string, AuthenticationResult>();
+        private readonly ConcurrentDictionary<string, AuthenticationResult> tenantBasedTokenMap = new ConcurrentDictionary<string, AuthenticationResult>();
 
         /// <summary>
         /// The subscription to tenant map. Stores the list of subscription alongside their tenant ids.
         /// </summary>
-        private ConcurrentDictionary<SubscriptionInner, TenantIdDescription> subscriptionToTenantMap = new ConcurrentDictionary<SubscriptionInner, TenantIdDescription>();
+        private readonly ConcurrentDictionary<SubscriptionInner, TenantIdDescription> subscriptionToTenantMap = new ConcurrentDictionary<SubscriptionInner, TenantIdDescription>();
+
+        /// <summary>
+        /// The user identifier.
+        /// </summary>
+        private UserIdentifier userIdentifier;
 
         /// <summary>
         /// Authenticates the user.
@@ -65,7 +66,7 @@ namespace TunnelRelay
                 Logger.LogInfo(CallInfo.Site(), "Logging the user in with Common tenant info");
                 AuthenticationContext authContext = new AuthenticationContext("https://login.microsoftonline.com/common", false, TokenCache.DefaultShared);
 
-                AuthenticationResult authToken = this.AcquireGraphToken("common", PromptBehavior.RefreshSession);
+                AuthenticationResult authToken = this.AcquireAzureManagementToken("common", PromptBehavior.RefreshSession);
 
                 this.userIdentifier = new UserIdentifier(authToken.UserInfo.DisplayableId, UserIdentifierType.OptionalDisplayableId);
                 this.tenantBasedTokenMap[authToken.TenantId] = authToken;
@@ -105,10 +106,10 @@ namespace TunnelRelay
                     (tenant) =>
                     {
                         // Optimization to skip refetching tokens. AAD tokens live for 1 hour.
-                         if (!this.tenantBasedTokenMap.ContainsKey(tenant.TenantId))
+                        if (!this.tenantBasedTokenMap.ContainsKey(tenant.TenantId))
                         {
                             Logger.LogInfo(CallInfo.Site(), "Get token with '{0}' tenant info", tenant.TenantId);
-                            this.tenantBasedTokenMap[tenant.TenantId] = this.AcquireGraphToken(tenant.TenantId, PromptBehavior.Never, this.userIdentifier);
+                            this.tenantBasedTokenMap[tenant.TenantId] = this.AcquireAzureManagementToken(tenant.TenantId, PromptBehavior.Never, this.userIdentifier);
                         }
                     });
 
@@ -157,7 +158,10 @@ namespace TunnelRelay
         /// <param name="promptBehavior">The prompt behavior.</param>
         /// <param name="userIdentifier">Optional user for which token is to be fetched.</param>
         /// <returns>AAD authentication result.</returns>
-        private AuthenticationResult AcquireGraphToken(string tenantId, PromptBehavior promptBehavior = PromptBehavior.Never, UserIdentifier userIdentifier = null)
+        private AuthenticationResult AcquireAzureManagementToken(
+            string tenantId,
+            PromptBehavior promptBehavior = PromptBehavior.Never,
+            UserIdentifier userIdentifier = null)
         {
             try
             {

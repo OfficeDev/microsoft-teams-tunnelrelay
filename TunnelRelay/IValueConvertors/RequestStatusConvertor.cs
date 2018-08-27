@@ -30,6 +30,7 @@ namespace TunnelRelay
     using System.Net;
     using System.Windows.Data;
     using System.Windows.Media;
+    using TunnelRelay.Engine;
 
     /// <summary>
     /// Decides the color of row in secret management.
@@ -54,10 +55,6 @@ namespace TunnelRelay
                 if (requestData?.StatusCode.Equals("Active") == true)
                 {
                     return Brushes.Green;
-                }
-                else if (requestData?.StatusCode.Equals("Exception!!") == true)
-                {
-                    return Brushes.Red;
                 }
                 else
                 {
