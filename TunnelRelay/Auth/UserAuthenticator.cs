@@ -64,8 +64,6 @@ namespace TunnelRelay
             if (this.tenantBasedTokenMap.Count == 0)
             {
                 Logger.LogInfo(CallInfo.Site(), "Logging the user in with Common tenant info");
-                AuthenticationContext authContext = new AuthenticationContext("https://login.microsoftonline.com/common", false, TokenCache.DefaultShared);
-
                 AuthenticationResult authToken = this.AcquireAzureManagementToken("common", PromptBehavior.RefreshSession);
 
                 this.userIdentifier = new UserIdentifier(authToken.UserInfo.DisplayableId, UserIdentifierType.OptionalDisplayableId);
