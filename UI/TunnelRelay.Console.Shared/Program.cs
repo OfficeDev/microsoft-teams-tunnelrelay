@@ -94,10 +94,13 @@ namespace TunnelRelay.Console.Shared
                 };
 
                 RelayRequestManager relayManager = new RelayRequestManager(
-                    Options.Create(new RelayRequestManagerOptions
+                    new SimpleOptionsMonitor<RelayRequestManagerOptions>
                     {
-                        InternalServiceUrl = new Uri(serviceAddress),
-                    }),
+                        CurrentValue = new RelayRequestManagerOptions
+                        {
+                            InternalServiceUrl = new Uri(serviceAddress),
+                        }
+                    },
                     new List<ITunnelRelayPlugin>(),
                     new RelayRequestEventListener());
 

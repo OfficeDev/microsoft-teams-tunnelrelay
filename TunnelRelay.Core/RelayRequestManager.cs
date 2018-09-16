@@ -35,23 +35,19 @@ namespace TunnelRelay.Core
         /// <param name="tunnelRelayPlugins">Instances of the plugins to use.</param>
         /// <param name="relayRequestEventListener">Optional relay request event listener instance</param>
         public RelayRequestManager(
-            IOptions<RelayRequestManagerOptions> relayRequestManagerOptions,
+            IOptionsMonitor<RelayRequestManagerOptions> relayRequestManagerOptions,
             IEnumerable<ITunnelRelayPlugin> tunnelRelayPlugins,
             IRelayRequestEventListener relayRequestEventListener = null)
         {
-            if (relayRequestManagerOptions?.Value == null)
-            {
-                throw new ArgumentNullException(nameof(relayRequestManagerOptions));
-            }
-
-            if (relayRequestManagerOptions.Value.InternalServiceUrl == null)
-            {
-                throw new ArgumentNullException(nameof(relayRequestManagerOptions.Value.InternalServiceUrl));
-            }
-
             this.tunnelRelayPlugins = tunnelRelayPlugins;
-            this.internalServiceUrl = relayRequestManagerOptions.Value.InternalServiceUrl.AbsoluteUri.TrimEnd('/');
             this.relayRequestEventListener = relayRequestEventListener;
+
+            this.UpdateSettings(relayRequestManagerOptions?.CurrentValue);
+
+            relayRequestManagerOptions.OnChange((newOptions) =>
+            {
+                this.UpdateSettings(newOptions);
+            });
         }
 
         /// <summary>
@@ -127,15 +123,6 @@ namespace TunnelRelay.Core
             }
 
             return relayResponse;
-        }
-
-        /// <summary>
-        /// Updates the internal service url used to send requests.
-        /// </summary>
-        /// <param name="internalServiceUrl">New internal service url.</param>
-        public void UpdateInternalServiceUrl(string internalServiceUrl)
-        {
-            this.internalServiceUrl = internalServiceUrl.TrimEnd('/');
         }
 
         /// <summary>
@@ -248,6 +235,21 @@ namespace TunnelRelay.Core
             {
                 httpContent.Headers.ContentLength = long.Parse(headerCollection[HttpRequestHeader.ContentLength]);
             }
+        }
+
+        private void UpdateSettings(RelayRequestManagerOptions relayRequestManagerOptions)
+        {
+            if (relayRequestManagerOptions == null)
+            {
+                throw new ArgumentNullException(nameof(relayRequestManagerOptions));
+            }
+
+            if (relayRequestManagerOptions.InternalServiceUrl == null)
+            {
+                throw new ArgumentNullException(nameof(relayRequestManagerOptions.InternalServiceUrl));
+            }
+
+            this.internalServiceUrl = relayRequestManagerOptions.InternalServiceUrl.AbsoluteUri.TrimEnd('/');
         }
     }
 }

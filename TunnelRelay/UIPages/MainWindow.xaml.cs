@@ -56,6 +56,11 @@ namespace TunnelRelay
         internal static HybridConnectionManager hybridConnectionManager;
 
         /// <summary>
+        /// Options monitor to update redirect url.
+        /// </summary>
+        internal SimpleOptionsMonitor<RelayRequestManagerOptions> relayRequestManagerOptions = new SimpleOptionsMonitor<RelayRequestManagerOptions>();
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="MainWindow"/> class.
         /// </summary>
         public MainWindow()
@@ -169,12 +174,14 @@ namespace TunnelRelay
                         ServiceBusUrl = ApplicationData.Instance.HybridConnectionUrl
                     };
 
+                    relayRequestManagerOptions.CurrentValue = new RelayRequestManagerOptions
+                    {
+                        InternalServiceUrl = new Uri(ApplicationData.Instance.RedirectionUrl),
+                    };
+
                     // TODO (ramjsing) : Enable support for Plugins again.
                     RelayRequestManager relayManager = new RelayRequestManager(
-                        Options.Create(new RelayRequestManagerOptions
-                        {
-                            InternalServiceUrl = new Uri(ApplicationData.Instance.RedirectionUrl),
-                        }),
+                        relayRequestManagerOptions,
                         new List<ITunnelRelayPlugin>(),
                         this);
 
@@ -243,6 +250,11 @@ namespace TunnelRelay
         {
             Logger.LogVerbose(CallInfo.Site(), "Updating redirection url");
             ApplicationData.Instance.RedirectionUrl = (sender as TextBox).Text;
+
+            relayRequestManagerOptions.CurrentValue = new RelayRequestManagerOptions
+            {
+                InternalServiceUrl = new Uri(ApplicationData.Instance.RedirectionUrl),
+            };
         }
 
         /// <summary>

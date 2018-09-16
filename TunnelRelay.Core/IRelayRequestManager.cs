@@ -18,11 +18,5 @@ namespace TunnelRelay.Core
         /// <param name="relayRequest">Incoming relay request.</param>
         /// <returns>Response from the internal service.</returns>
         Task<RelayResponse> HandleRelayRequestAsync(RelayRequest relayRequest);
-
-        /// <summary>
-        /// Updates the internal service url used to send requests.
-        /// </summary>
-        /// <param name="internalServiceUrl">New internal service url.</param>
-        void UpdateInternalServiceUrl(string internalServiceUrl);
     }
 }
