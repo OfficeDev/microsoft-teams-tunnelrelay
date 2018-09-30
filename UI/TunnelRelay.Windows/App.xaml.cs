@@ -1,4 +1,4 @@
-﻿// <copyright file="SharedAssemblyInfo.cs" company="Microsoft Corporation">
+﻿// <copyright file="App.xaml.cs" company="Microsoft Corporation">
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 // </copyright>
@@ -23,26 +23,41 @@
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-using System.Reflection;
+namespace TunnelRelay.Windows
+{
+    using System.Threading;
+    using System.Windows;
+    using TunnelRelay.Diagnostics;
+    using TunnelRelay.Windows.Engine;
 
-// General Information about an assembly is controlled through the following
-// set of attributes. Change these attribute values to modify the information
-// associated with an assembly.
-[assembly: AssemblyCompany("Microsoft")]
-[assembly: AssemblyProduct("TunnelRelay")]
-[assembly: AssemblyCopyright("Copyright ©  2018")]
-[assembly: AssemblyTrademark("")]
-[assembly: AssemblyCulture("")]
+    /// <summary>
+    /// Interaction logic for App.xaml.
+    /// </summary>
+    internal partial class App : Application
+    {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="App"/> class.
+        /// </summary>
+        public App()
+        {
+            Logger.RegisterLogger(new TextLogger());
+        }
 
-// Version information for an assembly consists of the following four values:
-//
-//      Major Version
-//      Minor Version
-//      Build Number
-//      Revision
-//
-// You can specify all the values or you can default the Build and Revision Numbers
-// by using the '*' as shown below:
-// [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("2.0.0.0")]
-[assembly: AssemblyFileVersion("2.0.0.0")]
+        /// <summary>
+        /// Raises the <see cref="Application.Exit" /> event.
+        /// </summary>
+        /// <param name="e">An <see cref="ExitEventArgs" /> that contains the event data.</param>
+        protected override void OnExit(ExitEventArgs e)
+        {
+            Logger.LogInfo(CallInfo.Site(), "Exiting the application with exit code '{0}'", e.ApplicationExitCode);
+
+            TunnelRelayStateManager.ApplicationData.SaveSettings();
+            if (TunnelRelayStateManager.HybridConnectionManager != null)
+            {
+                TunnelRelayStateManager.HybridConnectionManager.CloseAsync(CancellationToken.None).Wait();
+            }
+
+            Logger.Close();
+        }
+    }
+}

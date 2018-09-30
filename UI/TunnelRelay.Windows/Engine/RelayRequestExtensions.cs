@@ -1,0 +1,33 @@
+﻿// <copyright file="RelayRequestExtensions.cs" company="Microsoft Corporation">
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+// </copyright>
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace TunnelRelay.Windows.Engine
+{
+    internal static class RelayRequestExtensions
+    {
+        public static List<HeaderDetails> GetHeaderMap(this WebHeaderCollection headerCollection)
+        {
+            List<HeaderDetails> headers = new List<HeaderDetails>();
+
+            foreach (string headerName in headerCollection.AllKeys)
+            {
+                headers.Add(new HeaderDetails
+                {
+                    HeaderName = headerName,
+                    HeaderValue = headerCollection[headerName]
+                });
+            }
+
+            return headers;
+        }
+    }
+}

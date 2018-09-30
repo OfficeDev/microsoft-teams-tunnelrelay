@@ -1,4 +1,4 @@
-﻿// <copyright file="SharedAssemblyInfo.cs" company="Microsoft Corporation">
+﻿// <copyright file="Startup.xaml.cs" company="Microsoft Corporation">
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 // </copyright>
@@ -23,26 +23,37 @@
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-using System.Reflection;
+namespace TunnelRelay.Windows
+{
+    using System.Windows;
+    using TunnelRelay.Diagnostics;
+    using TunnelRelay.Windows.Engine;
 
-// General Information about an assembly is controlled through the following
-// set of attributes. Change these attribute values to modify the information
-// associated with an assembly.
-[assembly: AssemblyCompany("Microsoft")]
-[assembly: AssemblyProduct("TunnelRelay")]
-[assembly: AssemblyCopyright("Copyright ©  2018")]
-[assembly: AssemblyTrademark("")]
-[assembly: AssemblyCulture("")]
+    /// <summary>
+    /// Interaction logic for Startup.xaml.
+    /// </summary>
+    public partial class Startup : Window
+    {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Startup"/> class.
+        /// </summary>
+        public Startup()
+        {
+            this.InitializeComponent();
 
-// Version information for an assembly consists of the following four values:
-//
-//      Major Version
-//      Minor Version
-//      Build Number
-//      Revision
-//
-// You can specify all the values or you can default the Build and Revision Numbers
-// by using the '*' as shown below:
-// [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("2.0.0.0")]
-[assembly: AssemblyFileVersion("2.0.0.0")]
+            if (string.IsNullOrEmpty(TunnelRelayStateManager.ApplicationData.HybridConnectionUrl))
+            {
+                Logger.LogInfo(CallInfo.Site(), "Starting welcome experiance");
+                LoginToAzure gettingStarted = new LoginToAzure();
+                gettingStarted.Show();
+            }
+            else
+            {
+                Logger.LogInfo(CallInfo.Site(), "User is logged in already. Starting app directly");
+                new MainWindow().Show();
+            }
+
+            this.Close();
+        }
+    }
+}
