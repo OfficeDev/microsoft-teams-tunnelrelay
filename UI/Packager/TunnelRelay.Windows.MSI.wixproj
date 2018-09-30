@@ -9,7 +9,7 @@
     <OutputName>TunnelRelay</OutputName>
     <OutputType>Package</OutputType>
     <Name>TunnelRelayMSI</Name>
-    <WixInstallPath>$(MSBuildThisFileDirectory)..\Build\SDK\Wix311</WixInstallPath>
+    <WixInstallPath>$(MSBuildThisFileDirectory)..\..\Build\SDK\Wix311</WixInstallPath>
     <WixTargetsPath>$(WixInstallPath)\wix.targets</WixTargetsPath>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">

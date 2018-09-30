@@ -51,11 +51,8 @@ namespace TunnelRelay.Windows
         {
             Logger.LogInfo(CallInfo.Site(), "Exiting the application with exit code '{0}'", e.ApplicationExitCode);
 
-            TunnelRelayStateManager.ApplicationData.SaveSettings();
-            if (TunnelRelayStateManager.HybridConnectionManager != null)
-            {
-                TunnelRelayStateManager.HybridConnectionManager.CloseAsync(CancellationToken.None).Wait();
-            }
+            TunnelRelayStateManager.SaveSettingsToFile();
+            TunnelRelayStateManager.ShutdownTunnelRelayAsync().ConfigureAwait(false).GetAwaiter().GetResult();
 
             Logger.Close();
         }

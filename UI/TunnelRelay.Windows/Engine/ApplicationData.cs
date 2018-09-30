@@ -98,55 +98,10 @@ namespace TunnelRelay.Windows.Engine
         public int Version { get; set; }
 
         /// <summary>
-        /// Called after deserialization is done.
-        /// </summary>
-        /// <param name="context">Deserialization context.</param>
-        [OnDeserialized]
-        internal void OnDeserializedMethod(StreamingContext context)
-        {
-            if (this.Version < CurrentVersion)
-            {
-                this.HybridConnectionKeyName = null;
-                this.serviceBusSharedKeyBytes = null;
-                this.HybridConnectionUrl = null;
-            }
-        }
-
-        /// <summary>
-        /// Called during serialization.
-        /// </summary>
-        /// <param name="context">Serialzation context.</param>
-        [OnSerializing]
-        internal void OnSerializingMethod(StreamingContext context)
-        {
-            this.Version = CurrentVersion;
-        }
-
-        /// <summary>
-        /// Saves the settings to file.
-        /// </summary>
-        public void SaveSettings()
-        {
-            File.WriteAllText("appSettings.json", JsonConvert.SerializeObject(this));
-        }
-
-        /// <summary>
-        /// Logouts this instance.
-        /// </summary>
-        public void Logout()
-        {
-            Logger.LogInfo(CallInfo.Site(), "Logging out");
-            TunnelRelayStateManager.ApplicationData = new ApplicationData
-            {
-                RedirectionUrl = "http://localhost:3979/",
-            };
-        }
-
-        /// <summary>
         /// Gets the exported settings.
         /// </summary>
         /// <returns>Settings which can be moved in between machines.</returns>
-        public string GetExportedSettings()
+        public string ExportSettings()
         {
             // Clone the current object into a new one.
             ApplicationData applicationData = JObject.FromObject(TunnelRelayStateManager.ApplicationData).ToObject<ApplicationData>();
@@ -169,6 +124,31 @@ namespace TunnelRelay.Windows.Engine
             applicationData.serviceBusSharedKeyBytes = DataProtection.Protect(applicationData.serviceBusSharedKeyBytes);
 
             TunnelRelayStateManager.ApplicationData = applicationData;
+        }
+
+        /// <summary>
+        /// Called after deserialization is done.
+        /// </summary>
+        /// <param name="context">Deserialization context.</param>
+        [OnDeserialized]
+        internal void OnDeserializedMethod(StreamingContext context)
+        {
+            if (this.Version < CurrentVersion)
+            {
+                this.HybridConnectionKeyName = null;
+                this.serviceBusSharedKeyBytes = null;
+                this.HybridConnectionUrl = null;
+            }
+        }
+
+        /// <summary>
+        /// Called during serialization.
+        /// </summary>
+        /// <param name="context">Serialzation context.</param>
+        [OnSerializing]
+        internal void OnSerializingMethod(StreamingContext context)
+        {
+            this.Version = CurrentVersion;
         }
     }
 }

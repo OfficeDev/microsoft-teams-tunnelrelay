@@ -7,7 +7,6 @@ namespace TunnelRelay.Core
 {
     using System;
     using System.Collections.Generic;
-    using System.Text;
     using Microsoft.Extensions.Options;
 
     /// <summary>

@@ -3,25 +3,38 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 // </copyright>
 
-using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Options;
-using Newtonsoft.Json;
-using TunnelRelay.Core;
-using TunnelRelay.Diagnostics;
-using TunnelRelay.PluginEngine;
-
 namespace TunnelRelay.Windows.Engine
 {
+    using System;
+    using System.Collections.ObjectModel;
+    using System.IO;
+    using System.Linq;
+    using System.Threading;
+    using System.Threading.Tasks;
+    using Microsoft.Extensions.Options;
+    using Newtonsoft.Json;
+    using TunnelRelay.Core;
+    using TunnelRelay.Diagnostics;
+
+    /// <summary>
+    /// Maintains the state of application.
+    /// </summary>
     internal static class TunnelRelayStateManager
     {
+        /// <summary>
+        /// Current application data instance.
+        /// </summary>
         private static ApplicationData applicationData;
+
+        /// <summary>
+        /// The current connection manager.
+        /// </summary>
+        private static HybridConnectionManager hybridConnectionManager;
+
+        /// <summary>
+        /// Gets or sets the relay request event listener.
+        /// </summary>
+        public static IRelayRequestEventListener RelayRequestEventListener { get; set; }
 
         /// <summary>
         /// Gets or sets the list of plugins.
@@ -62,25 +75,10 @@ namespace TunnelRelay.Windows.Engine
         }
 
         /// <summary>
-        /// Gets or sets the current connection manager.
+        /// Gets the Options monitor to update redirect url.
         /// </summary>
-        public static HybridConnectionManager HybridConnectionManager { get; set; }
-
-        /// <summary>
-        /// Gets or sets the relay request event listener.
-        /// </summary>
-        public static IRelayRequestEventListener RelayRequestEventListener { get; set; }
-
-        /// <summary>
-        /// Options monitor to update redirect url.
-        /// </summary>
-        public static SimpleOptionsMonitor<RelayRequestManagerOptions> RelayRequestManagerOptions = 
+        public static SimpleOptionsMonitor<RelayRequestManagerOptions> RelayRequestManagerOptions { get; } =
             new SimpleOptionsMonitor<RelayRequestManagerOptions>();
-
-        /// <summary>
-        /// Current connection manager.
-        /// </summary>
-        private static HybridConnectionManager hybridConnectionManager;
 
         /// <summary>
         /// Initializes the plugins.
@@ -101,6 +99,11 @@ namespace TunnelRelay.Windows.Engine
             if (TunnelRelayStateManager.hybridConnectionManager != null)
             {
                 await TunnelRelayStateManager.hybridConnectionManager.CloseAsync(CancellationToken.None).ConfigureAwait(false);
+            }
+
+            if (TunnelRelayStateManager.RelayRequestEventListener == null)
+            {
+                throw new InvalidOperationException("No request event listener was assigned");
             }
 
             HybridConnectionManagerOptions hybridConnectionManagerOptions = new HybridConnectionManagerOptions
@@ -126,6 +129,44 @@ namespace TunnelRelay.Windows.Engine
                 relayManager);
 
             await TunnelRelayStateManager.hybridConnectionManager.InitializeAsync(CancellationToken.None).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Saves the settings to file.
+        /// </summary>
+        public static void SaveSettingsToFile()
+        {
+            if (TunnelRelayStateManager.applicationData != null)
+            {
+                File.WriteAllText("appSettings.json", JsonConvert.SerializeObject(TunnelRelayStateManager.ApplicationData));
+            }
+        }
+
+        /// <summary>
+        /// Logouts this instance.
+        /// </summary>
+        /// <returns>Task tracking operation.</returns>
+        public static async Task LogoutAsync()
+        {
+            Logger.LogInfo(CallInfo.Site(), "Logging out");
+
+            await TunnelRelayStateManager.ShutdownTunnelRelayAsync().ConfigureAwait(false);
+            TunnelRelayStateManager.ApplicationData = new ApplicationData
+            {
+                RedirectionUrl = "http://localhost:3979/",
+            };
+        }
+
+        /// <summary>
+        /// Shuts the tunnel relay down.
+        /// </summary>
+        /// <returns>Task tracking operation.</returns>
+        public static async Task ShutdownTunnelRelayAsync()
+        {
+            if (TunnelRelayStateManager.hybridConnectionManager != null)
+            {
+                await TunnelRelayStateManager.hybridConnectionManager.CloseAsync(CancellationToken.None).ConfigureAwait(false);
+            }
         }
     }
 }

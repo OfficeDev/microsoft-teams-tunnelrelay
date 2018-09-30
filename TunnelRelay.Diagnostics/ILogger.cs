@@ -1,7 +1,5 @@
 ﻿namespace TunnelRelay.Diagnostics
 {
-    using System;
-
     /// <summary>
     /// Logging interface.
     /// </summary>

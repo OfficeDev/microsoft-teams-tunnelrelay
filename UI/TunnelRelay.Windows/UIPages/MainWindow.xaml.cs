@@ -34,13 +34,11 @@ namespace TunnelRelay.Windows
     using System.Windows.Controls;
     using System.Windows.Input;
     using System.Windows.Media;
-    using Microsoft.Extensions.Options;
     using Microsoft.Win32;
     using Newtonsoft.Json.Linq;
     using TunnelRelay.Core;
     using TunnelRelay.Diagnostics;
     using TunnelRelay.Windows.Engine;
-    using TunnelRelay.PluginEngine;
 
     /// <summary>
     /// Interaction logic for MainWindow.xaml.
@@ -78,6 +76,12 @@ namespace TunnelRelay.Windows
             }
         }
 
+        /// <summary>
+        /// Executed when a new request is received.
+        /// </summary>
+        /// <param name="requestId">Unique request Id.</param>
+        /// <param name="relayRequest">Relay request instance.</param>
+        /// <returns>Task tracking operation.</returns>
         public Task RequestReceivedAsync(string requestId, RelayRequest relayRequest)
         {
             this.Dispatcher.Invoke(() =>
@@ -88,7 +92,7 @@ namespace TunnelRelay.Windows
                 {
                     Method = relayRequest.HttpMethod.Method,
                     RequestHeaders = relayRequest.Headers.GetHeaderMap(),
-                    RequestData = (new StreamReader(relayRequest.InputStream)).ReadToEnd(),
+                    RequestData = new StreamReader(relayRequest.InputStream).ReadToEnd(),
                     RequestReceiveTime = relayRequest.RequestStartDateTime.DateTime,
                     Url = relayRequest.RelativeUrl,
                     StatusCode = "Active",
@@ -100,6 +104,12 @@ namespace TunnelRelay.Windows
             return Task.CompletedTask;
         }
 
+        /// <summary>
+        /// Executed when response for a request is sent back.
+        /// </summary>
+        /// <param name="requestId">Unique request Id.</param>
+        /// <param name="relayResponse">The response being sent back.</param>
+        /// <returns>Task tracking operation.</returns>
         public Task ResponseSentAsync(string requestId, RelayResponse relayResponse)
         {
             this.Dispatcher.Invoke(() =>
@@ -159,11 +169,12 @@ namespace TunnelRelay.Windows
                 try
                 {
                     TunnelRelayStateManager.InitializePlugins();
+                    TunnelRelayStateManager.RelayRequestEventListener = this;
                     TunnelRelayStateManager.StartTunnelRelayAsync().ConfigureAwait(false).GetAwaiter().GetResult();
 
                     this.Dispatcher.Invoke(new Action(() =>
                     {
-                        this.txtProxyDetails.Text = TunnelRelayStateManager.ApplicationData.HybridConnectionUrl +  TunnelRelayStateManager.ApplicationData.HybridConnectionName;
+                        this.txtProxyDetails.Text = TunnelRelayStateManager.ApplicationData.HybridConnectionUrl + TunnelRelayStateManager.ApplicationData.HybridConnectionName;
                         this.btnExportSettings.IsEnabled = true;
                     }));
                 }
@@ -243,7 +254,7 @@ namespace TunnelRelay.Windows
         /// <param name="e">The <see cref="RoutedEventArgs"/> instance containing the event data.</param>
         private void BtnLogout_Click(object sender, RoutedEventArgs e)
         {
-            TunnelRelayStateManager.ApplicationData.Logout();
+            TunnelRelayStateManager.LogoutAsync().ConfigureAwait(false).GetAwaiter().GetResult();
 
             MessageBox.Show("Logout Complete. Application will now close to complete cleanup. Open again to login");
             Application.Current.Shutdown();
@@ -292,7 +303,7 @@ namespace TunnelRelay.Windows
             {
                 string exportedSettingsFileName = saveFileDialog.FileName;
 
-                File.WriteAllText(exportedSettingsFileName, TunnelRelayStateManager.ApplicationData.GetExportedSettings());
+                File.WriteAllText(exportedSettingsFileName, TunnelRelayStateManager.ApplicationData.ExportSettings());
             }
         }
     }

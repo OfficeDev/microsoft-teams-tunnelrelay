@@ -7,7 +7,7 @@
     /// <summary>
     /// Text logger to log into a text file.
     /// </summary>
-    /// <seealso cref="TunnelRelay.Core.ILogger" />
+    /// <seealso cref="ILogger" />
     public class TextLogger : ILogger
     {
         /// <summary>

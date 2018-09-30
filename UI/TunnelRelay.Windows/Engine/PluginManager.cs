@@ -3,20 +3,18 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 // </copyright>
 
-using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
-using TunnelRelay.Diagnostics;
-using TunnelRelay.PluginEngine;
-using TunnelRelay.Plugins;
-
 namespace TunnelRelay.Windows.Engine
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Collections.ObjectModel;
+    using System.IO;
+    using System.Linq;
+    using System.Reflection;
+    using TunnelRelay.Diagnostics;
+    using TunnelRelay.PluginEngine;
+    using TunnelRelay.Plugins;
+
     /// <summary>
     /// Plugin manager.
     /// </summary>
@@ -25,6 +23,7 @@ namespace TunnelRelay.Windows.Engine
         /// <summary>
         /// Initializes the plugins.
         /// </summary>
+        /// <returns>Initialized plugin list.</returns>
         public ObservableCollection<PluginDetails> InitializePlugins()
         {
             List<ITunnelRelayPlugin> pluginInstances = new List<ITunnelRelayPlugin>();

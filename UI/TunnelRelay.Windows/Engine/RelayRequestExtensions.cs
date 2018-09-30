@@ -3,17 +3,21 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 // </copyright>
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Text;
-using System.Threading.Tasks;
-
 namespace TunnelRelay.Windows.Engine
 {
+    using System.Collections.Generic;
+    using System.Net;
+
+    /// <summary>
+    /// Relay request extensions.
+    /// </summary>
     internal static class RelayRequestExtensions
     {
+        /// <summary>
+        /// Converts header collection into UI format.
+        /// </summary>
+        /// <param name="headerCollection">Header collection.</param>
+        /// <returns>Headers in UI format.</returns>
         public static List<HeaderDetails> GetHeaderMap(this WebHeaderCollection headerCollection)
         {
             List<HeaderDetails> headers = new List<HeaderDetails>();
@@ -23,7 +27,7 @@ namespace TunnelRelay.Windows.Engine
                 headers.Add(new HeaderDetails
                 {
                     HeaderName = headerName,
-                    HeaderValue = headerCollection[headerName]
+                    HeaderValue = headerCollection[headerName],
                 });
             }
 

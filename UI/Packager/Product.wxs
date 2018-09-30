@@ -1,0 +1,411 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <Product Id="*" Name="Tunnel Relay" Language="1033" Version="2.0.0.0" Manufacturer="Microsoft" UpgradeCode="f777fda3-99c0-4223-9ef3-271b868864f3">
+    <Package InstallerVersion="200" Compressed="yes" InstallPrivileges="elevated" />
+
+    <MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
+    <MediaTemplate EmbedCab="yes" CompressionLevel="high" />
+
+    <Feature Id="ProductFeature" Title="TunnelRelay" Level="1">
+      <ComponentGroupRef Id="ProductComponents" />
+    </Feature>
+
+    <Property Id="ARPPRODUCTICON" Value="TunnelRelayIcon.exe" />
+    <Property Id="ApplicationFolderName" Value="TunnelRelay" />
+    <Property Id="WixAppFolder" Value="WixPerMachineFolder" />
+    <WixVariable Id="WixUISupportPerUser" Value="0" />
+    <WixVariable Id="WixUILicenseRtf" Value="License.rtf" />
+    <WixVariable Id="WixUIBannerBmp" Value="TRBannerTop.bmp" />
+    <UIRef Id="WixUI_Advanced" />
+
+    <Property Id="MyURL"><![CDATA[https://github.com/OfficeDev/microsoft-teams-tunnelrelay/blob/master/README.md]]></Property>
+    <InstallExecuteSequence>
+      <!-- Launch webpage during install, but not upgrade -->
+      <Custom Action="SetOpenURL" After="InstallFinalize">NOT Installed AND NOT UPGRADINGPRODUCTCODE</Custom>
+      <Custom Action="OpenURL" After="SetOpenURL">NOT Installed AND NOT UPGRADINGPRODUCTCODE</Custom>
+    </InstallExecuteSequence>
+  </Product>
+
+  <!--Directory Declarations-->
+  <Fragment>
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <Directory Id="DesktopFolder" Name="Desktop" />
+      <Directory Id="ProgramFilesFolder">
+        <Directory Id="APPLICATIONFOLDER" Name="TunnelRelay" />
+      </Directory>
+    </Directory>
+  </Fragment>
+
+  <!--File declaration-->
+  <Fragment>
+    <ComponentGroup Id="ProductComponents" Directory="APPLICATIONFOLDER">
+      <Component Id="TunnelRelayUI" Guid="4ECA0543-FA69-4317-ADCC-5E9BE7AB54C5">
+        <File Id="TunnelRelayUIExe" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\TunnelRelay.Windows.exe" DiskId="1" KeyPath="yes">
+          <Shortcut
+            Id="TunnelRelayUIExeShortcut"
+            Name="Tunnel Relay"
+            Description="Tunnel Relay"
+            Directory="DesktopFolder"
+            Advertise="yes"
+            WorkingDirectory="APPLICATIONFOLDER">
+            <Icon Id="TunnelRelayIcon.exe" SourceFile="..\TunnelRelay.Windows\bin\$(var.Configuration)\TunnelRelay.Windows.exe" />
+          </Shortcut>
+        </File>
+        <File Id="TunnelRelayUIExeConfig" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\TunnelRelay.Windows.exe.config" DiskId="1" />
+        <File Id="TunnelRelayUIPdb" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\TunnelRelay.Windows.pdb" DiskId="1" />
+        <File Id="TunnelRelayUIXml" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\TunnelRelay.Windows.xml" DiskId="1" />
+
+      </Component>
+      <Component Id="TunnelRelayCore" Guid="1B0D63B9-F963-4853-A6A6-3C4BAA2EDC71">
+        <File Id="TunnelRelayCoreDll" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\TunnelRelay.Core.dll" DiskId="1" />
+        <File Id="TunnelRelayCorePdb" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\TunnelRelay.Core.pdb" DiskId="1" />
+        <File Id="TunnelRelayCoreXml" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\TunnelRelay.Core.xml" DiskId="1" />
+        <File Id="TunnelRelayConfig" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\appSettings.Json.default" Name="appSettings.Json" DiskId="1">
+          <Permission ChangePermission="yes" GenericAll="yes" User="Everyone" TakeOwnership="yes" Write="yes" WriteAttributes="yes" WriteExtendedAttributes="yes" />
+        </File>
+      </Component>
+      <Component Id="TunnelRelayPlugin" Guid="2D4C603E-EA3B-4A6B-8DC8-5075FC9FD7EC">
+        <File Id="TunnelRelayPluginDll" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\TunnelRelay.Plugins.dll" DiskId="1" />
+        <File Id="TunnelRelayPluginPdb" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\TunnelRelay.Plugins.pdb" DiskId="1" />
+        <File Id="TunnelRelayPluginXml" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\TunnelRelay.Plugins.xml" DiskId="1" />
+      </Component>
+      <Component Id="TunnelRelayDiagnostics" Guid="FE84816C-98B6-4F0D-A107-8560D4207650">
+        <File Id="TunnelRelayDiagnosticsDll" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\TunnelRelay.Diagnostics.dll" DiskId="1" />
+        <File Id="TunnelRelayDiagnosticsPdb" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\TunnelRelay.Diagnostics.pdb" DiskId="1" />
+        <File Id="TunnelRelayDiagnosticsXml" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\TunnelRelay.Diagnostics.xml" DiskId="1" />
+      </Component>
+      <Component Id="NewtonsoftJson" Guid="19B7E2F8-9E4C-40D1-A6A1-499F2576887C">
+        <File Id="NewtonsoftJsonDll" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\Newtonsoft.Json.dll" DiskId="1" />
+      </Component>
+      <Component Id="RestClientRuntime" Guid="28B803DF-DFE3-4DC7-B0B3-007A4A05207D">
+        <File Id="RestClientRuntimeDll" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\Microsoft.Rest.ClientRuntime.dll" DiskId="1" />
+      </Component>
+      <Component Id="RestClientRuntimeAzure" Guid="720E64F0-3677-4FDA-9700-0AEBE6CBBD0F">
+        <File Id="RestClientRuntimeAzureDll" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\Microsoft.Rest.ClientRuntime.Azure.dll" DiskId="1" />
+      </Component>
+      <Component Id="RestClientRuntimeAzureAuth" Guid="B2C9400F-EB89-4368-A600-F84C3D88C3AB">
+        <File Id="RestClientRuntimeAzureAuthDll" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\Microsoft.Rest.ClientRuntime.Azure.Authentication.dll" DiskId="1" />
+      </Component>
+      <Component Id="Adal" Guid="CD88DA03-66BC-4B91-9358-B1BA19A0595D">
+        <File Id="AdalDll" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\Microsoft.IdentityModel.Clients.ActiveDirectory.dll" DiskId="1" />
+        <File Id="AdalDesktopDll" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\Microsoft.IdentityModel.Clients.ActiveDirectory.Platform.dll" DiskId="1" />
+      </Component>
+      <Component Id="ResourceManagerManagement" Guid="3EA25677-E0C9-4B21-B684-204CA4992F9F">
+        <File Id="ResourceManagerManagementDll" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\Microsoft.Azure.Management.ResourceManager.Fluent.dll" DiskId="1" />
+      </Component>
+      <Component Id="MicrosoftAzureManagementRelayFluent" Guid="8D13C315-52B3-4029-AA1F-BF6A69C6B50E">
+        <File Id="MicrosoftAzureManagementRelayFluentDll" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\Microsoft.Azure.Management.Relay.Fluent.dll" DiskId="1" />
+      </Component>
+      <Component Id="MicrosoftAzureRelay" Guid="DA236E24-6175-4044-B11B-7C54E5FBE554">
+        <File Id="MicrosoftAzureRelayDll" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\Microsoft.Azure.Relay.dll" DiskId="1" />
+      </Component>
+
+      <!-- NetStandard DLLs-->
+      <Component Id="MicrosoftExtensionsDependencyInjectionAbstractions" Guid="92AD4270-2000-46BD-A7E7-2F3B15FB7511">
+        <File Id="MicrosoftExtensionsDependencyInjectionAbstractionsDll" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\Microsoft.Extensions.DependencyInjection.Abstractions.dll" DiskId="1" />
+      </Component>
+      <Component Id="MicrosoftExtensionsOptions" Guid="5BA9EC4B-AFA9-46FC-96A9-0859595F672A">
+        <File Id="MicrosoftExtensionsOptionsDll" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\Microsoft.Extensions.Options.dll" DiskId="1" />
+      </Component>
+      <Component Id="MicrosoftExtensionsPrimitives" Guid="013AD58C-6528-4801-BEA0-34B2BDEF2411">
+        <File Id="MicrosoftExtensionsPrimitivesDll" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\Microsoft.Extensions.Primitives.dll" DiskId="1" />
+      </Component>
+      <Component Id="MicrosoftWin32Primitives" Guid="B9716EF2-C1E8-406B-A3F0-B277BCEDAA17">
+        <File Id="MicrosoftWin32PrimitivesDll" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\Microsoft.Win32.Primitives.dll" DiskId="1" />
+      </Component>
+      <Component Id="netstandard" Guid="F0697E44-271F-4D47-9AF3-579652D52153">
+        <File Id="netstandardDll" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\netstandard.dll" DiskId="1" />
+      </Component>
+      <Component Id="SystemAppContext" Guid="77CC5F70-5387-4882-8555-99961743F082">
+        <File Id="SystemAppContextDll" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\System.AppContext.dll" DiskId="1" />
+      </Component>
+      <Component Id="SystemCollectionsConcurrent" Guid="147C474B-84E8-4DE0-A066-4ADD09B3EB1C">
+        <File Id="SystemCollectionsConcurrentDll" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\System.Collections.Concurrent.dll" DiskId="1" />
+      </Component>
+      <Component Id="SystemCollections" Guid="C7A8011D-6CA5-4F5F-A9F1-1DADADC6DD40">
+        <File Id="SystemCollectionsDll" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\System.Collections.dll" DiskId="1" />
+      </Component>
+      <Component Id="SystemCollectionsNonGeneric" Guid="F1FB7048-CD39-40E3-92C2-FA2F99E8EF18">
+        <File Id="SystemCollectionsNonGenericDll" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\System.Collections.NonGeneric.dll" DiskId="1" />
+      </Component>
+      <Component Id="SystemCollectionsSpecialized" Guid="6CA04A95-21B6-48DA-A696-995BD150E575">
+        <File Id="SystemCollectionsSpecializedDll" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\System.Collections.Specialized.dll" DiskId="1" />
+      </Component>
+      <Component Id="SystemComponentModel" Guid="C94C0AED-B7CD-4299-99A6-91CF84975C6B">
+        <File Id="SystemComponentModelDll" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\System.ComponentModel.dll" DiskId="1" />
+      </Component>
+      <Component Id="SystemComponentModelEventBasedAsync" Guid="4B96803B-455D-4702-BB09-47EC5EF9B0F9">
+        <File Id="SystemComponentModelEventBasedAsyncDll" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\System.ComponentModel.EventBasedAsync.dll" DiskId="1" />
+      </Component>
+      <Component Id="SystemComponentModelPrimitives" Guid="0F339D81-25CC-4965-ACD3-9514511C086B">
+        <File Id="SystemComponentModelPrimitivesDll" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\System.ComponentModel.Primitives.dll" DiskId="1" />
+      </Component>
+      <Component Id="SystemComponentModelTypeConverter" Guid="C0684507-1968-463C-A14F-B46C9BB00053">
+        <File Id="SystemComponentModelTypeConverterDll" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\System.ComponentModel.TypeConverter.dll" DiskId="1" />
+      </Component>
+      <Component Id="SystemConsole" Guid="6198C56D-2590-4181-9954-50DDC8F98FCC">
+        <File Id="SystemConsoleDll" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\System.Console.dll" DiskId="1" />
+      </Component>
+      <Component Id="SystemDataCommon" Guid="B4C714DA-A446-441A-A85E-63AA6EB26201">
+        <File Id="SystemDataCommonDll" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\System.Data.Common.dll" DiskId="1" />
+      </Component>
+      <Component Id="SystemDiagnosticsContracts" Guid="F4F5AFFE-F69F-4D55-9930-BB8A9FCC8924">
+        <File Id="SystemDiagnosticsContractsDll" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\System.Diagnostics.Contracts.dll" DiskId="1" />
+      </Component>
+      <Component Id="SystemDiagnosticsDebug" Guid="C33F5E6E-B452-40FC-8AD5-A7BE6FA31A74">
+        <File Id="SystemDiagnosticsDebugDll" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\System.Diagnostics.Debug.dll" DiskId="1" />
+      </Component>
+      <Component Id="SystemDiagnosticsFileVersionInfo" Guid="33EC9589-2869-4C0B-9361-42B0E534C452">
+        <File Id="SystemDiagnosticsFileVersionInfoDll" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\System.Diagnostics.FileVersionInfo.dll" DiskId="1" />
+      </Component>
+      <Component Id="SystemDiagnosticsProcess" Guid="7F275D26-BB44-4ACD-8DA3-8D80793494E1">
+        <File Id="SystemDiagnosticsProcessDll" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\System.Diagnostics.Process.dll" DiskId="1" />
+      </Component>
+      <Component Id="SystemDiagnosticsStackTrace" Guid="C2FC3DEE-F4CF-456C-AEEA-7E3356BE07E2">
+        <File Id="SystemDiagnosticsStackTraceDll" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\System.Diagnostics.StackTrace.dll" DiskId="1" />
+      </Component>
+      <Component Id="SystemDiagnosticsTextWriterTraceListener" Guid="82201848-6244-4ABE-9FCE-D9CCF18D0DC0">
+        <File Id="SystemDiagnosticsTextWriterTraceListenerDll" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\System.Diagnostics.TextWriterTraceListener.dll" DiskId="1" />
+      </Component>
+      <Component Id="SystemDiagnosticsTools" Guid="4540DA99-BB94-4E1B-9802-E82FA5B9FA96">
+        <File Id="SystemDiagnosticsToolsDll" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\System.Diagnostics.Tools.dll" DiskId="1" />
+      </Component>
+      <Component Id="SystemDiagnosticsTraceSource" Guid="47720D29-7362-4039-B82C-E2D0DC2F1CA1">
+        <File Id="SystemDiagnosticsTraceSourceDll" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\System.Diagnostics.TraceSource.dll" DiskId="1" />
+      </Component>
+      <Component Id="SystemDiagnosticsTracing" Guid="643CA375-6BEC-42C8-8BE7-AA9243AE0A60">
+        <File Id="SystemDiagnosticsTracingDll" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\System.Diagnostics.Tracing.dll" DiskId="1" />
+      </Component>
+      <Component Id="SystemDrawingPrimitives" Guid="C65FE948-455F-4056-95DE-C398DFA77C91">
+        <File Id="SystemDrawingPrimitivesDll" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\System.Drawing.Primitives.dll" DiskId="1" />
+      </Component>
+      <Component Id="SystemDynamicRuntime" Guid="0B5AEB77-3D1C-40CC-904E-DEE7A4F5719B">
+        <File Id="SystemDynamicRuntimeDll" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\System.Dynamic.Runtime.dll" DiskId="1" />
+      </Component>
+      <Component Id="SystemGlobalizationCalendars" Guid="E3604007-CE99-4B7F-9441-6C5D9E707FB8">
+        <File Id="SystemGlobalizationCalendarsDll" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\System.Globalization.Calendars.dll" DiskId="1" />
+      </Component>
+      <Component Id="SystemGlobalization" Guid="10DA93F8-7C3E-4310-B381-6503BC2B78F8">
+        <File Id="SystemGlobalizationDll" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\System.Globalization.dll" DiskId="1" />
+      </Component>
+      <Component Id="SystemGlobalizationExtensions" Guid="71A629AC-76A3-4E92-9899-1FEFFC778155">
+        <File Id="SystemGlobalizationExtensionsDll" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\System.Globalization.Extensions.dll" DiskId="1" />
+      </Component>
+      <Component Id="SystemIOCompression" Guid="1A8B5765-CF12-4556-933B-B4E986917FEF">
+        <File Id="SystemIOCompressionDll" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\System.IO.Compression.dll" DiskId="1" />
+      </Component>
+      <Component Id="SystemIOCompressionZipFile" Guid="61046CEC-580F-4A0F-B00B-D3DE470B39C4">
+        <File Id="SystemIOCompressionZipFileDll" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\System.IO.Compression.ZipFile.dll" DiskId="1" />
+      </Component>
+      <Component Id="SystemIO" Guid="680EDD55-C8B4-4D77-B125-C2D73552AC8D">
+        <File Id="SystemIODll" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\System.IO.dll" DiskId="1" />
+      </Component>
+      <Component Id="SystemIOFileSystem" Guid="72CF6F62-8EC5-4B96-8FEC-20DAF551B1D0">
+        <File Id="SystemIOFileSystemDll" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\System.IO.FileSystem.dll" DiskId="1" />
+      </Component>
+      <Component Id="SystemIOFileSystemDriveInfo" Guid="3D7D0487-5C38-4F06-862B-1232BF3A01CE">
+        <File Id="SystemIOFileSystemDriveInfoDll" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\System.IO.FileSystem.DriveInfo.dll" DiskId="1" />
+      </Component>
+      <Component Id="SystemIOFileSystemPrimitives" Guid="1069DA04-EEA0-48B6-9040-C8054A33BCAF">
+        <File Id="SystemIOFileSystemPrimitivesDll" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\System.IO.FileSystem.Primitives.dll" DiskId="1" />
+      </Component>
+      <Component Id="SystemIOFileSystemWatcher" Guid="F6A69988-D86F-4333-97C4-98AEA72768AC">
+        <File Id="SystemIOFileSystemWatcherDll" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\System.IO.FileSystem.Watcher.dll" DiskId="1" />
+      </Component>
+      <Component Id="SystemIOIsolatedStorage" Guid="D26FCFE8-5033-43B4-AE09-B4464C3E2202">
+        <File Id="SystemIOIsolatedStorageDll" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\System.IO.IsolatedStorage.dll" DiskId="1" />
+      </Component>
+      <Component Id="SystemIOMemoryMappedFiles" Guid="2CEF6DE5-B62F-47FF-AEEE-9A93435D7C1E">
+        <File Id="SystemIOMemoryMappedFilesDll" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\System.IO.MemoryMappedFiles.dll" DiskId="1" />
+      </Component>
+      <Component Id="SystemIOPipes" Guid="E86025F0-CDE6-45EF-96D2-090DE12D17E9">
+        <File Id="SystemIOPipesDll" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\System.IO.Pipes.dll" DiskId="1" />
+      </Component>
+      <Component Id="SystemIOUnmanagedMemoryStream" Guid="8978865E-87D6-4215-B872-F20755BD3F7E">
+        <File Id="SystemIOUnmanagedMemoryStreamDll" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\System.IO.UnmanagedMemoryStream.dll" DiskId="1" />
+      </Component>
+      <Component Id="SystemLinq" Guid="E50859FB-6735-4F03-AD1E-D55CFFE039B9">
+        <File Id="SystemLinqDll" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\System.Linq.dll" DiskId="1" />
+      </Component>
+      <Component Id="SystemLinqExpressions" Guid="BAB39BFF-709E-4AF9-9E30-5A1E1840ACDB">
+        <File Id="SystemLinqExpressionsDll" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\System.Linq.Expressions.dll" DiskId="1" />
+      </Component>
+      <Component Id="SystemLinqParallel" Guid="A5522943-05A0-466F-9E05-0C905476220E">
+        <File Id="SystemLinqParallelDll" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\System.Linq.Parallel.dll" DiskId="1" />
+      </Component>
+      <Component Id="SystemLinqQueryable" Guid="EA22A06E-C335-45EB-953F-4E5DE1264109">
+        <File Id="SystemLinqQueryableDll" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\System.Linq.Queryable.dll" DiskId="1" />
+      </Component>
+      <Component Id="SystemNetHttp" Guid="E68CBCB7-6BC2-4810-AD8C-2341A966D096">
+        <File Id="SystemNetHttpDll" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\System.Net.Http.dll" DiskId="1" />
+      </Component>
+      <Component Id="SystemNetNameResolution" Guid="7F2106B4-17E9-4A91-9534-75FCDB247A54">
+        <File Id="SystemNetNameResolutionDll" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\System.Net.NameResolution.dll" DiskId="1" />
+      </Component>
+      <Component Id="SystemNetNetworkInformation" Guid="F8EDE31B-EC2F-4472-9253-5DA86D4D0009">
+        <File Id="SystemNetNetworkInformationDll" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\System.Net.NetworkInformation.dll" DiskId="1" />
+      </Component>
+      <Component Id="SystemNetPing" Guid="A47C25BB-5642-4955-AE1D-ACEFF882AEFF">
+        <File Id="SystemNetPingDll" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\System.Net.Ping.dll" DiskId="1" />
+      </Component>
+      <Component Id="SystemNetPrimitives" Guid="CB7A1C7B-22A0-4448-A4A1-186DD632A467">
+        <File Id="SystemNetPrimitivesDll" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\System.Net.Primitives.dll" DiskId="1" />
+      </Component>
+      <Component Id="SystemNetRequests" Guid="41D412C5-0780-47AE-8F41-8D40391F3C01">
+        <File Id="SystemNetRequestsDll" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\System.Net.Requests.dll" DiskId="1" />
+      </Component>
+      <Component Id="SystemNetSecurity" Guid="5E06C2A4-A917-4800-8E24-C8458CDE0806">
+        <File Id="SystemNetSecurityDll" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\System.Net.Security.dll" DiskId="1" />
+      </Component>
+      <Component Id="SystemNetSockets" Guid="1E506659-5C93-4A7F-9FB2-A5D594402E15">
+        <File Id="SystemNetSocketsDll" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\System.Net.Sockets.dll" DiskId="1" />
+      </Component>
+      <Component Id="SystemNetWebHeaderCollection" Guid="D933A8FC-E44D-43A8-BD13-CFDE3EC35AFE">
+        <File Id="SystemNetWebHeaderCollectionDll" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\System.Net.WebHeaderCollection.dll" DiskId="1" />
+      </Component>
+      <Component Id="SystemNetWebSocketsClient" Guid="C6B84124-87BF-4C19-A238-485FA6EB0176">
+        <File Id="SystemNetWebSocketsClientDll" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\System.Net.WebSockets.Client.dll" DiskId="1" />
+      </Component>
+      <Component Id="SystemNetWebSockets" Guid="EFF992C9-4277-4BE4-9218-355A6D944981">
+        <File Id="SystemNetWebSocketsDll" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\System.Net.WebSockets.dll" DiskId="1" />
+      </Component>
+      <Component Id="SystemObjectModel" Guid="F05C03CE-B9A8-4C38-8A11-58903EB9EE77">
+        <File Id="SystemObjectModelDll" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\System.ObjectModel.dll" DiskId="1" />
+      </Component>
+      <Component Id="SystemReflection" Guid="0B370598-CB40-4ACF-87E6-7D242610754D">
+        <File Id="SystemReflectionDll" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\System.Reflection.dll" DiskId="1" />
+      </Component>
+      <Component Id="SystemReflectionExtensions" Guid="7042893D-49D4-46A5-9ED5-D5C3FA30E257">
+        <File Id="SystemReflectionExtensionsDll" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\System.Reflection.Extensions.dll" DiskId="1" />
+      </Component>
+      <Component Id="SystemReflectionPrimitives" Guid="15933B03-1245-49DD-AE5F-44691BFD3ECA">
+        <File Id="SystemReflectionPrimitivesDll" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\System.Reflection.Primitives.dll" DiskId="1" />
+      </Component>
+      <Component Id="SystemResourcesReader" Guid="D0145CE9-B882-4E41-800F-333148CF0DF7">
+        <File Id="SystemResourcesReaderDll" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\System.Resources.Reader.dll" DiskId="1" />
+      </Component>
+      <Component Id="SystemResourcesResourceManager" Guid="69FDC0E4-1908-4CEE-9FD3-E0D8D512D9D2">
+        <File Id="SystemResourcesResourceManagerDll" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\System.Resources.ResourceManager.dll" DiskId="1" />
+      </Component>
+      <Component Id="SystemResourcesWriter" Guid="466B26F0-829F-46DF-B6EC-B893C9392A83">
+        <File Id="SystemResourcesWriterDll" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\System.Resources.Writer.dll" DiskId="1" />
+      </Component>
+      <Component Id="SystemRuntimeCompilerServicesUnsafe" Guid="22D0CE53-4A5E-4C16-A5DD-B67BEE27549C">
+        <File Id="SystemRuntimeCompilerServicesUnsafeDll" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\System.Runtime.CompilerServices.Unsafe.dll" DiskId="1" />
+      </Component>
+      <Component Id="SystemRuntimeCompilerServicesVisualC" Guid="18E9BFFC-898C-4A6C-87C2-5DD666E6E7A0">
+        <File Id="SystemRuntimeCompilerServicesVisualCDll" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\System.Runtime.CompilerServices.VisualC.dll" DiskId="1" />
+      </Component>
+      <Component Id="SystemRuntime" Guid="38AEDBD4-A39A-4189-8EEB-AE53051C45AE">
+        <File Id="SystemRuntimeDll" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\System.Runtime.dll" DiskId="1" />
+      </Component>
+      <Component Id="SystemRuntimeExtensions" Guid="4A35F417-4A9C-48F5-8548-9403ABBAC4D7">
+        <File Id="SystemRuntimeExtensionsDll" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\System.Runtime.Extensions.dll" DiskId="1" />
+      </Component>
+      <Component Id="SystemRuntimeHandles" Guid="3D7BBBDF-09EE-4527-80A0-307EDFE6799B">
+        <File Id="SystemRuntimeHandlesDll" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\System.Runtime.Handles.dll" DiskId="1" />
+      </Component>
+      <Component Id="SystemRuntimeInteropServices" Guid="EF45A030-7413-49E5-9740-FE2C6FEEE14E">
+        <File Id="SystemRuntimeInteropServicesDll" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\System.Runtime.InteropServices.dll" DiskId="1" />
+      </Component>
+      <Component Id="SystemRuntimeInteropServicesRuntimeInformation" Guid="0AD7F85F-8CC7-431E-A145-5C0426D34A58">
+        <File Id="SystemRuntimeInteropServicesRuntimeInformationDll" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\System.Runtime.InteropServices.RuntimeInformation.dll" DiskId="1" />
+      </Component>
+      <Component Id="SystemRuntimeNumerics" Guid="ECCB8F57-5C68-453A-BFC9-AC5D26481805">
+        <File Id="SystemRuntimeNumericsDll" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\System.Runtime.Numerics.dll" DiskId="1" />
+      </Component>
+      <Component Id="SystemRuntimeSerializationFormatters" Guid="EB95DD4E-D63C-4C54-8FF7-A199C33D81AD">
+        <File Id="SystemRuntimeSerializationFormattersDll" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\System.Runtime.Serialization.Formatters.dll" DiskId="1" />
+      </Component>
+      <Component Id="SystemRuntimeSerializationJson" Guid="4EFFF3B1-6EAA-4ADD-A2F0-E23896DC708F">
+        <File Id="SystemRuntimeSerializationJsonDll" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\System.Runtime.Serialization.Json.dll" DiskId="1" />
+      </Component>
+      <Component Id="SystemRuntimeSerializationPrimitives" Guid="2066BC9C-9239-4789-80E9-E2B2FD18BC00">
+        <File Id="SystemRuntimeSerializationPrimitivesDll" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\System.Runtime.Serialization.Primitives.dll" DiskId="1" />
+      </Component>
+      <Component Id="SystemRuntimeSerializationXml" Guid="FC10CC04-92DD-4674-9425-4BFBEA5971A9">
+        <File Id="SystemRuntimeSerializationXmlDll" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\System.Runtime.Serialization.Xml.dll" DiskId="1" />
+      </Component>
+      <Component Id="SystemSecurityClaims" Guid="FA7F034E-4C99-4389-A63B-FCB8E46A8056">
+        <File Id="SystemSecurityClaimsDll" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\System.Security.Claims.dll" DiskId="1" />
+      </Component>
+      <Component Id="SystemSecurityCryptographyAlgorithms" Guid="CCD7E95E-0ABD-452D-9D57-D0BD6B07775F">
+        <File Id="SystemSecurityCryptographyAlgorithmsDll" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\System.Security.Cryptography.Algorithms.dll" DiskId="1" />
+      </Component>
+      <Component Id="SystemSecurityCryptographyCsp" Guid="D6E0AE70-72D4-4FA4-9AA1-228903D67257">
+        <File Id="SystemSecurityCryptographyCspDll" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\System.Security.Cryptography.Csp.dll" DiskId="1" />
+      </Component>
+      <Component Id="SystemSecurityCryptographyEncoding" Guid="6F91D27F-0C5F-4CE6-9CFB-5F9D5F35C233">
+        <File Id="SystemSecurityCryptographyEncodingDll" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\System.Security.Cryptography.Encoding.dll" DiskId="1" />
+      </Component>
+      <Component Id="SystemSecurityCryptographyPrimitives" Guid="03834508-28E0-4C21-A190-154B965F7861">
+        <File Id="SystemSecurityCryptographyPrimitivesDll" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\System.Security.Cryptography.Primitives.dll" DiskId="1" />
+      </Component>
+      <Component Id="SystemSecurityCryptographyX509Certificates" Guid="F5526788-D522-4850-987E-6FB0929BBA39">
+        <File Id="SystemSecurityCryptographyX509CertificatesDll" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\System.Security.Cryptography.X509Certificates.dll" DiskId="1" />
+      </Component>
+      <Component Id="SystemSecurityPrincipal" Guid="4E473CA1-D4D5-4C80-84F1-B032B6CA29F0">
+        <File Id="SystemSecurityPrincipalDll" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\System.Security.Principal.dll" DiskId="1" />
+      </Component>
+      <Component Id="SystemSecuritySecureString" Guid="60434BF9-D17E-4C3C-A947-D9B70B351D11">
+        <File Id="SystemSecuritySecureStringDll" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\System.Security.SecureString.dll" DiskId="1" />
+      </Component>
+      <Component Id="SystemTextEncoding" Guid="9D2D355C-5B77-4340-B580-22AE74EEB55A">
+        <File Id="SystemTextEncodingDll" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\System.Text.Encoding.dll" DiskId="1" />
+      </Component>
+      <Component Id="SystemTextEncodingExtensions" Guid="7E69A181-8608-47F5-AC0C-08D0C8ED3071">
+        <File Id="SystemTextEncodingExtensionsDll" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\System.Text.Encoding.Extensions.dll" DiskId="1" />
+      </Component>
+      <Component Id="SystemTextRegularExpressions" Guid="8ECE398B-23C0-46F3-838A-B67D2638F51F">
+        <File Id="SystemTextRegularExpressionsDll" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\System.Text.RegularExpressions.dll" DiskId="1" />
+      </Component>
+      <Component Id="SystemThreading" Guid="94C9E726-5914-41E5-86AF-FBD9296BAFEA">
+        <File Id="SystemThreadingDll" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\System.Threading.dll" DiskId="1" />
+      </Component>
+      <Component Id="SystemThreadingOverlapped" Guid="E5B3D5C5-84FD-4A19-BEDB-1AAAF677131E">
+        <File Id="SystemThreadingOverlappedDll" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\System.Threading.Overlapped.dll" DiskId="1" />
+      </Component>
+      <Component Id="SystemThreadingTasks" Guid="76EF85A9-81B7-4C71-AE6D-78952CB4F918">
+        <File Id="SystemThreadingTasksDll" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\System.Threading.Tasks.dll" DiskId="1" />
+      </Component>
+      <Component Id="SystemThreadingTasksParallel" Guid="B3C51090-6D6B-41C8-A47E-857CA50EBC4D">
+        <File Id="SystemThreadingTasksParallelDll" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\System.Threading.Tasks.Parallel.dll" DiskId="1" />
+      </Component>
+      <Component Id="SystemThreadingThread" Guid="1DBA5204-40AA-402B-B258-6E777E7B1D4A">
+        <File Id="SystemThreadingThreadDll" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\System.Threading.Thread.dll" DiskId="1" />
+      </Component>
+      <Component Id="SystemThreadingThreadPool" Guid="1CEB6350-84C3-4504-A6F7-09B32B261DE3">
+        <File Id="SystemThreadingThreadPoolDll" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\System.Threading.ThreadPool.dll" DiskId="1" />
+      </Component>
+      <Component Id="SystemThreadingTimer" Guid="775D9098-803E-4813-9841-DE508DBD8315">
+        <File Id="SystemThreadingTimerDll" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\System.Threading.Timer.dll" DiskId="1" />
+      </Component>
+      <Component Id="SystemValueTuple" Guid="58B49F93-C577-4D14-970C-B8A74FF58A4C">
+        <File Id="SystemValueTupleDll" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\System.ValueTuple.dll" DiskId="1" />
+      </Component>
+      <Component Id="SystemXmlReaderWriter" Guid="CD01FE29-4DAE-404A-859D-022951B28A1E">
+        <File Id="SystemXmlReaderWriterDll" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\System.Xml.ReaderWriter.dll" DiskId="1" />
+      </Component>
+      <Component Id="SystemXmlXDocument" Guid="4CBD9F92-1C5D-4323-9E76-FAA5C12D3599">
+        <File Id="SystemXmlXDocumentDll" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\System.Xml.XDocument.dll" DiskId="1" />
+      </Component>
+      <Component Id="SystemXmlXmlDocument" Guid="85F389DE-386E-4B16-96F4-C8B884C252B8">
+        <File Id="SystemXmlXmlDocumentDll" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\System.Xml.XmlDocument.dll" DiskId="1" />
+      </Component>
+      <Component Id="SystemXmlXmlSerializer" Guid="463943B7-F565-49AE-B8BB-C55F95EFE9B4">
+        <File Id="SystemXmlXmlSerializerDll" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\System.Xml.XmlSerializer.dll" DiskId="1" />
+      </Component>
+      <Component Id="SystemXmlXPath" Guid="7D4426F1-B2F4-4FA7-9334-CAFC205E9E8E">
+        <File Id="SystemXmlXPathDll" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\System.Xml.XPath.dll" DiskId="1" />
+      </Component>
+      <Component Id="SystemXmlXPathXDocument" Guid="8CE2FBD2-DBF2-4ABC-9347-62C6088E88CE">
+        <File Id="SystemXmlXPathXDocumentDll" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\System.Xml.XPath.XDocument.dll" DiskId="1" />
+      </Component>
+    </ComponentGroup>
+  </Fragment>
+
+  <Fragment>
+    <CustomAction Id="SetOpenURL" Property="WixShellExecTarget" Value="[MyURL]" />
+    <CustomAction Id="OpenURL" BinaryKey="WixCA" DllEntry="WixShellExec" Impersonate="yes" Return="ignore" />
+  </Fragment>
+</Wix>
