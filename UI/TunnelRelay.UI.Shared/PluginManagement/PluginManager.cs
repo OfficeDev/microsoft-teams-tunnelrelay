@@ -3,7 +3,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 // </copyright>
 
-namespace TunnelRelay.Windows.Engine
+namespace TunnelRelay.UI.PluginManagement
 {
     using System;
     using System.Collections.Generic;
@@ -14,6 +14,7 @@ namespace TunnelRelay.Windows.Engine
     using Microsoft.Extensions.Logging;
     using TunnelRelay.PluginEngine;
     using TunnelRelay.Plugins;
+    using TunnelRelay.UI.StateManagement;
 
     /// <summary>
     /// Plugin manager.
@@ -23,13 +24,23 @@ namespace TunnelRelay.Windows.Engine
         /// <summary>
         /// Logger.
         /// </summary>
-        private ILogger<PluginManager> logger = LoggingHelper.GetLogger<PluginManager>();
+        private ILogger<PluginManager> logger;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="PluginManager"/> class.
+        /// </summary>
+        /// <param name="logger">Logger.</param>
+        public PluginManager(ILogger<PluginManager> logger)
+        {
+            this.logger = logger;
+        }
 
         /// <summary>
         /// Initializes the plugins.
         /// </summary>
+        /// <param name="applicationData">Application data.</param>
         /// <returns>Initialized plugin list.</returns>
-        public ObservableCollection<PluginDetails> InitializePlugins()
+        public ObservableCollection<PluginDetails> InitializePlugins(ApplicationData applicationData)
         {
             List<ITunnelRelayPlugin> pluginInstances = new List<ITunnelRelayPlugin>();
             ObservableCollection<PluginDetails> plugins = new ObservableCollection<PluginDetails>();
@@ -59,11 +70,11 @@ namespace TunnelRelay.Windows.Engine
 
             pluginInstances.ForEach(plugin =>
             {
-                PluginDetails pluginDetails = new PluginDetails
+                PluginDetails pluginDetails = new PluginDetails(applicationData)
                 {
                     PluginInstance = plugin,
                     PluginSettings = new ObservableCollection<PluginSettingDetails>(),
-                    IsEnabled = TunnelRelayStateManager.ApplicationData.EnabledPlugins.Contains(plugin.GetType().FullName),
+                    IsEnabled = applicationData.EnabledPlugins.Contains(plugin.GetType().FullName),
                 };
 
                 try
@@ -77,14 +88,14 @@ namespace TunnelRelay.Windows.Engine
                             throw new InvalidDataException("Plugin settings can only be of string datatype");
                         }
 
-                        var pluginSetting = new PluginSettingDetails
+                        var pluginSetting = new PluginSettingDetails(applicationData)
                         {
                             AttributeData = setting.GetCustomAttribute<PluginSettingAttribute>(),
                             PluginInstance = plugin,
                             PropertyDetails = setting,
                         };
 
-                        if (TunnelRelayStateManager.ApplicationData.PluginSettingsMap.TryGetValue(pluginDetails.PluginInstance.GetType().FullName, out Dictionary<string, string> pluginSettingsVal))
+                        if (applicationData.PluginSettingsMap.TryGetValue(pluginDetails.PluginInstance.GetType().FullName, out Dictionary<string, string> pluginSettingsVal))
                         {
                             if (pluginSettingsVal.TryGetValue(pluginSetting.PropertyDetails.Name, out string propertyValue))
                             {
@@ -97,6 +108,7 @@ namespace TunnelRelay.Windows.Engine
 
                     if (pluginDetails.IsEnabled)
                     {
+                        this.logger.LogInformation("Initializing '{0}'.", pluginDetails.PluginInstance.PluginName);
                         pluginDetails.InitializePlugin();
                     }
                 }

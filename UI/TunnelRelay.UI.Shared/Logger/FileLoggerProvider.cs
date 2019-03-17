@@ -8,14 +8,18 @@ namespace TunnelRelay.UI.Logger
     using System;
     using System.IO;
     using Microsoft.Extensions.Logging;
+    using Microsoft.Extensions.Options;
 
     /// <summary>
     /// File logger provider.
     /// </summary>
     /// <seealso cref="ILoggerProvider" />
-    public class FileLoggerProvider : ILoggerProvider
+    internal class FileLoggerProvider : ILoggerProvider
     {
-        private const string LogFileName = "TunnelRelay.log";
+        /// <summary>
+        /// Name of the log file name.
+        /// </summary>
+        private readonly string logFileName;
 
         /// <summary>
         /// The lock object used for synchronizing stream opening.
@@ -33,6 +37,20 @@ namespace TunnelRelay.UI.Logger
         private IExternalScopeProvider externalScopeProvider;
 
         /// <summary>
+        /// Initializes a new instance of the <see cref="FileLoggerProvider"/> class.
+        /// </summary>
+        /// <param name="fileLoggerProviderOptions">Logger options.</param>
+        public FileLoggerProvider(IOptions<FileLoggerProviderOptions> fileLoggerProviderOptions)
+        {
+            if (string.IsNullOrEmpty(fileLoggerProviderOptions?.Value?.FileName))
+            {
+                throw new ArgumentNullException(nameof(fileLoggerProviderOptions));
+            }
+
+            this.logFileName = fileLoggerProviderOptions.Value.FileName;
+        }
+
+        /// <summary>
         /// Creates a new <see cref="ILogger" /> instance.
         /// </summary>
         /// <param name="categoryName">The category name for messages produced by the logger.</param>
@@ -45,7 +63,7 @@ namespace TunnelRelay.UI.Logger
                 {
                     if (this.streamWriter == null)
                     {
-                        this.streamWriter = new StreamWriter(new FileStream(FileLoggerProvider.LogFileName, FileMode.Append))
+                        this.streamWriter = new StreamWriter(new FileStream(this.logFileName, FileMode.Append))
                         {
                             AutoFlush = true,
                             NewLine = Environment.NewLine,

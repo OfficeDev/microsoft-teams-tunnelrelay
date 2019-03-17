@@ -15,6 +15,8 @@ namespace TunnelRelay.Windows.Engine
     using Microsoft.Extensions.Options;
     using Newtonsoft.Json;
     using TunnelRelay.Core;
+    using TunnelRelay.UI.PluginManagement;
+    using TunnelRelay.UI.StateManagement;
 
     /// <summary>
     /// Maintains the state of application.
@@ -90,8 +92,8 @@ namespace TunnelRelay.Windows.Engine
         /// </summary>
         public static void InitializePlugins()
         {
-            PluginManager pluginManager = new PluginManager();
-            TunnelRelayStateManager.Plugins = pluginManager.InitializePlugins();
+            PluginManager pluginManager = new PluginManager(LoggingHelper.GetLogger<PluginManager>());
+            TunnelRelayStateManager.Plugins = pluginManager.InitializePlugins(TunnelRelayStateManager.applicationData);
         }
 
         /// <summary>

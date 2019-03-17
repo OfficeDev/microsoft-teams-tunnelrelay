@@ -3,22 +3,22 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 // </copyright>
 
-namespace TunnelRelay.Windows.Engine
+namespace TunnelRelay.UI.PluginManagement
 {
     using System.Collections.ObjectModel;
     using System.Threading.Tasks;
-    using Microsoft.Extensions.Logging;
     using TunnelRelay.PluginEngine;
+    using TunnelRelay.UI.StateManagement;
 
     /// <summary>
     /// Plugin instance details.
     /// </summary>
-    public class PluginDetails
+    internal class PluginDetails
     {
         /// <summary>
-        /// Logger.
+        /// Active instance of application data.
         /// </summary>
-        private readonly ILogger<PluginDetails> logger = LoggingHelper.GetLogger<PluginDetails>();
+        private readonly ApplicationData applicationData;
 
         /// <summary>
         /// Is this plugin enabled or not. Used to cache the value to avoid probing the list everytime.
@@ -29,6 +29,15 @@ namespace TunnelRelay.Windows.Engine
         /// The instance is initialized.
         /// </summary>
         private bool isInitialized;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="PluginDetails"/> class.
+        /// </summary>
+        /// <param name="applicationData">Application data.</param>
+        public PluginDetails(ApplicationData applicationData)
+        {
+            this.applicationData = applicationData ?? throw new System.ArgumentNullException(nameof(applicationData));
+        }
 
         /// <summary>
         /// Gets or sets a value indicating whether this instance is enabled.
@@ -42,7 +51,7 @@ namespace TunnelRelay.Windows.Engine
             {
                 if (this.isEnabled == null)
                 {
-                    this.isEnabled = TunnelRelayStateManager.ApplicationData.EnabledPlugins.Contains(this.PluginInstance.GetType().FullName);
+                    this.isEnabled = this.applicationData.EnabledPlugins.Contains(this.PluginInstance.GetType().FullName);
                 }
 
                 return this.isEnabled.Value;
@@ -52,26 +61,26 @@ namespace TunnelRelay.Windows.Engine
             {
                 if (value == true)
                 {
-                    TunnelRelayStateManager.ApplicationData.EnabledPlugins.Add(this.PluginInstance.GetType().FullName);
+                    this.applicationData.EnabledPlugins.Add(this.PluginInstance.GetType().FullName);
                     this.isEnabled = true;
                 }
                 else
                 {
-                    TunnelRelayStateManager.ApplicationData.EnabledPlugins.Remove(this.PluginInstance.GetType().FullName);
+                    this.applicationData.EnabledPlugins.Remove(this.PluginInstance.GetType().FullName);
                     this.isEnabled = false;
                 }
             }
         }
 
         /// <summary>
-        /// Gets the plugin instance.
+        /// Gets or sets the plugin instance.
         /// </summary>
-        public ITunnelRelayPlugin PluginInstance { get; internal set; }
+        public ITunnelRelayPlugin PluginInstance { get; set; }
 
         /// <summary>
-        /// Gets the plugin settings.
+        /// Gets or sets the plugin settings.
         /// </summary>
-        public ObservableCollection<PluginSettingDetails> PluginSettings { get; internal set; }
+        public ObservableCollection<PluginSettingDetails> PluginSettings { get; set; }
 
         /// <summary>
         /// Initializes the plugin.
@@ -80,7 +89,6 @@ namespace TunnelRelay.Windows.Engine
         {
             if (!this.isInitialized)
             {
-                this.logger.LogInformation("Initializing '{0}'.", this.PluginInstance.PluginName);
                 Task.Run(() => this.PluginInstance.InitializeAsync());
                 this.isInitialized = true;
             }

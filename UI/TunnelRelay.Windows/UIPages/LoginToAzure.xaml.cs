@@ -11,6 +11,8 @@ namespace TunnelRelay.Windows
     using System.Windows.Navigation;
     using Microsoft.Extensions.Logging;
     using Microsoft.Win32;
+    using TunnelRelay.UI.ResourceManagement;
+    using TunnelRelay.UI.StateManagement;
     using TunnelRelay.Windows.Engine;
 
     /// <summary>
@@ -52,10 +54,10 @@ namespace TunnelRelay.Windows
             {
                 this.logger.LogInformation("Starting Azure login.");
 
-                var userAuthDetails = new UserAuthenticator();
+                var userAuthDetails = new UserAuthenticator(LoggingHelper.GetLogger<UserAuthenticator>());
 
                 // Raise Authentication prompt and log the user in.
-                userAuthDetails.AuthenticateUser();
+                userAuthDetails.AuthenticateUserAsync().ConfigureAwait(false).GetAwaiter().GetResult();
                 this.logger.LogInformation("Token acquire complete.");
 
                 SelectServiceBus selectServiceBus = new SelectServiceBus(userAuthDetails);
@@ -90,7 +92,7 @@ namespace TunnelRelay.Windows
 
             if (dialogResult == true)
             {
-                TunnelRelayStateManager.ApplicationData.ImportSettings(File.ReadAllText(openFileDialog.FileName));
+                TunnelRelayStateManager.ApplicationData = ApplicationData.ImportSettings(File.ReadAllText(openFileDialog.FileName));
 
                 if (string.IsNullOrEmpty(TunnelRelayStateManager.ApplicationData.HybridConnectionUrl))
                 {

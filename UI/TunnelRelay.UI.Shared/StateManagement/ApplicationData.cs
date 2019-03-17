@@ -3,7 +3,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 // </copyright>
 
-namespace TunnelRelay.Windows.Engine
+namespace TunnelRelay.UI.StateManagement
 {
     using System;
     using System.Collections.Generic;
@@ -20,7 +20,7 @@ namespace TunnelRelay.Windows.Engine
         /// <summary>
         /// Current version of the config.
         /// </summary>
-        private const int CurrentVersion = 2;
+        internal const int CurrentVersion = 2;
 
         /// <summary>
         /// Gets or sets the service bus shared key bytes.
@@ -109,25 +109,11 @@ namespace TunnelRelay.Windows.Engine
         public int Version { get; set; }
 
         /// <summary>
-        /// Gets the exported settings.
-        /// </summary>
-        /// <returns>Settings which can be moved in between machines.</returns>
-        public string ExportSettings()
-        {
-            // Clone the current object into a new one.
-            ApplicationData applicationData = JObject.FromObject(TunnelRelayStateManager.ApplicationData).ToObject<ApplicationData>();
-
-            // Unprotect the data before exporting.
-            applicationData.serviceBusSharedKeyBytes = DataProtection.Unprotect(applicationData.serviceBusSharedKeyBytes);
-
-            return JsonConvert.SerializeObject(applicationData);
-        }
-
-        /// <summary>
         /// Imports the settings.
         /// </summary>
         /// <param name="serializedSettings">The serialized settings.</param>
-        public void ImportSettings(string serializedSettings)
+        /// <returns>Application data.</returns>
+        public static ApplicationData ImportSettings(string serializedSettings)
         {
             ApplicationData applicationData = JsonConvert.DeserializeObject<ApplicationData>(serializedSettings);
 
@@ -137,7 +123,22 @@ namespace TunnelRelay.Windows.Engine
                 applicationData.serviceBusSharedKeyBytes = DataProtection.Protect(applicationData.serviceBusSharedKeyBytes);
             }
 
-            TunnelRelayStateManager.ApplicationData = applicationData;
+            return applicationData;
+        }
+
+        /// <summary>
+        /// Gets the exported settings.
+        /// </summary>
+        /// <returns>Settings which can be moved in between machines.</returns>
+        public string ExportSettings()
+        {
+            // Clone the current object into a new one.
+            ApplicationData applicationData = JObject.FromObject(this).ToObject<ApplicationData>();
+
+            // Unprotect the data before exporting.
+            applicationData.serviceBusSharedKeyBytes = DataProtection.Unprotect(applicationData.serviceBusSharedKeyBytes);
+
+            return JsonConvert.SerializeObject(applicationData);
         }
 
         /// <summary>

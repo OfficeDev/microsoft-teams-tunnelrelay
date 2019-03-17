@@ -7,17 +7,41 @@ namespace TunnelRelay.Console
 {
     using System;
     using System.Collections.Generic;
+    using System.Collections.ObjectModel;
+    using System.IO;
+    using System.Linq;
+    using System.Reflection;
     using System.Threading;
+    using System.Threading.Tasks;
+    using Microsoft.Azure.Management.Relay.Fluent.Models;
+    using Microsoft.Azure.Management.ResourceManager.Fluent.Models;
     using Microsoft.Extensions.CommandLineUtils;
+    using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.Logging;
     using Microsoft.Extensions.Options;
+    using Newtonsoft.Json;
     using TunnelRelay.Core;
     using TunnelRelay.PluginEngine;
+    using TunnelRelay.UI.Logger;
+    using TunnelRelay.UI.PluginManagement;
+    using TunnelRelay.UI.ResourceManagement;
+    using TunnelRelay.UI.StateManagement;
 
     /// <summary>
     /// Program execution class.
     /// </summary>
     public sealed class Program
     {
+        /// <summary>
+        /// File name where settings are stored.
+        /// </summary>
+        private const string SettingsFileName = "appSettings.json";
+
+        /// <summary>
+        /// Path to the configuration file.
+        /// </summary>
+        private static readonly string ConfigurationFilePath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), Program.SettingsFileName);
+
         /// <summary>
         /// Program invocation point.
         /// </summary>
@@ -52,79 +76,136 @@ namespace TunnelRelay.Console
                 CommandOptionType.SingleValue);
 
             commandLineApplication.HelpOption("-h|--help|-?");
-            commandLineApplication.OnExecute(() =>
+
+            commandLineApplication.ExtendedHelpText = "Commandline arguments takes preference over saved config. If no command line argument is specified" +
+                "Config file will be loaded. If no config file is found, application will go through interactive configuration process.";
+
+            commandLineApplication.OnExecute(async () =>
             {
-                string serviceBusUrl = serviceBusUrlOption.Value();
-                string sharedKeyName = serviceBusSharedKeyNameOption.Value();
-                string sharedKey = serviceBusSharedKeyOption.Value();
-                string connectionName = connectionNameOption.Value();
-                string serviceAddress = serviceAddressOption.Value();
+                ServiceCollection serviceDescriptors = new ServiceCollection();
 
-                bool paramsPresent = true;
-                if (string.IsNullOrEmpty(serviceBusUrl))
+                serviceDescriptors.AddLogging(loggingBuilder =>
                 {
-                    System.Console.Error.WriteLine("Missing required Service Bus url");
-                    paramsPresent = false;
-                }
-
-                if (string.IsNullOrEmpty(sharedKeyName))
-                {
-                    System.Console.Error.WriteLine("Missing required Service Bus shared key name");
-                    paramsPresent = false;
-                }
-
-                if (string.IsNullOrEmpty(sharedKey))
-                {
-                    System.Console.Error.WriteLine("Missing required Service Bus shared key");
-                    paramsPresent = false;
-                }
-
-                if (string.IsNullOrEmpty(connectionName))
-                {
-                    System.Console.Error.WriteLine("Missing required hybrid connection name");
-                    paramsPresent = false;
-                }
-
-                if (string.IsNullOrEmpty(serviceAddress))
-                {
-                    System.Console.Error.WriteLine("Missing required service url");
-                    paramsPresent = false;
-                }
-
-                if (!paramsPresent)
-                {
-                    return -1;
-                }
-
-                HybridConnectionManagerOptions hybridConnectionManagerOptions = new HybridConnectionManagerOptions
-                {
-                    ConnectionPath = connectionName,
-                    ServiceBusKeyName = sharedKeyName,
-                    ServiceBusSharedKey = sharedKey,
-                    ServiceBusUrlHost = serviceBusUrl,
-                };
-
-                RelayRequestManager relayManager = new RelayRequestManager(
-                    new SimpleOptionsMonitor<RelayRequestManagerOptions>
+                    loggingBuilder.Services.Configure<FileLoggerProviderOptions>((fileLoggerOptions) =>
                     {
-                        CurrentValue = new RelayRequestManagerOptions
-                        {
-                            InternalServiceUrl = new Uri(serviceAddress),
-                        },
-                    },
-                    new List<ITunnelRelayPlugin>(),
-                    new RelayRequestEventListener());
+                        fileLoggerOptions.FileName = "TunnelRelayConsole.log";
+                    });
 
-                HybridConnectionManager hybridConnectionManager = new HybridConnectionManager(
-                    Options.Create(hybridConnectionManagerOptions),
-                    relayManager);
+                    loggingBuilder.AddFileLogger();
+                });
+
+                serviceDescriptors.AddSingleton<UserAuthenticator>();
+                serviceDescriptors.AddSingleton<ServiceBusResourceManager>();
+
+                ApplicationData applicationData = null;
+
+                // If command line arguments were specified.
+                if (!string.IsNullOrEmpty(serviceBusUrlOption.Value()))
+                {
+                    bool paramsPresent = true;
+
+                    if (string.IsNullOrEmpty(serviceBusSharedKeyNameOption.Value()))
+                    {
+                        Console.Error.WriteLine("Missing required Service Bus shared key name");
+                        paramsPresent = false;
+                    }
+
+                    if (string.IsNullOrEmpty(serviceBusSharedKeyOption.Value()))
+                    {
+                        Console.Error.WriteLine("Missing required Service Bus shared key");
+                        paramsPresent = false;
+                    }
+
+                    if (string.IsNullOrEmpty(connectionNameOption.Value()))
+                    {
+                        Console.Error.WriteLine("Missing required hybrid connection name");
+                        paramsPresent = false;
+                    }
+
+                    if (string.IsNullOrEmpty(serviceAddressOption.Value()))
+                    {
+                        Console.Error.WriteLine("Missing required service url");
+                        paramsPresent = false;
+                    }
+
+                    if (!paramsPresent)
+                    {
+                        return -1;
+                    }
+
+                    applicationData = new ApplicationData
+                    {
+                        HybridConnectionKeyName = serviceBusSharedKeyNameOption.Value(),
+                        HybridConnectionName = connectionNameOption.Value(),
+                        HybridConnectionSharedKey = serviceBusSharedKeyOption.Value(),
+                        HybridConnectionUrl = serviceBusUrlOption.Value(),
+                        RedirectionUrl = serviceAddressOption.Value(),
+                        Version = ApplicationData.CurrentVersion,
+                    };
+                }
+                else if (File.Exists(Program.ConfigurationFilePath))
+                {
+                    applicationData = JsonConvert.DeserializeObject<ApplicationData>(File.ReadAllText(Program.ConfigurationFilePath));
+
+                    // Discard old settings and run interactive flow again.
+                    if (applicationData.Version < ApplicationData.CurrentVersion)
+                    {
+                        Console.WriteLine("Stored settings are old and cannot be used. Discarding them. Running interactive configuration.");
+
+                        applicationData = await Program.PerformInteractiveConfigurationAsync(
+                            serviceDescriptors.BuildServiceProvider(),
+                            serviceAddressOption.Value()).ConfigureAwait(false);
+                    }
+                }
+                else
+                {
+                    applicationData = await Program.PerformInteractiveConfigurationAsync(
+                        serviceDescriptors.BuildServiceProvider(),
+                        serviceAddressOption.Value()).ConfigureAwait(false);
+                }
+
+                serviceDescriptors.AddSingleton(applicationData);
+
+                serviceDescriptors.Configure<HybridConnectionManagerOptions>((hybridConnectionOptions) =>
+                {
+                    hybridConnectionOptions.ConnectionPath = applicationData.HybridConnectionName;
+                    hybridConnectionOptions.ServiceBusKeyName = applicationData.HybridConnectionKeyName;
+                    hybridConnectionOptions.ServiceBusSharedKey = applicationData.HybridConnectionSharedKey;
+                    hybridConnectionOptions.ServiceBusUrlHost = applicationData.HybridConnectionUrl;
+                });
+
+                serviceDescriptors.Configure<RelayRequestManagerOptions>((relayRequestManagerOptions) =>
+                {
+                    relayRequestManagerOptions.InternalServiceUrl = new Uri(applicationData.RedirectionUrl);
+                });
+
+                serviceDescriptors.AddSingleton<IRelayRequestEventListener, RelayRequestEventListener>();
+
+                serviceDescriptors.AddSingleton<PluginManager>();
+
+                serviceDescriptors.AddSingleton<IEnumerable<ITunnelRelayPlugin>>((provider) =>
+                {
+                    PluginManager pluginManager = provider.GetRequiredService<PluginManager>();
+
+                    ObservableCollection<PluginDetails> plugins = pluginManager.InitializePlugins(provider.GetRequiredService<ApplicationData>());
+
+                    return plugins.Where(details => details.IsEnabled).Select(details => details.PluginInstance);
+                });
+
+                serviceDescriptors.AddSingleton<IRelayRequestManager, RelayRequestManager>();
+
+                serviceDescriptors.AddSingleton<IHybridConnectionManager, HybridConnectionManager>();
+
+                IServiceProvider serviceProvider = serviceDescriptors.BuildServiceProvider();
+
+                IHybridConnectionManager hybridConnectionManager = serviceProvider.GetRequiredService<IHybridConnectionManager>();
 
                 hybridConnectionManager.InitializeAsync(CancellationToken.None).Wait();
 
-                System.Console.CancelKeyPress += (sender, cancelledEvent) =>
+                Console.CancelKeyPress += (sender, cancelledEvent) =>
                 {
-                    hybridConnectionManager.CloseAsync(CancellationToken.None).Wait();
-                    System.Environment.Exit(0);
+                    hybridConnectionManager.CloseAsync(CancellationToken.None).ConfigureAwait(false).GetAwaiter().GetResult();
+                    Environment.Exit(0);
                 };
 
                 // Prevents this host process from terminating so relay keeps running.
@@ -133,6 +214,147 @@ namespace TunnelRelay.Console
             });
 
             return commandLineApplication.Execute(args);
+        }
+
+        private static async Task<ApplicationData> PerformInteractiveConfigurationAsync(
+            IServiceProvider serviceProvider,
+            string redirectionUrl = null)
+        {
+            UserAuthenticator userAuthenticator = serviceProvider.GetRequiredService<UserAuthenticator>();
+
+            ServiceBusResourceManager serviceBusResourceManager = serviceProvider.GetRequiredService<ServiceBusResourceManager>();
+
+            List<SubscriptionInner> userSubscriptions = await userAuthenticator.GetUserSubscriptionsAsync().ConfigureAwait(false);
+
+            if (userSubscriptions.Count == 0)
+            {
+                Console.Error.WriteLine("No Azure subscriptions found");
+                throw new InvalidOperationException("User has no associated subscriptions");
+            }
+
+            Console.WriteLine("Select the subscription you want to use");
+
+            for (int i = 0; i < userSubscriptions.Count - 1; i++)
+            {
+                Console.WriteLine($"{i + 1} - {userSubscriptions[i].DisplayName}({userSubscriptions[i].SubscriptionId})");
+            }
+
+            int selectedSubscriptionIndex = 0;
+            while (true)
+            {
+                if (!int.TryParse(Console.ReadLine(), out selectedSubscriptionIndex))
+                {
+                    Console.Error.WriteLine("Invalid input. Please select the index.");
+                    continue;
+                }
+
+                if (selectedSubscriptionIndex > userSubscriptions.Count || selectedSubscriptionIndex == 0)
+                {
+                    Console.Error.WriteLine("Invalid input. Select index out of allowed values");
+                    continue;
+                }
+
+                break;
+            }
+
+            SubscriptionInner selectedSubscription = userSubscriptions[selectedSubscriptionIndex - 1];
+
+            List<RelayNamespaceInner> relayNamespaces = await serviceBusResourceManager.GetRelayNamespacesAsync(selectedSubscription).ConfigureAwait(false);
+
+            int selectedRelayIndex = 0;
+            if (relayNamespaces.Count != 0)
+            {
+                Console.WriteLine("Select the Service Bus you want to use.");
+
+                Console.WriteLine("0 - Create a new service bus");
+                for (int i = 0; i < relayNamespaces.Count - 1; i++)
+                {
+                    Console.WriteLine($"{i + 1} - {relayNamespaces[i].Name}");
+                }
+
+                while (true)
+                {
+                    if (!int.TryParse(Console.ReadLine(), out selectedRelayIndex))
+                    {
+                        Console.Error.WriteLine("Invalid input. Please select the index.");
+                        continue;
+                    }
+
+                    if (selectedRelayIndex > relayNamespaces.Count)
+                    {
+                        Console.Error.WriteLine("Invalid input. Select index out of allowed values");
+                        continue;
+                    }
+
+                    break;
+                }
+            }
+
+            HybridConnectionDetails hybridConnectionDetails = null;
+            if (selectedRelayIndex == 0)
+            {
+                Console.Write("Enter the name for the new Service Bus. This must be atleast 6 character long. ");
+                string serviceBusName = Console.ReadLine();
+
+                Console.WriteLine("Select the location for the new service bus from the list below");
+
+                List<Location> subscriptionLocations = userAuthenticator.GetSubscriptionLocations(selectedSubscription).ToList();
+
+                for (int i = 0; i < subscriptionLocations.Count - 1; i++)
+                {
+                    Console.WriteLine($"{i + 1} - {subscriptionLocations[i].DisplayName}");
+                }
+
+                int selectedLocationIndex = 0;
+                while (true)
+                {
+                    if (!int.TryParse(Console.ReadLine(), out selectedLocationIndex))
+                    {
+                        Console.Error.WriteLine("Invalid input. Please select the index.");
+                        continue;
+                    }
+
+                    if (selectedRelayIndex > subscriptionLocations.Count || selectedLocationIndex == 0)
+                    {
+                        Console.Error.WriteLine("Invalid input. Select index out of allowed values");
+                        continue;
+                    }
+
+                    break;
+                }
+
+                hybridConnectionDetails = await serviceBusResourceManager.CreateHybridConnectionAsync(
+                    selectedSubscription,
+                    serviceBusName,
+                    Environment.MachineName,
+                    subscriptionLocations[selectedLocationIndex - 1].DisplayName).ConfigureAwait(false);
+            }
+            else
+            {
+                hybridConnectionDetails = await serviceBusResourceManager.GetHybridConnectionAsync(
+                    selectedSubscription,
+                    relayNamespaces[selectedRelayIndex - 1],
+                    Environment.MachineName).ConfigureAwait(false);
+            }
+
+            if (string.IsNullOrEmpty(redirectionUrl))
+            {
+                Console.Write("Enter the endpoint to route requests to. Example http://localhost:4200");
+                redirectionUrl = Console.ReadLine();
+            }
+
+            return new ApplicationData
+            {
+                EnableCredentialEncryption = true,
+                EnabledPlugins = new HashSet<string>(),
+                HybridConnectionKeyName = hybridConnectionDetails.HybridConnectionKeyName,
+                HybridConnectionName = hybridConnectionDetails.HybridConnectionName,
+                HybridConnectionSharedKey = hybridConnectionDetails.HybridConnectionSharedKey,
+                HybridConnectionUrl = hybridConnectionDetails.ServiceBusUrl,
+                PluginSettingsMap = new Dictionary<string, Dictionary<string, string>>(),
+                Version = ApplicationData.CurrentVersion,
+                RedirectionUrl = redirectionUrl,
+            };
         }
     }
 }

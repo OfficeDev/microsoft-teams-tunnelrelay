@@ -18,6 +18,7 @@ namespace TunnelRelay.Windows
     using Microsoft.Extensions.Logging;
     using Microsoft.Rest;
     using Microsoft.Rest.Azure;
+    using TunnelRelay.UI.ResourceManagement;
     using TunnelRelay.Windows.Engine;
     using RM = Microsoft.Azure.Management.ResourceManager.Fluent;
 
@@ -43,7 +44,12 @@ namespace TunnelRelay.Windows
         /// <summary>
         /// User authentication manager.
         /// </summary>
-        private UserAuthenticator userAuthenticator;
+        private readonly UserAuthenticator userAuthenticator;
+
+        /// <summary>
+        /// Service bus resource manager.
+        /// </summary>
+        private readonly ServiceBusResourceManager serviceBusResourceManager;
 
         /// <summary>
         /// List of Azure subscription.
@@ -59,11 +65,13 @@ namespace TunnelRelay.Windows
         /// Initializes a new instance of the <see cref="SelectServiceBus"/> class.
         /// </summary>
         /// <param name="authenticationDetails">The authentication details for the user.</param>
-        public SelectServiceBus(UserAuthenticator authenticationDetails)
+        internal SelectServiceBus(UserAuthenticator authenticationDetails)
         {
             this.ContentRendered += this.Window_ContentRendered;
             this.InitializeComponent();
             this.userAuthenticator = authenticationDetails;
+            this.serviceBusResourceManager = new ServiceBusResourceManager(this.userAuthenticator);
+
             this.comboSubscriptionList.ItemsSource = this.subscriptions;
             this.comboServiceBusList.ItemsSource = this.serviceBuses;
 
@@ -85,7 +93,7 @@ namespace TunnelRelay.Windows
             {
                 try
                 {
-                    var subscriptionList = this.userAuthenticator.GetUserSubscriptions();
+                    var subscriptionList = this.userAuthenticator.GetUserSubscriptionsAsync().ConfigureAwait(false).GetAwaiter().GetResult();
 
                     this.Dispatcher.Invoke(() =>
                     {
@@ -123,28 +131,26 @@ namespace TunnelRelay.Windows
             {
                 try
                 {
-                    TokenCredentials tokenCredentials = new TokenCredentials(this.userAuthenticator.GetSubscriptionSpecificUserToken(selectedSubscription).AccessToken);
-                    RelayManagementClient relayManagementClient = new RelayManagementClient(tokenCredentials);
-
-                    relayManagementClient.SubscriptionId = selectedSubscription.SubscriptionId;
-
-                    List<RelayNamespaceInner> serviceBusList = new List<RelayNamespaceInner>();
-                    var resp = relayManagementClient.Namespaces.ListAsync().ConfigureAwait(false).GetAwaiter().GetResult();
-                    serviceBusList.AddRange(resp);
-
-                    while (!string.IsNullOrEmpty(resp.NextPageLink))
-                    {
-                        resp = relayManagementClient.Namespaces.ListNextAsync(resp.NextPageLink).ConfigureAwait(false).GetAwaiter().GetResult();
-                        serviceBusList.AddRange(resp);
-                    }
+                    List<RelayNamespaceInner> serviceBusList = this.serviceBusResourceManager.GetRelayNamespacesAsync(selectedSubscription).ConfigureAwait(false).GetAwaiter().GetResult();
 
                     this.Dispatcher.Invoke(() =>
                     {
                         this.serviceBuses.Clear();
+
+                        // Add a fake service bus. This guides people to create a new one.
                         this.serviceBuses.Add(newServiceBus);
                         serviceBusList.ForEach(sub => this.serviceBuses.Add(sub));
                         this.comboServiceBusList.IsEnabled = true;
                         this.progressBar.Visibility = Visibility.Hidden;
+
+                        this.listBoxSubscriptionLocations.Items.Clear();
+
+                        foreach (RM.Models.Location location in this.userAuthenticator.GetSubscriptionLocations(selectedSubscription))
+                        {
+                            this.listBoxSubscriptionLocations.Items.Add(location.DisplayName);
+                        }
+
+                        this.listBoxSubscriptionLocations.SelectedIndex = 0;
                     });
                 }
                 catch (Exception ex)
@@ -169,6 +175,7 @@ namespace TunnelRelay.Windows
             var selectedSubscription = (this.comboSubscriptionList as ComboBox).SelectedItem as RM.Models.SubscriptionInner;
             var selectedServiceBus = (sender as ComboBox).SelectedItem as RelayNamespaceInner;
 
+            // Selected service bus Id is null when it is the value we added manually i.e. newServiceBus above.
             if (selectedServiceBus.Id == null)
             {
                 this.lblServiceBusName.Visibility = Visibility.Visible;
@@ -200,37 +207,15 @@ namespace TunnelRelay.Windows
             var selectedServiceBus = (this.comboServiceBusList as ComboBox).SelectedItem as RelayNamespaceInner;
 
             string newBusName = this.txtServiceBusName.Text;
-            string rgName = null;
-            if (!string.IsNullOrEmpty(selectedServiceBus.Id))
-            {
-                int startIndex = selectedServiceBus.Id.IndexOf("resourceGroups", StringComparison.OrdinalIgnoreCase) + 15;
-                rgName = selectedServiceBus.Id.Substring(startIndex, selectedServiceBus.Id.IndexOf('/', startIndex) - startIndex);
-            }
-
-            TokenCredentials tokenCredentials = new TokenCredentials(this.userAuthenticator.GetSubscriptionSpecificUserToken(selectedSubscription).AccessToken);
-            RelayManagementClient relayManagementClient = new RelayManagementClient(tokenCredentials);
-            relayManagementClient.SubscriptionId = selectedSubscription.SubscriptionId;
-
-            List<AuthorizationRuleInner> serviceBusList = new List<AuthorizationRuleInner>();
 
             // Case 1. When user used existing service bus.
             Thread existingServiceBusThread = new Thread(new ThreadStart(() =>
             {
                 try
                 {
-                    List<HybridConnectionInner> hybridConnections = new List<HybridConnectionInner>();
-                    hybridConnections.AddRange(relayManagementClient.HybridConnections.ListByNamespaceAsync(rgName, selectedServiceBus.Name).ConfigureAwait(false).GetAwaiter().GetResult());
+                    HybridConnectionDetails hybridConnectionDetails = this.serviceBusResourceManager.GetHybridConnectionAsync(selectedSubscription, selectedServiceBus, Environment.MachineName).ConfigureAwait(false).GetAwaiter().GetResult();
 
-                    // Create the hybrid connection if one does not exist.
-                    if (!hybridConnections.Any(connection => connection.Name.Equals(Environment.MachineName, StringComparison.OrdinalIgnoreCase)))
-                    {
-                        relayManagementClient.HybridConnections.CreateOrUpdateAsync(rgName, selectedServiceBus.Name, Environment.MachineName, new HybridConnectionInner
-                        {
-                            RequiresClientAuthorization = false,
-                        }).ConfigureAwait(false).GetAwaiter().GetResult();
-                    }
-
-                    this.SetApplicationData(rgName, relayManagementClient, selectedServiceBus);
+                    this.SetApplicationData(hybridConnectionDetails);
                 }
                 catch (Exception ex)
                 {
@@ -245,30 +230,6 @@ namespace TunnelRelay.Windows
             {
                 try
                 {
-                    RM.ResourceManagementClient resourceManagementClient = new RM.ResourceManagementClient(tokenCredentials);
-                    resourceManagementClient.SubscriptionId = selectedSubscription.SubscriptionId;
-
-                    RM.Models.ResourceGroupInner resourceGroup = null;
-
-                    try
-                    {
-                        resourceGroup = resourceManagementClient.ResourceGroups.GetAsync("TunnelRelay").ConfigureAwait(false).GetAwaiter().GetResult();
-                    }
-                    catch (Microsoft.Rest.Azure.CloudException httpEx)
-                    {
-                        if (httpEx.Response.StatusCode == System.Net.HttpStatusCode.NotFound)
-                        {
-                            resourceGroup = resourceManagementClient.ResourceGroups.CreateOrUpdateAsync("TunnelRelay", new RM.Models.ResourceGroupInner
-                            {
-                                Location = "WestUS",
-                                Name = "TunnelRelay",
-                                Tags = newServiceBus.Tags,
-                            }).ConfigureAwait(false).GetAwaiter().GetResult();
-                        }
-                    }
-
-                    rgName = resourceGroup.Name;
-
                     if (string.IsNullOrEmpty(newBusName))
                     {
                         MessageBox.Show("Please enter the name for service bus.");
@@ -291,19 +252,13 @@ namespace TunnelRelay.Windows
                         return;
                     }
 
-                    selectedServiceBus = relayManagementClient.Namespaces.CreateOrUpdateAsync(rgName, newBusName, new RelayNamespaceInner
-                    {
-                        Location = selectedServiceBus.Location,
-                        Sku = selectedServiceBus.Sku,
-                        Tags = selectedServiceBus.Tags,
-                    }).ConfigureAwait(false).GetAwaiter().GetResult();
+                    HybridConnectionDetails hybridConnectionDetails = this.serviceBusResourceManager.CreateHybridConnectionAsync(
+                        selectedSubscription,
+                        newBusName,
+                        Environment.MachineName,
+                        this.listBoxSubscriptionLocations.SelectedItem.ToString()).ConfigureAwait(false).GetAwaiter().GetResult();
 
-                    relayManagementClient.HybridConnections.CreateOrUpdateAsync(rgName, newBusName, Environment.MachineName, new HybridConnectionInner
-                    {
-                        RequiresClientAuthorization = false,
-                    }).ConfigureAwait(false).GetAwaiter().GetResult();
-
-                    this.SetApplicationData(rgName, relayManagementClient, selectedServiceBus);
+                    this.SetApplicationData(hybridConnectionDetails);
                 }
                 catch (CloudException cloudEx)
                 {
@@ -329,6 +284,7 @@ namespace TunnelRelay.Windows
                 }
             }));
 
+            // If the user selected to new service bus entry we added.
             if (selectedServiceBus.Id == null)
             {
                 newServiceBusThread.Start();
@@ -367,56 +323,23 @@ namespace TunnelRelay.Windows
         }
 
         /// <summary>
-        /// Gets the auth rules for a service bus and writes Application data.
+        /// Sets the application data based on hybrid connection details.
         /// </summary>
-        /// <param name="rgName">Name of the rg.</param>
-        /// <param name="relayManagementClient">The service bus management client.</param>
-        /// <param name="selectedServiceBus">The selected service bus.</param>
-        private void SetApplicationData(string rgName, RelayManagementClient relayManagementClient, RelayNamespaceInner selectedServiceBus)
+        /// <param name="hybridConnectionDetails">Hybrid connection details.</param>
+        private void SetApplicationData(HybridConnectionDetails hybridConnectionDetails)
         {
-            List<AuthorizationRuleInner> serviceBusAuthRuleList = new List<AuthorizationRuleInner>();
-            var resp = relayManagementClient.Namespaces.ListAuthorizationRulesAsync(rgName, selectedServiceBus.Name).ConfigureAwait(false).GetAwaiter().GetResult();
-            serviceBusAuthRuleList.AddRange(resp);
+            TunnelRelayStateManager.ApplicationData.EnableCredentialEncryption = this.chkEnableEncryption.IsChecked.GetValueOrDefault();
+            TunnelRelayStateManager.ApplicationData.HybridConnectionSharedKey = hybridConnectionDetails.HybridConnectionSharedKey;
+            TunnelRelayStateManager.ApplicationData.HybridConnectionKeyName = hybridConnectionDetails.HybridConnectionKeyName;
+            TunnelRelayStateManager.ApplicationData.HybridConnectionUrl = hybridConnectionDetails.ServiceBusUrl;
+            TunnelRelayStateManager.ApplicationData.HybridConnectionName = hybridConnectionDetails.HybridConnectionName;
 
-            while (!string.IsNullOrEmpty(resp.NextPageLink))
+            this.Dispatcher.Invoke(() =>
             {
-                resp = relayManagementClient.Namespaces.ListAuthorizationRulesNextAsync(resp.NextPageLink).ConfigureAwait(false).GetAwaiter().GetResult();
-                serviceBusAuthRuleList.AddRange(resp);
-            }
-
-            var selectedAuthRule = serviceBusAuthRuleList.FirstOrDefault(rule => rule.Rights != null && rule.Rights.Contains(AccessRights.Listen) && rule.Rights.Contains(AccessRights.Manage) && rule.Rights.Contains(AccessRights.Send));
-
-            if (selectedAuthRule == null)
-            {
-                MessageBox.Show("Failed to find a suitable Authorization rule to use. Please create an Authorization rule with Listen, Manage and Send rights and retry the operation");
-                this.Dispatcher.Invoke(() =>
-                {
-                    this.progressBar.Visibility = Visibility.Hidden;
-                    this.btnDone.IsEnabled = true;
-                });
-                return;
-            }
-            else
-            {
-                TunnelRelayStateManager.ApplicationData.EnableCredentialEncryption = this.chkEnableEncryption.IsChecked.GetValueOrDefault();
-                TunnelRelayStateManager.ApplicationData.HybridConnectionSharedKey = relayManagementClient.Namespaces.ListKeysAsync(
-                    rgName,
-                    selectedServiceBus.Name,
-                    selectedAuthRule.Name).ConfigureAwait(false).GetAwaiter().GetResult().PrimaryKey;
-                TunnelRelayStateManager.ApplicationData.HybridConnectionKeyName = relayManagementClient.Namespaces.ListKeysAsync(
-                    rgName,
-                    selectedServiceBus.Name,
-                    selectedAuthRule.Name).ConfigureAwait(false).GetAwaiter().GetResult().KeyName;
-                TunnelRelayStateManager.ApplicationData.HybridConnectionUrl = selectedServiceBus.ServiceBusEndpoint;
-                TunnelRelayStateManager.ApplicationData.HybridConnectionName = Environment.MachineName;
-
-                this.Dispatcher.Invoke(() =>
-                {
-                    MainWindow mainWindow = new MainWindow();
-                    mainWindow.Show();
-                    this.Close();
-                });
-            }
+                MainWindow mainWindow = new MainWindow();
+                mainWindow.Show();
+                this.Close();
+            });
         }
 
         /// <summary>

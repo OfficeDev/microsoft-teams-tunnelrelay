@@ -13,7 +13,7 @@ namespace TunnelRelay.UI.Logger
     /// Stream logger.
     /// </summary>
     /// <seealso cref="ILogger" />
-    public class StreamLogger : ILogger
+    internal class StreamLogger : ILogger
     {
         private readonly StreamWriter streamWriter;
         private readonly string categoryName;

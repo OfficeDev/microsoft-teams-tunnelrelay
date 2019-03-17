@@ -7,6 +7,7 @@
     <UseWPF>true</UseWPF>
     <IsPackable>false</IsPackable>
     <TargetFramework>net461</TargetFramework>
+    <DefineConstants>NET461</DefineConstants>
     <ApplicationIcon>TRLogo.ico</ApplicationIcon>
   </PropertyGroup>
 
@@ -14,7 +15,7 @@
     <PackageReference Include="Microsoft.Extensions.CommandLineUtils" Version="1.1.1" />
     <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="4.5.0" />
   </ItemGroup>
-
+  
   <ItemGroup>
     <ProjectReference Include="..\..\TunnelRelay.Core\TunnelRelay.Core.csproj" />
     <ProjectReference Include="..\..\TunnelRelay.Plugins\TunnelRelay.Plugins.csproj" />

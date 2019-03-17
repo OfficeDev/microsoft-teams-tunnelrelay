@@ -6,15 +6,21 @@
     <SharedGUID>11936a45-1d0e-4566-96ca-4f0904654475</SharedGUID>
   </PropertyGroup>
   <PropertyGroup Label="Configuration">
-    <Import_RootNamespace>TunnelRelay.UI.Shared</Import_RootNamespace>
+    <Import_RootNamespace>TunnelRelay.UI</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)ResourceManagement\HybridConnectionDetails.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ResourceManagement\ServiceBusResourceManager.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ResourceManagement\UserAuthenticator.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)PluginManagement\PluginDetails.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)PluginManagement\PluginManager.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)PluginManagement\PluginSettingDetails.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)StateManagement\ApplicationData.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)StateManagement\DataProtection.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Logger\FileLoggerProvider.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Logger\FileLoggerProviderOptions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Logger\LoggerExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Logger\NullScope.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Logger\StreamLogger.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="$(MSBuildThisFileDirectory)Logger\" />
   </ItemGroup>
 </Project>
