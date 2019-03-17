@@ -2,26 +2,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 // </copyright>
-// Licensed under the MIT license.
-// MIT License:
-// Permission is hereby granted, free of charge, to any person obtaining
-// a copy of this software and associated documentation files (the
-// "Software"), to deal in the Software without restriction, including
-// without limitation the rights to use, copy, modify, merge, publish,
-// distribute, sublicense, and/or sell copies of the Software, and to
-// permit persons to whom the Software is furnished to do so, subject to
-// the following conditions:
-//
-// The above copyright notice and this permission notice shall be
-// included in all copies or substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED ""AS IS"", WITHOUT WARRANTY OF ANY KIND,
-// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
-// LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
-// OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
-// WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 namespace TunnelRelay.Windows
 {
@@ -34,10 +14,10 @@ namespace TunnelRelay.Windows
     using System.Windows.Controls;
     using System.Windows.Input;
     using System.Windows.Media;
+    using Microsoft.Extensions.Logging;
     using Microsoft.Win32;
     using Newtonsoft.Json.Linq;
     using TunnelRelay.Core;
-    using TunnelRelay.Diagnostics;
     using TunnelRelay.Windows.Engine;
 
     /// <summary>
@@ -48,7 +28,12 @@ namespace TunnelRelay.Windows
         /// <summary>
         /// The request map. Request ID => Index.
         /// </summary>
-        private ObservableDictionary<string, RequestDetails> requestMap = new ObservableDictionary<string, RequestDetails>();
+        private readonly ObservableDictionary<string, RequestDetails> requestMap = new ObservableDictionary<string, RequestDetails>();
+
+        /// <summary>
+        /// Logger.
+        /// </summary>
+        private readonly ILogger<MainWindow> logger = LoggingHelper.GetLogger<MainWindow>();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MainWindow"/> class.
@@ -71,7 +56,7 @@ namespace TunnelRelay.Windows
             }
             catch (Exception ex)
             {
-                Logger.LogError(CallInfo.Site(), ex);
+                this.logger.LogError(ex, "Init failed");
                 MessageBox.Show("Failed to start Tunnel relay!!", "Engine start failure", MessageBoxButton.OKCancel, MessageBoxImage.Error);
             }
         }
@@ -86,7 +71,7 @@ namespace TunnelRelay.Windows
         {
             this.Dispatcher.Invoke(() =>
             {
-                Logger.LogVerbose(CallInfo.Site(), "Received request with Id '{0}'", requestId);
+                this.logger.LogTrace("Received request with Id '{0}'", requestId);
 
                 KeyValuePair<string, RequestDetails> requestItem = new KeyValuePair<string, RequestDetails>(requestId, new RequestDetails
                 {
@@ -114,7 +99,7 @@ namespace TunnelRelay.Windows
         {
             this.Dispatcher.Invoke(() =>
             {
-                Logger.LogVerbose(CallInfo.Site(), "Updating request with Id '{0}'", requestId);
+                this.logger.LogTrace("Updating request with Id '{0}'", requestId);
 
                 if (this.requestMap.ContainsKey(requestId))
                 {
@@ -131,7 +116,7 @@ namespace TunnelRelay.Windows
                     }
                     catch (Exception ex)
                     {
-                        Logger.LogWarning(CallInfo.Site(), ex, "Hit exception while updating request with Id '{0}'.", requestId);
+                        this.logger.LogWarning(ex, "Hit exception while updating request with Id '{0}'.", requestId);
                     }
                 }
             });
@@ -180,7 +165,7 @@ namespace TunnelRelay.Windows
                 }
                 catch (Exception ex)
                 {
-                    Logger.LogError(CallInfo.Site(), ex, "Failed to establish connection to Azure Relay");
+                    this.logger.LogError(ex, "Failed to establish connection to Azure Relay");
 
                     this.Dispatcher.Invoke(new Action(() =>
                     {
@@ -218,7 +203,7 @@ namespace TunnelRelay.Windows
         /// <param name="e">The <see cref="RoutedEventArgs"/> instance containing the event data.</param>
         private void BtnClearAllRequests_Click(object sender, RoutedEventArgs e)
         {
-            Logger.LogVerbose(CallInfo.Site(), "Clearing all requests");
+            this.logger.LogTrace("Clearing all requests");
             this.requestMap.Clear();
         }
 
@@ -229,7 +214,7 @@ namespace TunnelRelay.Windows
         /// <param name="e">The <see cref="TextChangedEventArgs"/> instance containing the event data.</param>
         private void TxtRedirectionUrl_TextChanged(object sender, TextChangedEventArgs e)
         {
-            Logger.LogVerbose(CallInfo.Site(), "Updating redirection url");
+            this.logger.LogTrace("Updating redirection url");
             TunnelRelayStateManager.ApplicationData.RedirectionUrl = (sender as TextBox).Text;
 
             try
@@ -267,7 +252,7 @@ namespace TunnelRelay.Windows
         /// <param name="e">The <see cref="RoutedEventArgs"/> instance containing the event data.</param>
         private void PluginManagement_Click(object sender, RoutedEventArgs e)
         {
-            Logger.LogVerbose(CallInfo.Site(), "Starting plugin management");
+            this.logger.LogTrace("Starting plugin management");
             PluginManagement pluginMangement = new PluginManagement();
             pluginMangement.Show();
         }

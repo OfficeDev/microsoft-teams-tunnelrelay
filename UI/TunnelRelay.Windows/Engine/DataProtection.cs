@@ -7,13 +7,18 @@ namespace TunnelRelay.Windows.Engine
 {
     using System;
     using System.Security.Cryptography;
-    using TunnelRelay.Diagnostics;
+    using Microsoft.Extensions.Logging;
 
     /// <summary>
     /// Methods for encrypting and decrypting secrets using DPAPI.
     /// </summary>
     internal class DataProtection
     {
+        /// <summary>
+        /// Logger.
+        /// </summary>
+        private static readonly ILogger<DataProtection> Logger = LoggingHelper.GetLogger<DataProtection>();
+
         /// <summary>
         /// Protects the specified data.
         /// </summary>
@@ -29,12 +34,12 @@ namespace TunnelRelay.Windows.Engine
             }
             catch (CryptographicException cryptEx)
             {
-                Logger.LogError(CallInfo.Site(), cryptEx, "Failed to encrypt with Cryptographic exception");
+                DataProtection.Logger.LogError(cryptEx, "Failed to encrypt with Cryptographic exception");
                 throw;
             }
             catch (Exception ex)
             {
-                Logger.LogError(CallInfo.Site(), ex, "Failed to encrypt");
+                DataProtection.Logger.LogError(ex, "Failed to encrypt");
                 throw;
             }
         }
@@ -52,12 +57,12 @@ namespace TunnelRelay.Windows.Engine
             }
             catch (CryptographicException cryptEx)
             {
-                Logger.LogError(CallInfo.Site(), cryptEx, "Failed to decryt with Cryptographic exception");
+                DataProtection.Logger.LogError(cryptEx, "Failed to decryt with Cryptographic exception");
                 throw;
             }
             catch (Exception ex)
             {
-                Logger.LogError(CallInfo.Site(), ex, "Failed to decrypt");
+                DataProtection.Logger.LogError(ex, "Failed to decrypt");
                 throw;
             }
         }

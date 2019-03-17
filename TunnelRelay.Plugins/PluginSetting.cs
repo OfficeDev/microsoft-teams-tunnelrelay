@@ -8,7 +8,7 @@ namespace TunnelRelay.PluginEngine
     using System;
 
     /// <summary>
-    /// Plugin settings.s
+    /// Plugin settings.
     /// </summary>
     /// <seealso cref="System.Attribute" />
     [AttributeUsage(AttributeTargets.Property, AllowMultiple = false)]

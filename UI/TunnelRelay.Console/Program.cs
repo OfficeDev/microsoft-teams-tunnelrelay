@@ -1,16 +1,29 @@
-﻿using Microsoft.Extensions.CommandLineUtils;
-using Microsoft.Extensions.Options;
-using System;
-using System.Collections.Generic;
-using System.Threading;
-using TunnelRelay.Core;
-using TunnelRelay.PluginEngine;
+﻿// <copyright file="Program.cs" company="Microsoft Corporation">
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+// </copyright>
 
 namespace TunnelRelay.Console.Shared
 {
-    class Program
+    using System;
+    using System.Collections.Generic;
+    using System.Threading;
+    using Microsoft.Extensions.CommandLineUtils;
+    using Microsoft.Extensions.Options;
+    using TunnelRelay.Core;
+    using TunnelRelay.PluginEngine;
+
+    /// <summary>
+    /// Program execution class.
+    /// </summary>
+    public sealed class Program
     {
-        static int Main(string[] args)
+        /// <summary>
+        /// Program invocation point.
+        /// </summary>
+        /// <param name="args">Commandline arguments.</param>
+        /// <returns>Process return code.</returns>
+        public static int Main(string[] args)
         {
             CommandLineApplication commandLineApplication = new CommandLineApplication(false);
             CommandOption serviceBusUrlOption = commandLineApplication.Option(
@@ -97,7 +110,7 @@ namespace TunnelRelay.Console.Shared
                         CurrentValue = new RelayRequestManagerOptions
                         {
                             InternalServiceUrl = new Uri(serviceAddress),
-                        }
+                        },
                     },
                     new List<ITunnelRelayPlugin>(),
                     new RelayRequestEventListener());

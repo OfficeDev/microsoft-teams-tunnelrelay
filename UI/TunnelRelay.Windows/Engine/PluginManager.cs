@@ -11,7 +11,7 @@ namespace TunnelRelay.Windows.Engine
     using System.IO;
     using System.Linq;
     using System.Reflection;
-    using TunnelRelay.Diagnostics;
+    using Microsoft.Extensions.Logging;
     using TunnelRelay.PluginEngine;
     using TunnelRelay.Plugins;
 
@@ -20,6 +20,11 @@ namespace TunnelRelay.Windows.Engine
     /// </summary>
     internal class PluginManager
     {
+        /// <summary>
+        /// Logger.
+        /// </summary>
+        private ILogger<PluginManager> logger = LoggingHelper.GetLogger<PluginManager>();
+
         /// <summary>
         /// Initializes the plugins.
         /// </summary>
@@ -41,13 +46,13 @@ namespace TunnelRelay.Windows.Engine
                         Assembly assembly = Assembly.LoadFrom(dll);
                         foreach (Type pluginType in assembly.GetExportedTypes().Where(type => type.GetInterfaces().Contains(typeof(ITunnelRelayPlugin))))
                         {
-                            Logger.LogInfo(CallInfo.Site(), "Loading plugin '{0}'", pluginType.FullName);
+                            this.logger.LogInformation("Loading plugin '{0}'", pluginType.FullName);
                             pluginInstances.Add(Activator.CreateInstance(pluginType) as ITunnelRelayPlugin);
                         }
                     }
                     catch (Exception ex)
                     {
-                        Logger.LogError(CallInfo.Site(), ex);
+                        this.logger.LogError(ex, "Plugin discovery hit an error!");
                     }
                 });
             }
@@ -97,7 +102,7 @@ namespace TunnelRelay.Windows.Engine
                 }
                 catch (Exception ex)
                 {
-                    Logger.LogError(CallInfo.Site(), ex);
+                    this.logger.LogError(ex, "Plugin init failed");
                 }
 
                 plugins.Add(pluginDetails);

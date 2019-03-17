@@ -11,7 +11,6 @@ namespace TunnelRelay.Windows.Engine
     using System.Runtime.Serialization;
     using Newtonsoft.Json;
     using Newtonsoft.Json.Linq;
-    using TunnelRelay.Diagnostics;
 
     /// <summary>
     /// Application data.

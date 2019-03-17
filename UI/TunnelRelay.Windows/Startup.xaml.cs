@@ -26,7 +26,7 @@
 namespace TunnelRelay.Windows
 {
     using System.Windows;
-    using TunnelRelay.Diagnostics;
+    using Microsoft.Extensions.Logging;
     using TunnelRelay.Windows.Engine;
 
     /// <summary>
@@ -34,6 +34,11 @@ namespace TunnelRelay.Windows
     /// </summary>
     public partial class Startup : Window
     {
+        /// <summary>
+        /// Logger.
+        /// </summary>
+        private readonly ILogger<Startup> logger = LoggingHelper.GetLogger<Startup>();
+
         /// <summary>
         /// Initializes a new instance of the <see cref="Startup"/> class.
         /// </summary>
@@ -43,13 +48,13 @@ namespace TunnelRelay.Windows
 
             if (string.IsNullOrEmpty(TunnelRelayStateManager.ApplicationData.HybridConnectionUrl))
             {
-                Logger.LogInfo(CallInfo.Site(), "Starting welcome experiance");
+                this.logger.LogInformation("Starting welcome experiance");
                 LoginToAzure gettingStarted = new LoginToAzure();
                 gettingStarted.Show();
             }
             else
             {
-                Logger.LogInfo(CallInfo.Site(), "User is logged in already. Starting app directly");
+                this.logger.LogInformation("User is logged in already. Starting app directly");
                 new MainWindow().Show();
             }
 

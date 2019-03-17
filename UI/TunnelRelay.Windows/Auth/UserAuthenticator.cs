@@ -12,9 +12,9 @@ namespace TunnelRelay.Windows
     using System.Threading.Tasks;
     using Microsoft.Azure.Management.ResourceManager.Fluent;
     using Microsoft.Azure.Management.ResourceManager.Fluent.Models;
+    using Microsoft.Extensions.Logging;
     using Microsoft.IdentityModel.Clients.ActiveDirectory;
     using Microsoft.Rest;
-    using TunnelRelay.Diagnostics;
 
     /// <summary>
     /// User authentication details.
@@ -42,6 +42,11 @@ namespace TunnelRelay.Windows
         private static readonly Uri PSRedirectUrl = new Uri("urn:ietf:wg:oauth:2.0:oob");
 
         /// <summary>
+        /// Logger.
+        /// </summary>
+        private readonly ILogger<UserAuthenticator> logger = LoggingHelper.GetLogger<UserAuthenticator>();
+
+        /// <summary>
         /// The tenant based token map. This stores tokens Tenant wise.
         /// </summary>
         private readonly ConcurrentDictionary<string, AuthenticationResult> tenantBasedTokenMap = new ConcurrentDictionary<string, AuthenticationResult>();
@@ -64,7 +69,7 @@ namespace TunnelRelay.Windows
             // If user is already authenticated skip authenticating the user.
             if (this.tenantBasedTokenMap.Count == 0)
             {
-                Logger.LogInfo(CallInfo.Site(), "Logging the user in with Common tenant info");
+                this.logger.LogInformation("Logging the user in with Common tenant info");
                 AuthenticationResult authToken = this.AcquireAzureManagementToken("common", PromptBehavior.RefreshSession);
 
                 this.userIdentifier = new UserIdentifier(authToken.UserInfo.DisplayableId, UserIdentifierType.OptionalDisplayableId);
@@ -107,7 +112,7 @@ namespace TunnelRelay.Windows
                         // Optimization to skip refetching tokens. AAD tokens live for 1 hour.
                         if (!this.tenantBasedTokenMap.ContainsKey(tenant.TenantId))
                         {
-                            Logger.LogInfo(CallInfo.Site(), "Get token with '{0}' tenant info", tenant.TenantId);
+                            this.logger.LogInformation("Get token with '{0}' tenant info", tenant.TenantId);
                             this.tenantBasedTokenMap[tenant.TenantId] = this.AcquireAzureManagementToken(tenant.TenantId, PromptBehavior.Never, this.userIdentifier);
                         }
                     });
@@ -118,7 +123,7 @@ namespace TunnelRelay.Windows
                      (tenant) =>
                      {
                          List<SubscriptionInner> subscriptionList = new List<SubscriptionInner>();
-                         Logger.LogVerbose(CallInfo.Site(), "Getting subscriptions for '{0}' tenant.", tenant.TenantId);
+                         this.logger.LogTrace("Getting subscriptions for '{0}' tenant.", tenant.TenantId);
                          TokenCredentials subsCreds = new TokenCredentials(this.tenantBasedTokenMap[tenant.TenantId].AccessToken);
                          SubscriptionClient subscriptionClient = new SubscriptionClient(subsCreds);
 
@@ -131,7 +136,7 @@ namespace TunnelRelay.Windows
                              subscriptionList.AddRange(resp);
                          }
 
-                         Logger.LogVerbose(CallInfo.Site(), "Fetched total of '{0}' subscriptions for tenant '{1}'", subscriptionList.Count, tenant.TenantId);
+                         this.logger.LogTrace("Fetched total of '{0}' subscriptions for tenant '{1}'", subscriptionList.Count, tenant.TenantId);
 
                          subscriptionList.ForEach(subscription => this.subscriptionToTenantMap[subscription] = tenant);
                      });
@@ -184,7 +189,7 @@ namespace TunnelRelay.Windows
             }
             catch (Exception ex)
             {
-                Logger.LogError(CallInfo.Site(), ex, "Failed to acquire token for tenant Id '{0}'", tenantId);
+                this.logger.LogError(ex, "Failed to acquire token for tenant Id '{0}'", tenantId);
                 throw;
             }
         }

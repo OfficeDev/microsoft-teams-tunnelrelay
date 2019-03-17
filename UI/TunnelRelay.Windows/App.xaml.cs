@@ -27,7 +27,7 @@ namespace TunnelRelay.Windows
 {
     using System.Threading;
     using System.Windows;
-    using TunnelRelay.Diagnostics;
+    using Microsoft.Extensions.Logging;
     using TunnelRelay.Windows.Engine;
 
     /// <summary>
@@ -36,12 +36,9 @@ namespace TunnelRelay.Windows
     internal partial class App : Application
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="App"/> class.
+        /// Logger.
         /// </summary>
-        public App()
-        {
-            Logger.RegisterLogger(new TextLogger());
-        }
+        private ILogger<App> logger = LoggingHelper.GetLogger<App>();
 
         /// <summary>
         /// Raises the <see cref="Application.Exit" /> event.
@@ -49,12 +46,10 @@ namespace TunnelRelay.Windows
         /// <param name="e">An <see cref="ExitEventArgs" /> that contains the event data.</param>
         protected override void OnExit(ExitEventArgs e)
         {
-            Logger.LogInfo(CallInfo.Site(), "Exiting the application with exit code '{0}'", e.ApplicationExitCode);
+            this.logger.LogInformation("Exiting the application with exit code '{0}'", e.ApplicationExitCode);
 
             TunnelRelayStateManager.SaveSettingsToFile();
             TunnelRelayStateManager.ShutdownTunnelRelayAsync().ConfigureAwait(false).GetAwaiter().GetResult();
-
-            Logger.Close();
         }
     }
 }

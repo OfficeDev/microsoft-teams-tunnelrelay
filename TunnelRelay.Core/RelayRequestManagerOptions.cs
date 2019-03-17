@@ -8,7 +8,7 @@ namespace TunnelRelay.Core
     using System;
 
     /// <summary>
-    /// Settings for <see cref="RelayRequestManager"/>
+    /// Settings for <see cref="RelayRequestManager"/>.
     /// </summary>
     public class RelayRequestManagerOptions
     {

@@ -33,7 +33,7 @@ namespace TunnelRelay.Core
         /// </summary>
         /// <param name="relayRequestManagerOptions">Relay request manager options.</param>
         /// <param name="tunnelRelayPlugins">Instances of the plugins to use.</param>
-        /// <param name="relayRequestEventListener">Optional relay request event listener instance</param>
+        /// <param name="relayRequestEventListener">Optional relay request event listener instance.</param>
         public RelayRequestManager(
             IOptionsMonitor<RelayRequestManagerOptions> relayRequestManagerOptions,
             IEnumerable<ITunnelRelayPlugin> tunnelRelayPlugins,
@@ -161,7 +161,7 @@ namespace TunnelRelay.Core
         }
 
         /// <summary>
-        /// Converts <see cref="HttpResponseMessage"/> to <see cref="RelayResponse"/>
+        /// Converts <see cref="HttpResponseMessage"/> to <see cref="RelayResponse"/>.
         /// </summary>
         /// <param name="httpResponseMessage">Response message.</param>
         /// <returns>Relay response.</returns>

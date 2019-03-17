@@ -11,16 +11,21 @@ namespace TunnelRelay.Windows.Engine
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
+    using Microsoft.Extensions.Logging;
     using Microsoft.Extensions.Options;
     using Newtonsoft.Json;
     using TunnelRelay.Core;
-    using TunnelRelay.Diagnostics;
 
     /// <summary>
     /// Maintains the state of application.
     /// </summary>
     internal static class TunnelRelayStateManager
     {
+        /// <summary>
+        /// Logger.
+        /// </summary>
+        private static readonly ILogger Logger = LoggingHelper.GetLogger<string>();
+
         /// <summary>
         /// Current application data instance.
         /// </summary>
@@ -52,12 +57,12 @@ namespace TunnelRelay.Windows.Engine
                 {
                     if (File.Exists("appSettings.json"))
                     {
-                        Logger.LogInfo(CallInfo.Site(), "Loading existing settings");
+                        TunnelRelayStateManager.Logger.LogInformation("Loading existing settings");
                         TunnelRelayStateManager.applicationData = JsonConvert.DeserializeObject<ApplicationData>(File.ReadAllText("appSettings.json"));
                     }
                     else
                     {
-                        Logger.LogInfo(CallInfo.Site(), "Appsettings don't exist. Creating new one.");
+                        TunnelRelayStateManager.Logger.LogInformation("Appsettings don't exist. Creating new one.");
                         TunnelRelayStateManager.applicationData = new ApplicationData
                         {
                             RedirectionUrl = "http://localhost:3979/",
@@ -148,7 +153,7 @@ namespace TunnelRelay.Windows.Engine
         /// <returns>Task tracking operation.</returns>
         public static async Task LogoutAsync()
         {
-            Logger.LogInfo(CallInfo.Site(), "Logging out");
+            TunnelRelayStateManager.Logger.LogInformation("Logging out");
 
             await TunnelRelayStateManager.ShutdownTunnelRelayAsync().ConfigureAwait(false);
             TunnelRelayStateManager.ApplicationData = new ApplicationData

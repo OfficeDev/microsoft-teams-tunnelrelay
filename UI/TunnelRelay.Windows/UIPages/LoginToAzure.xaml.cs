@@ -9,8 +9,8 @@ namespace TunnelRelay.Windows
     using System.IO;
     using System.Windows;
     using System.Windows.Navigation;
+    using Microsoft.Extensions.Logging;
     using Microsoft.Win32;
-    using TunnelRelay.Diagnostics;
     using TunnelRelay.Windows.Engine;
 
     /// <summary>
@@ -18,6 +18,11 @@ namespace TunnelRelay.Windows
     /// </summary>
     public partial class LoginToAzure : Window
     {
+        /// <summary>
+        /// Logger.
+        /// </summary>
+        private readonly ILogger<LoginToAzure> logger = LoggingHelper.GetLogger<LoginToAzure>();
+
         /// <summary>
         /// Initializes a new instance of the <see cref="LoginToAzure"/> class.
         /// </summary>
@@ -45,13 +50,13 @@ namespace TunnelRelay.Windows
         {
             try
             {
-                Logger.LogInfo(CallInfo.Site(), "Starting Azure login.");
+                this.logger.LogInformation("Starting Azure login.");
 
                 var userAuthDetails = new UserAuthenticator();
 
                 // Raise Authentication prompt and log the user in.
                 userAuthDetails.AuthenticateUser();
-                Logger.LogInfo(CallInfo.Site(), "Token acquire complete.");
+                this.logger.LogInformation("Token acquire complete.");
 
                 SelectServiceBus selectServiceBus = new SelectServiceBus(userAuthDetails);
                 selectServiceBus.Left = this.Left;
@@ -62,7 +67,7 @@ namespace TunnelRelay.Windows
             }
             catch (Exception ex)
             {
-                Logger.LogError(CallInfo.Site(), ex, "Failed to Login into Azure");
+                this.logger.LogError(ex, "Failed to Login into Azure");
                 MessageBox.Show("Failed to log you in!!", "Login failure", MessageBoxButton.OKCancel, MessageBoxImage.Error);
             }
         }
