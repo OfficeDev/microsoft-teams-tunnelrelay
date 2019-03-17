@@ -23,19 +23,11 @@ namespace TunnelRelay.Windows.Engine
         private const int CurrentVersion = 2;
 
         /// <summary>
-        /// Gets or sets the service bus shared key encrypted.
+        /// Gets or sets the service bus shared key bytes.
+        /// These can be encrypted if <see cref="EnableCredentialEncryption"/> is set to true.
         /// </summary>
         [JsonProperty(PropertyName = "serviceBusSharedKey")]
         private byte[] serviceBusSharedKeyBytes;
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="ApplicationData"/> class.
-        /// </summary>
-        public ApplicationData()
-        {
-            this.EnabledPlugins = new HashSet<string>();
-            this.PluginSettingsMap = new Dictionary<string, Dictionary<string, string>>();
-        }
 
         /// <summary>
         /// Gets or sets the redirection URL.
@@ -62,6 +54,12 @@ namespace TunnelRelay.Windows.Engine
         public string HybridConnectionKeyName { get; set; }
 
         /// <summary>
+        /// Gets or sets a value indicating whether encryption of credentials is enabled or not.
+        /// </summary>
+        [JsonProperty(PropertyName = "enableCredentialEncryption")]
+        public bool EnableCredentialEncryption { get; set; } = true;
+
+        /// <summary>
         /// Gets or sets the hybrid connection shared key.
         /// </summary>
         [JsonIgnore]
@@ -69,12 +67,26 @@ namespace TunnelRelay.Windows.Engine
         {
             get
             {
-                return Convert.ToBase64String(DataProtection.Unprotect(this.serviceBusSharedKeyBytes));
+                if (this.EnableCredentialEncryption)
+                {
+                    return Convert.ToBase64String(DataProtection.Unprotect(this.serviceBusSharedKeyBytes));
+                }
+                else
+                {
+                    return Convert.ToBase64String(this.serviceBusSharedKeyBytes);
+                }
             }
 
             set
             {
-                this.serviceBusSharedKeyBytes = DataProtection.Protect(Convert.FromBase64String(value));
+                if (this.EnableCredentialEncryption)
+                {
+                    this.serviceBusSharedKeyBytes = DataProtection.Protect(Convert.FromBase64String(value));
+                }
+                else
+                {
+                    this.serviceBusSharedKeyBytes = Convert.FromBase64String(value);
+                }
             }
         }
 
@@ -82,13 +94,13 @@ namespace TunnelRelay.Windows.Engine
         /// Gets or sets the list of enabled plugins.
         /// </summary>
         [JsonProperty(PropertyName = "enabledPlugins")]
-        public HashSet<string> EnabledPlugins { get; set; }
+        public HashSet<string> EnabledPlugins { get; set; } = new HashSet<string>();
 
         /// <summary>
         /// Gets or sets the plugin settings map.
         /// </summary>
         [JsonProperty(PropertyName = "pluginSettingsMap")]
-        public Dictionary<string, Dictionary<string, string>> PluginSettingsMap { get; set; }
+        public Dictionary<string, Dictionary<string, string>> PluginSettingsMap { get; set; } = new Dictionary<string, Dictionary<string, string>>();
 
         /// <summary>
         /// Gets or sets the version of the config.
@@ -120,7 +132,10 @@ namespace TunnelRelay.Windows.Engine
             ApplicationData applicationData = JsonConvert.DeserializeObject<ApplicationData>(serializedSettings);
 
             // Encrypt the data with DPAPI.
-            applicationData.serviceBusSharedKeyBytes = DataProtection.Protect(applicationData.serviceBusSharedKeyBytes);
+            if (applicationData.EnableCredentialEncryption)
+            {
+                applicationData.serviceBusSharedKeyBytes = DataProtection.Protect(applicationData.serviceBusSharedKeyBytes);
+            }
 
             TunnelRelayStateManager.ApplicationData = applicationData;
         }
@@ -136,6 +151,7 @@ namespace TunnelRelay.Windows.Engine
             {
                 this.HybridConnectionKeyName = null;
                 this.serviceBusSharedKeyBytes = null;
+                this.EnableCredentialEncryption = true;
                 this.HybridConnectionUrl = null;
             }
         }

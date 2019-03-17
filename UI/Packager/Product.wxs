@@ -69,11 +69,6 @@
         <File Id="TunnelRelayPluginPdb" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\TunnelRelay.Plugins.pdb" DiskId="1" />
         <File Id="TunnelRelayPluginXml" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\TunnelRelay.Plugins.xml" DiskId="1" />
       </Component>
-      <Component Id="TunnelRelayDiagnostics" Guid="FE84816C-98B6-4F0D-A107-8560D4207650">
-        <File Id="TunnelRelayDiagnosticsDll" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\TunnelRelay.Diagnostics.dll" DiskId="1" />
-        <File Id="TunnelRelayDiagnosticsPdb" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\TunnelRelay.Diagnostics.pdb" DiskId="1" />
-        <File Id="TunnelRelayDiagnosticsXml" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\TunnelRelay.Diagnostics.xml" DiskId="1" />
-      </Component>
       <Component Id="NewtonsoftJson" Guid="19B7E2F8-9E4C-40D1-A6A1-499F2576887C">
         <File Id="NewtonsoftJsonDll" Source="..\TunnelRelay.Windows\bin\$(var.Configuration)\Newtonsoft.Json.dll" DiskId="1" />
       </Component>

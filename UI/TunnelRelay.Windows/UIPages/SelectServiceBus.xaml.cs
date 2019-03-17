@@ -398,6 +398,7 @@ namespace TunnelRelay.Windows
             }
             else
             {
+                TunnelRelayStateManager.ApplicationData.EnableCredentialEncryption = this.chkEnableEncryption.IsChecked.GetValueOrDefault();
                 TunnelRelayStateManager.ApplicationData.HybridConnectionSharedKey = relayManagementClient.Namespaces.ListKeysAsync(
                     rgName,
                     selectedServiceBus.Name,
@@ -415,6 +416,32 @@ namespace TunnelRelay.Windows
                     mainWindow.Show();
                     this.Close();
                 });
+            }
+        }
+
+        /// <summary>
+        /// Invoked when user unchecks the encryption setting on the UI.
+        /// </summary>
+        /// <param name="sender">Event sender, in this case it is <see cref="chkEnableEncryption"/>.</param>
+        /// <param name="e">Event arguments.</param>
+        private void ChkEnableEncryption_Unchecked(object sender, RoutedEventArgs e)
+        {
+            if (!(sender as CheckBox).IsInitialized)
+            {
+                return;
+            }
+
+            MessageBoxResult messageBoxResult = MessageBox.Show(
+                "WARNING: This will disable Azure Service Bus SAS key encryption, if the configuration is copied out of this machine " +
+                    "it can be used by someone else to connect to the Azure Service Bus. Do you want to continue?",
+                "Key encryption setting",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Warning);
+
+            if (messageBoxResult == MessageBoxResult.No)
+            {
+                // Undo user's action.
+                (sender as CheckBox).IsChecked = true;
             }
         }
     }

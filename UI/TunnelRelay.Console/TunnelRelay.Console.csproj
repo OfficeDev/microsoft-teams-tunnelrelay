@@ -2,6 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
     <TargetFrameworks>netcoreapp2.2;net461</TargetFrameworks>
     <!--Any changes here also need to be made down in RunPublish target.-->
     <RuntimeIdentifiers>win-x64;linux-x64;osx-x64</RuntimeIdentifiers>
@@ -9,6 +10,7 @@
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\TRSnkKey.snk</AssemblyOriginatorKeyFile>
     <DelaySign>false</DelaySign>
+    <DocumentationFile>bin\$(Configuration)\$(TargetFramework)\$(AssemblyName).xml</DocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>
@@ -19,6 +21,14 @@
     <ProjectReference Include="..\..\TunnelRelay.Core\TunnelRelay.Core.csproj" />
     <ProjectReference Include="..\..\TunnelRelay.Plugins\TunnelRelay.Plugins.csproj" />
   </ItemGroup>
+
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net461'">
+    <DefineConstants>NET461</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(TargetFramework)' == 'netcoreapp2.2'">
+    <DefineConstants>NETCORE</DefineConstants>
+  </PropertyGroup>
 
   <ItemGroup>
     <AdditionalFiles Include="..\..\Build\stylecop.json" Link="stylecop.json" />
