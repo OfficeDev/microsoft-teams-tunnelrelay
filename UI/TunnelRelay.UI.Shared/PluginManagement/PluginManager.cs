@@ -79,16 +79,16 @@ namespace TunnelRelay.UI.PluginManagement
 
                 try
                 {
-                    var settingProperties = plugin.GetType().GetProperties().Where(memberInfo => memberInfo.GetCustomAttribute(typeof(PluginSettingAttribute)) != null);
+                    IEnumerable<PropertyInfo> settingProperties = plugin.GetType().GetProperties().Where(memberInfo => memberInfo.GetCustomAttribute(typeof(PluginSettingAttribute)) != null);
 
-                    foreach (var setting in settingProperties)
+                    foreach (PropertyInfo setting in settingProperties)
                     {
                         if (!setting.PropertyType.IsEquivalentTo(typeof(string)))
                         {
                             throw new InvalidDataException("Plugin settings can only be of string datatype");
                         }
 
-                        var pluginSetting = new PluginSettingDetails(applicationData)
+                        PluginSettingDetails pluginSetting = new PluginSettingDetails(applicationData)
                         {
                             AttributeData = setting.GetCustomAttribute<PluginSettingAttribute>(),
                             PluginInstance = plugin,

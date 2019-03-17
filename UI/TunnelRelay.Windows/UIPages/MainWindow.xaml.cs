@@ -8,6 +8,8 @@ namespace TunnelRelay.Windows
     using System;
     using System.Collections.Generic;
     using System.IO;
+    using System.IO.Compression;
+    using System.Net;
     using System.Threading;
     using System.Threading.Tasks;
     using System.Windows;
@@ -16,6 +18,7 @@ namespace TunnelRelay.Windows
     using System.Windows.Media;
     using Microsoft.Extensions.Logging;
     using Microsoft.Win32;
+    using Newtonsoft.Json;
     using Newtonsoft.Json.Linq;
     using TunnelRelay.Core;
     using TunnelRelay.Windows.Engine;
@@ -77,7 +80,7 @@ namespace TunnelRelay.Windows
                 {
                     Method = relayRequest.HttpMethod.Method,
                     RequestHeaders = relayRequest.Headers.GetHeaderMap(),
-                    RequestData = new StreamReader(relayRequest.InputStream).ReadToEnd(),
+                    RequestData = this.GetUIFriendlyString(relayRequest.InputStream, relayRequest.Headers[HttpRequestHeader.ContentType], relayRequest.Headers[HttpRequestHeader.ContentEncoding]),
                     RequestReceiveTime = relayRequest.RequestStartDateTime.DateTime,
                     Url = relayRequest.RequestPathAndQuery,
                     StatusCode = "Active",
@@ -106,7 +109,7 @@ namespace TunnelRelay.Windows
                     try
                     {
                         RequestDetails requestDetails = this.requestMap[requestId];
-                        requestDetails.ResponseData = new StreamReader(relayResponse.OutputStream).ReadToEnd();
+                        requestDetails.ResponseData = this.GetUIFriendlyString(relayResponse.OutputStream, relayResponse.Headers[HttpResponseHeader.ContentType], relayResponse.Headers[HttpResponseHeader.ContentEncoding]);
                         requestDetails.ResponseHeaders = relayResponse.Headers.GetHeaderMap();
                         requestDetails.StatusCode = relayResponse.HttpStatusCode.ToString();
                         requestDetails.Duration = (relayResponse.RequestEndDateTime.DateTime - requestDetails.RequestReceiveTime).TotalMilliseconds + " ms";
@@ -122,6 +125,44 @@ namespace TunnelRelay.Windows
             });
 
             return Task.CompletedTask;
+        }
+
+        /// <summary>
+        /// Gets UI friendly string from stream.
+        /// </summary>
+        /// <param name="stream">Stream to read from.</param>
+        /// <param name="contentType">Content-Type header value.</param>
+        /// <param name="contentEncoding">Content-Encoding header value.</param>
+        /// <returns>String read, decompressed (if needed) and formatted (if needed).</returns>
+        private string GetUIFriendlyString(Stream stream, string contentType, string contentEncoding)
+        {
+            if (!string.IsNullOrEmpty(contentEncoding))
+            {
+                if (contentEncoding.Equals("gzip", StringComparison.OrdinalIgnoreCase))
+                {
+                    stream = new GZipStream(stream, CompressionMode.Decompress);
+                }
+                else if (contentEncoding.Equals("deflate", StringComparison.OrdinalIgnoreCase))
+                {
+                    stream = new DeflateStream(stream, CompressionMode.Decompress);
+                }
+            }
+
+            string data = new StreamReader(stream).ReadToEnd();
+
+            if (!string.IsNullOrEmpty(contentType) && contentType.Contains("json") && data.Length > 0)
+            {
+                try
+                {
+                    data = JsonConvert.SerializeObject(JsonConvert.DeserializeObject(data), Formatting.Indented);
+                }
+                catch
+                {
+                    this.logger.LogTrace($"Failed to transform data into formatted json.");
+                }
+            }
+
+            return data;
         }
 
         /// <summary>Executes copy command on list view.</summary>

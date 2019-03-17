@@ -54,7 +54,7 @@ namespace TunnelRelay.Windows
             {
                 this.logger.LogInformation("Starting Azure login.");
 
-                var userAuthDetails = new UserAuthenticator(LoggingHelper.GetLogger<UserAuthenticator>());
+                UserAuthenticator userAuthDetails = new UserAuthenticator(LoggingHelper.GetLogger<UserAuthenticator>());
 
                 // Raise Authentication prompt and log the user in.
                 userAuthDetails.AuthenticateUserAsync().ConfigureAwait(false).GetAwaiter().GetResult();

@@ -7,7 +7,6 @@ namespace TunnelRelay.UI.StateManagement
 {
     using System;
     using System.Collections.Generic;
-    using System.IO;
     using System.Runtime.Serialization;
     using Newtonsoft.Json;
     using Newtonsoft.Json.Linq;
@@ -103,10 +102,10 @@ namespace TunnelRelay.UI.StateManagement
         public Dictionary<string, Dictionary<string, string>> PluginSettingsMap { get; set; } = new Dictionary<string, Dictionary<string, string>>();
 
         /// <summary>
-        /// Gets or sets the version of the config.
+        /// Gets the version of the config.
         /// </summary>
         [JsonProperty(PropertyName = "version")]
-        public int Version { get; set; }
+        public int Version { get; private set; }
 
         /// <summary>
         /// Imports the settings.

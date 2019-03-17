@@ -5,8 +5,6 @@
 
 namespace TunnelRelay.Core
 {
-    using System;
-
     /// <summary>
     /// Hybrid connection manager options.
     /// </summary>

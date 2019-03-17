@@ -8,7 +8,6 @@ namespace TunnelRelay.UI.ResourceManagement
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using System.Text;
     using System.Threading.Tasks;
     using Microsoft.Azure.Management.Relay.Fluent;
     using Microsoft.Azure.Management.Relay.Fluent.Models;
@@ -59,7 +58,7 @@ namespace TunnelRelay.UI.ResourceManagement
                 serviceBusList.AddRange(resp);
             }
 
-            return serviceBusList;
+            return serviceBusList.OrderBy(bus => bus.Name).ToList();
         }
 
         /// <summary>
@@ -117,6 +116,7 @@ namespace TunnelRelay.UI.ResourceManagement
             TokenCredentials tokenCredentials = new TokenCredentials(authenticationResult.AccessToken);
 
             RM.ResourceManagementClient resourceManagementClient = new RM.ResourceManagementClient(tokenCredentials);
+            resourceManagementClient.SubscriptionId = subscription.SubscriptionId;
 
             RelayManagementClient relayManagementClient = new RelayManagementClient(tokenCredentials);
             relayManagementClient.SubscriptionId = subscription.SubscriptionId;
@@ -185,7 +185,7 @@ namespace TunnelRelay.UI.ResourceManagement
                 serviceBusAuthRuleList.AddRange(resp);
             }
 
-            var selectedAuthRule = serviceBusAuthRuleList.FirstOrDefault(rule => rule.Rights != null && rule.Rights.Contains(AccessRights.Listen) && rule.Rights.Contains(AccessRights.Manage) && rule.Rights.Contains(AccessRights.Send));
+            AuthorizationRuleInner selectedAuthRule = serviceBusAuthRuleList.FirstOrDefault(rule => rule.Rights != null && rule.Rights.Contains(AccessRights.Listen) && rule.Rights.Contains(AccessRights.Manage) && rule.Rights.Contains(AccessRights.Send));
 
             if (selectedAuthRule == null)
             {

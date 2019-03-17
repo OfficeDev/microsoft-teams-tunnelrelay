@@ -21,11 +21,6 @@ namespace Microsoft.Extensions.Logging
         /// <returns>The logging builder with new provider added to it.</returns>
         public static ILoggingBuilder AddFileLogger(this ILoggingBuilder loggingBuilder)
         {
-            loggingBuilder.Services.Configure<FileLoggerProviderOptions>((fileLoggerProviderOptions) =>
-            {
-                fileLoggerProviderOptions.FileName = "TunnelRelayWindows.log";
-            });
-
             loggingBuilder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<ILoggerProvider, FileLoggerProvider>());
 
             return loggingBuilder;

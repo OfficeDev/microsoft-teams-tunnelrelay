@@ -151,7 +151,7 @@
                     <RowDefinition Height="*" />
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
-                <Label Content="{Binding ElementName=lstRequests, Path=SelectedItem.Value.Timestamp}" Grid.Row="0"/>
+                <Label Content="{Binding ElementName=lstRequests, Path=SelectedItem.Value.RequestReceiveTime}" Grid.Row="0"/>
                 <TextBox Text="{Binding ElementName=lstRequests, Path=SelectedItem.Value.Url}" Grid.Row="1" IsReadOnly="True" BorderThickness="0"/>
             </Grid>
 

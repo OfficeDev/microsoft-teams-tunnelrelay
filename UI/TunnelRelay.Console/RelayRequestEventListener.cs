@@ -22,9 +22,9 @@ namespace TunnelRelay.Console
         /// <summary>
         /// Initializes a new instance of the <see cref="RelayRequestEventListener"/> class.
         /// </summary>
-        internal RelayRequestEventListener()
+        public RelayRequestEventListener()
         {
-            this.requestCount = Console.CursorTop;
+            this.requestCount = Console.CursorTop + 1;
         }
 
         /// <summary>

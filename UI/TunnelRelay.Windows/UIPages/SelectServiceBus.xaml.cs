@@ -8,15 +8,11 @@ namespace TunnelRelay.Windows
     using System;
     using System.Collections.Generic;
     using System.Collections.ObjectModel;
-    using System.Linq;
     using System.Threading;
     using System.Windows;
     using System.Windows.Controls;
-    using Microsoft.Azure.Management.Relay.Fluent;
     using Microsoft.Azure.Management.Relay.Fluent.Models;
-    using Microsoft.Azure.Management.ResourceManager.Fluent;
     using Microsoft.Extensions.Logging;
-    using Microsoft.Rest;
     using Microsoft.Rest.Azure;
     using TunnelRelay.UI.ResourceManagement;
     using TunnelRelay.Windows.Engine;
@@ -93,7 +89,7 @@ namespace TunnelRelay.Windows
             {
                 try
                 {
-                    var subscriptionList = this.userAuthenticator.GetUserSubscriptionsAsync().ConfigureAwait(false).GetAwaiter().GetResult();
+                    List<RM.Models.SubscriptionInner> subscriptionList = this.userAuthenticator.GetUserSubscriptionsAsync().ConfigureAwait(false).GetAwaiter().GetResult();
 
                     this.Dispatcher.Invoke(() =>
                     {
@@ -125,7 +121,7 @@ namespace TunnelRelay.Windows
             this.btnDone.IsEnabled = false;
 
             this.progressBar.Visibility = Visibility.Visible;
-            var selectedSubscription = (sender as ComboBox).SelectedItem as RM.Models.SubscriptionInner;
+            RM.Models.SubscriptionInner selectedSubscription = (sender as ComboBox).SelectedItem as RM.Models.SubscriptionInner;
 
             Thread serviceBusThread = new Thread(new ThreadStart(() =>
             {
@@ -172,8 +168,8 @@ namespace TunnelRelay.Windows
         /// <param name="e">The <see cref="SelectionChangedEventArgs"/> instance containing the event data.</param>
         private void ServiceBusList_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            var selectedSubscription = (this.comboSubscriptionList as ComboBox).SelectedItem as RM.Models.SubscriptionInner;
-            var selectedServiceBus = (sender as ComboBox).SelectedItem as RelayNamespaceInner;
+            RM.Models.SubscriptionInner selectedSubscription = (this.comboSubscriptionList as ComboBox).SelectedItem as RM.Models.SubscriptionInner;
+            RelayNamespaceInner selectedServiceBus = (sender as ComboBox).SelectedItem as RelayNamespaceInner;
 
             // Selected service bus Id is null when it is the value we added manually i.e. newServiceBus above.
             if (selectedServiceBus.Id == null)
@@ -203,8 +199,9 @@ namespace TunnelRelay.Windows
         {
             this.progressBar.Visibility = Visibility.Visible;
             this.btnDone.IsEnabled = false;
-            var selectedSubscription = (this.comboSubscriptionList as ComboBox).SelectedItem as RM.Models.SubscriptionInner;
-            var selectedServiceBus = (this.comboServiceBusList as ComboBox).SelectedItem as RelayNamespaceInner;
+            RM.Models.SubscriptionInner selectedSubscription = (this.comboSubscriptionList as ComboBox).SelectedItem as RM.Models.SubscriptionInner;
+            RelayNamespaceInner selectedServiceBus = (this.comboServiceBusList as ComboBox).SelectedItem as RelayNamespaceInner;
+            string selectedLocation = this.listBoxSubscriptionLocations.SelectedItem.ToString();
 
             string newBusName = this.txtServiceBusName.Text;
 
@@ -256,7 +253,7 @@ namespace TunnelRelay.Windows
                         selectedSubscription,
                         newBusName,
                         Environment.MachineName,
-                        this.listBoxSubscriptionLocations.SelectedItem.ToString()).ConfigureAwait(false).GetAwaiter().GetResult();
+                        selectedLocation).ConfigureAwait(false).GetAwaiter().GetResult();
 
                     this.SetApplicationData(hybridConnectionDetails);
                 }
@@ -328,7 +325,14 @@ namespace TunnelRelay.Windows
         /// <param name="hybridConnectionDetails">Hybrid connection details.</param>
         private void SetApplicationData(HybridConnectionDetails hybridConnectionDetails)
         {
-            TunnelRelayStateManager.ApplicationData.EnableCredentialEncryption = this.chkEnableEncryption.IsChecked.GetValueOrDefault();
+            bool encryptionEnabled = true;
+
+            this.Dispatcher.Invoke(() =>
+            {
+                encryptionEnabled = this.chkEnableEncryption.IsChecked.GetValueOrDefault();
+            });
+
+            TunnelRelayStateManager.ApplicationData.EnableCredentialEncryption = encryptionEnabled;
             TunnelRelayStateManager.ApplicationData.HybridConnectionSharedKey = hybridConnectionDetails.HybridConnectionSharedKey;
             TunnelRelayStateManager.ApplicationData.HybridConnectionKeyName = hybridConnectionDetails.HybridConnectionKeyName;
             TunnelRelayStateManager.ApplicationData.HybridConnectionUrl = hybridConnectionDetails.ServiceBusUrl;

@@ -18,7 +18,6 @@ namespace TunnelRelay.Console
     using Microsoft.Extensions.CommandLineUtils;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
-    using Microsoft.Extensions.Options;
     using Newtonsoft.Json;
     using TunnelRelay.Core;
     using TunnelRelay.PluginEngine;
@@ -140,7 +139,6 @@ namespace TunnelRelay.Console
                         HybridConnectionSharedKey = serviceBusSharedKeyOption.Value(),
                         HybridConnectionUrl = serviceBusUrlOption.Value(),
                         RedirectionUrl = serviceAddressOption.Value(),
-                        Version = ApplicationData.CurrentVersion,
                     };
                 }
                 else if (File.Exists(Program.ConfigurationFilePath))
@@ -165,6 +163,8 @@ namespace TunnelRelay.Console
                 }
 
                 serviceDescriptors.AddSingleton(applicationData);
+
+                File.WriteAllText(Program.ConfigurationFilePath, JsonConvert.SerializeObject(applicationData, Formatting.Indented));
 
                 serviceDescriptors.Configure<HybridConnectionManagerOptions>((hybridConnectionOptions) =>
                 {
@@ -202,9 +202,13 @@ namespace TunnelRelay.Console
 
                 hybridConnectionManager.InitializeAsync(CancellationToken.None).Wait();
 
+                Console.WriteLine($"Relay is now redirecting requests from {applicationData.HybridConnectionUrl}{applicationData.HybridConnectionName} to {applicationData.RedirectionUrl}");
+
                 Console.CancelKeyPress += (sender, cancelledEvent) =>
                 {
+                    Console.WriteLine("Closing relay..");
                     hybridConnectionManager.CloseAsync(CancellationToken.None).ConfigureAwait(false).GetAwaiter().GetResult();
+                    Console.WriteLine("Relay closed. Exiting.");
                     Environment.Exit(0);
                 };
 
@@ -220,6 +224,8 @@ namespace TunnelRelay.Console
             IServiceProvider serviceProvider,
             string redirectionUrl = null)
         {
+            Console.WriteLine("Please wait while we log you in...");
+
             UserAuthenticator userAuthenticator = serviceProvider.GetRequiredService<UserAuthenticator>();
 
             ServiceBusResourceManager serviceBusResourceManager = serviceProvider.GetRequiredService<ServiceBusResourceManager>();
@@ -234,7 +240,7 @@ namespace TunnelRelay.Console
 
             Console.WriteLine("Select the subscription you want to use");
 
-            for (int i = 0; i < userSubscriptions.Count - 1; i++)
+            for (int i = 0; i < userSubscriptions.Count; i++)
             {
                 Console.WriteLine($"{i + 1} - {userSubscriptions[i].DisplayName}({userSubscriptions[i].SubscriptionId})");
             }
@@ -267,7 +273,7 @@ namespace TunnelRelay.Console
                 Console.WriteLine("Select the Service Bus you want to use.");
 
                 Console.WriteLine("0 - Create a new service bus");
-                for (int i = 0; i < relayNamespaces.Count - 1; i++)
+                for (int i = 0; i < relayNamespaces.Count; i++)
                 {
                     Console.WriteLine($"{i + 1} - {relayNamespaces[i].Name}");
                 }
@@ -300,7 +306,7 @@ namespace TunnelRelay.Console
 
                 List<Location> subscriptionLocations = userAuthenticator.GetSubscriptionLocations(selectedSubscription).ToList();
 
-                for (int i = 0; i < subscriptionLocations.Count - 1; i++)
+                for (int i = 0; i < subscriptionLocations.Count; i++)
                 {
                     Console.WriteLine($"{i + 1} - {subscriptionLocations[i].DisplayName}");
                 }
@@ -339,7 +345,7 @@ namespace TunnelRelay.Console
 
             if (string.IsNullOrEmpty(redirectionUrl))
             {
-                Console.Write("Enter the endpoint to route requests to. Example http://localhost:4200");
+                Console.Write("Enter the endpoint to route requests to. Example http://localhost:4200 ");
                 redirectionUrl = Console.ReadLine();
             }
 
@@ -352,7 +358,6 @@ namespace TunnelRelay.Console
                 HybridConnectionSharedKey = hybridConnectionDetails.HybridConnectionSharedKey,
                 HybridConnectionUrl = hybridConnectionDetails.ServiceBusUrl,
                 PluginSettingsMap = new Dictionary<string, Dictionary<string, string>>(),
-                Version = ApplicationData.CurrentVersion,
                 RedirectionUrl = redirectionUrl,
             };
         }

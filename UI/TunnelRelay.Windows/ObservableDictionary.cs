@@ -82,7 +82,7 @@ namespace TunnelRelay.Windows
 
                 if (exists)
                 {
-                    var eventData = new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Replace, newItem, oldItem, oldIndex);
+                    NotifyCollectionChangedEventArgs eventData = new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Replace, newItem, oldItem, oldIndex);
                     this.CollectionChanged?.Invoke(this, eventData);
                 }
                 else

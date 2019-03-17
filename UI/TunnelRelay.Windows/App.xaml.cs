@@ -5,7 +5,6 @@
 
 namespace TunnelRelay.Windows
 {
-    using System.Threading;
     using System.Windows;
     using Microsoft.Extensions.Logging;
     using TunnelRelay.Windows.Engine;

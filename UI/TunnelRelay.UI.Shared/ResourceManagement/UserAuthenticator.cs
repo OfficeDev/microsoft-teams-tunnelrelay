@@ -107,7 +107,7 @@ namespace TunnelRelay.UI.ResourceManagement
 
                 List<TenantIdDescription> tenantList = new List<TenantIdDescription>();
 
-                var tenantListResp = await tenantClient.Tenants.ListAsync().ConfigureAwait(false);
+                IPage<TenantIdDescription> tenantListResp = await tenantClient.Tenants.ListAsync().ConfigureAwait(false);
                 tenantList.AddRange(tenantListResp);
 
                 while (!string.IsNullOrEmpty(tenantListResp.NextPageLink))
@@ -181,7 +181,7 @@ namespace TunnelRelay.UI.ResourceManagement
                 await Task.WhenAll(locationTasks).ConfigureAwait(false);
             }
 
-            return this.subscriptionToTenantMap.Keys.ToList();
+            return this.subscriptionToTenantMap.Keys.OrderBy(subs => subs.DisplayName).ToList();
         }
 
         /// <summary>
@@ -191,7 +191,7 @@ namespace TunnelRelay.UI.ResourceManagement
         /// <returns>Locations supported by the subscription.</returns>
         public IEnumerable<Location> GetSubscriptionLocations(SubscriptionInner subscription)
         {
-            return this.subscriptionToLocationMap[subscription];
+            return this.subscriptionToLocationMap[subscription].OrderBy(loc => loc.Name);
         }
 
         /// <summary>
@@ -230,7 +230,7 @@ namespace TunnelRelay.UI.ResourceManagement
 #else
                     DeviceCodeResult deviceCodeResult = await authenticationContext.AcquireDeviceCodeAsync(AzureAADResource, PSClientId).ConfigureAwait(false);
 
-                    Console.WriteLine($"Interactive login required. Please enter {deviceCodeResult.DeviceCode} on the browser window");
+                    Console.WriteLine($"Interactive login required. {deviceCodeResult.Message}");
 
                     await Task.Delay(1000).ConfigureAwait(false);
 

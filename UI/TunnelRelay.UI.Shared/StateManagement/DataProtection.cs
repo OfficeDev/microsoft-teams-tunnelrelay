@@ -5,7 +5,6 @@
 
 namespace TunnelRelay.UI.StateManagement
 {
-    using System;
     using System.Security.Cryptography;
 
     /// <summary>

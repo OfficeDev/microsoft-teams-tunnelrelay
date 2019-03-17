@@ -93,7 +93,7 @@ namespace TunnelRelay.Plugins
         /// </returns>
         public Task<HttpRequestMessage> PreProcessRequestToServiceAsync(HttpRequestMessage webRequest)
         {
-            foreach (var headerToAdd in this.headersToAdd)
+            foreach (KeyValuePair<string, string> headerToAdd in this.headersToAdd)
             {
                 if (webRequest.Headers.Contains(headerToAdd.Key))
                 {

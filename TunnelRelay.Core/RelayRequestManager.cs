@@ -188,7 +188,7 @@ namespace TunnelRelay.Core
             HttpRequestMessage httpRequestMessage = new HttpRequestMessage(relayRequest.HttpMethod, internalRequestUrl);
 
             // Prepare request content.
-            if (relayRequest.InputStream != null && relayRequest.HttpMethod != HttpMethod.Get)
+            if (relayRequest.InputStream != null)
             {
                 MemoryStream memoryStream = new MemoryStream((int)relayRequest.InputStream.Length);
                 await relayRequest.InputStream.CopyToAsync(memoryStream).ConfigureAwait(false);

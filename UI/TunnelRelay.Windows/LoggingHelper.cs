@@ -6,12 +6,9 @@
 namespace TunnelRelay.Windows
 {
     using System;
-    using System.Collections.Generic;
-    using System.Linq;
-    using System.Text;
-    using System.Threading.Tasks;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
+    using TunnelRelay.UI.Logger;
 
     /// <summary>
     /// Logging helper.
@@ -21,6 +18,11 @@ namespace TunnelRelay.Windows
         private static IServiceProvider serviceProvider = new ServiceCollection()
             .AddLogging(loggingBuilder =>
             {
+                loggingBuilder.Services.Configure<FileLoggerProviderOptions>((fileLoggerProviderOptions) =>
+                {
+                    fileLoggerProviderOptions.FileName = "TunnelRelayWindows.log";
+                });
+
                 loggingBuilder.AddFileLogger();
             })
             .BuildServiceProvider();

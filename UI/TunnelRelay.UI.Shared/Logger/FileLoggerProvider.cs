@@ -63,7 +63,7 @@ namespace TunnelRelay.UI.Logger
                 {
                     if (this.streamWriter == null)
                     {
-                        this.streamWriter = new StreamWriter(new FileStream(this.logFileName, FileMode.Append))
+                        this.streamWriter = new StreamWriter(new FileStream(this.logFileName, FileMode.Append, FileAccess.Write, FileShare.Write))
                         {
                             AutoFlush = true,
                             NewLine = Environment.NewLine,
