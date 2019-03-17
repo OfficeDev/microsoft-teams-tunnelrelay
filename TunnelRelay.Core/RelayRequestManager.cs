@@ -62,12 +62,13 @@ namespace TunnelRelay.Core
             // Inform listener that a request has been received.
             if (this.relayRequestEventListener != null)
             {
+                RelayRequest clonedRequest = relayRequest.Clone() as RelayRequest;
 #pragma warning disable CS4014 // We want eventing pipeline to run in parallel and not block the actual request execution.
                 Task.Run(async () =>
                 {
                     try
                     {
-                        await this.relayRequestEventListener.RequestReceivedAsync(requestId, relayRequest.Clone() as RelayRequest).ConfigureAwait(false);
+                        await this.relayRequestEventListener.RequestReceivedAsync(requestId, clonedRequest).ConfigureAwait(false);
                     }
                     catch (Exception)
                     {
@@ -107,12 +108,13 @@ namespace TunnelRelay.Core
 
             if (this.relayRequestEventListener != null)
             {
+                RelayResponse clonedResponse = relayResponse.Clone() as RelayResponse;
 #pragma warning disable CS4014 // We want eventing pipeline to run in parallel and not slowdown the actual request execution.
                 Task.Run(async () =>
                 {
                     try
                     {
-                        await this.relayRequestEventListener.ResponseSentAsync(requestId, relayResponse.Clone() as RelayResponse).ConfigureAwait(false);
+                        await this.relayRequestEventListener.ResponseSentAsync(requestId, clonedResponse).ConfigureAwait(false);
                     }
                     catch (Exception)
                     {
