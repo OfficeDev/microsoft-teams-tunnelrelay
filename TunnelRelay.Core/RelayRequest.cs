@@ -31,9 +31,9 @@ namespace TunnelRelay.Core
         public Stream InputStream { get; internal set; }
 
         /// <summary>
-        /// Gets the relative url for the incoming request.
+        /// Gets the request path for the incoming request.
         /// </summary>
-        public string RelativeUrl { get; internal set; }
+        public string RequestPathAndQuery { get; internal set; }
 
         /// <summary>
         /// Gets the start time for the request.
@@ -51,7 +51,7 @@ namespace TunnelRelay.Core
                 HttpMethod = new HttpMethod(this.HttpMethod.ToString()),
                 Headers = this.Headers.Clone(),
                 InputStream = this.InputStream.Clone(),
-                RelativeUrl = this.RelativeUrl.Clone() as string,
+                RequestPathAndQuery = this.RequestPathAndQuery.Clone() as string,
                 RequestStartDateTime = new DateTimeOffset(this.RequestStartDateTime.DateTime),
             };
         }

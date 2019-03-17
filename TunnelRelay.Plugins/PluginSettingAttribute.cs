@@ -1,4 +1,4 @@
-﻿// <copyright file="PluginSetting.cs" company="Microsoft Corporation">
+﻿// <copyright file="PluginSettingAttribute.cs" company="Microsoft Corporation">
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 // </copyright>
@@ -12,14 +12,14 @@ namespace TunnelRelay.PluginEngine
     /// </summary>
     /// <seealso cref="System.Attribute" />
     [AttributeUsage(AttributeTargets.Property, AllowMultiple = false)]
-    public class PluginSetting : Attribute
+    public sealed class PluginSettingAttribute : Attribute
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="PluginSetting"/> class.
+        /// Initializes a new instance of the <see cref="PluginSettingAttribute"/> class.
         /// </summary>
         /// <param name="displayName">The display name to be shown to user..</param>
         /// <param name="helpText">The help text to be shown on hover..</param>
-        public PluginSetting(string displayName, string helpText)
+        public PluginSettingAttribute(string displayName, string helpText)
         {
             this.DisplayName = displayName;
             this.HelpText = helpText;

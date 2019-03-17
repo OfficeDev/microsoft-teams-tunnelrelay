@@ -68,7 +68,7 @@ namespace TunnelRelay.Windows.Engine
 
                 try
                 {
-                    var settingProperties = plugin.GetType().GetProperties().Where(memberInfo => memberInfo.GetCustomAttribute(typeof(PluginSetting)) != null);
+                    var settingProperties = plugin.GetType().GetProperties().Where(memberInfo => memberInfo.GetCustomAttribute(typeof(PluginSettingAttribute)) != null);
 
                     foreach (var setting in settingProperties)
                     {
@@ -79,7 +79,7 @@ namespace TunnelRelay.Windows.Engine
 
                         var pluginSetting = new PluginSettingDetails
                         {
-                            AttributeData = setting.GetCustomAttribute<PluginSetting>(),
+                            AttributeData = setting.GetCustomAttribute<PluginSettingAttribute>(),
                             PluginInstance = plugin,
                             PropertyDetails = setting,
                         };

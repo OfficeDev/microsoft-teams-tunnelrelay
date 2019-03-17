@@ -14,7 +14,7 @@ namespace System.Windows.Workarounds
     /// </summary>
     /// <seealso cref="System.Windows.DependencyObject" />
     /// <seealso cref="System.IDisposable" />
-    public class AutoScrollHandler : DependencyObject, IDisposable
+    public sealed class AutoScrollHandler : DependencyObject, IDisposable
     {
         /// <summary>
         /// The items source property.

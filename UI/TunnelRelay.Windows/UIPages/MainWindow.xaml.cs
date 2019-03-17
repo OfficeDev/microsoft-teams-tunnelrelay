@@ -79,7 +79,7 @@ namespace TunnelRelay.Windows
                     RequestHeaders = relayRequest.Headers.GetHeaderMap(),
                     RequestData = new StreamReader(relayRequest.InputStream).ReadToEnd(),
                     RequestReceiveTime = relayRequest.RequestStartDateTime.DateTime,
-                    Url = relayRequest.RelativeUrl,
+                    Url = relayRequest.RequestPathAndQuery,
                     StatusCode = "Active",
                 });
 

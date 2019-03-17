@@ -3,7 +3,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 // </copyright>
 
-namespace TunnelRelay.Console.Shared
+namespace TunnelRelay.Console
 {
     using System;
     using System.Collections.Generic;
@@ -42,7 +42,7 @@ namespace TunnelRelay.Console.Shared
                 Console.Write(string.Format(
                     "{0} - {1}",
                     relayRequest.HttpMethod,
-                    relayRequest.RelativeUrl));
+                    relayRequest.RequestPathAndQuery));
 
                 this.requestConsoleDetailsMap[requestId] = new RequestConsoleDetails
                 {

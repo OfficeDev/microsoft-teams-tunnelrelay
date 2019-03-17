@@ -3,7 +3,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 // </copyright>
 
-namespace TunnelRelay.Console.Shared
+namespace TunnelRelay.Console
 {
     using System;
     using System.Collections.Generic;
@@ -101,7 +101,7 @@ namespace TunnelRelay.Console.Shared
                     ConnectionPath = connectionName,
                     ServiceBusKeyName = sharedKeyName,
                     ServiceBusSharedKey = sharedKey,
-                    ServiceBusUrl = serviceBusUrl,
+                    ServiceBusUrlHost = serviceBusUrl,
                 };
 
                 RelayRequestManager relayManager = new RelayRequestManager(

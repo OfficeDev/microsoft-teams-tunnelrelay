@@ -18,7 +18,7 @@ namespace TunnelRelay.Core
     /// <summary>
     /// Handles the requests received over the relay.
     /// </summary>
-    public class RelayRequestManager : IRelayRequestManager
+    public sealed class RelayRequestManager : IRelayRequestManager, IDisposable
     {
         private readonly IEnumerable<ITunnelRelayPlugin> tunnelRelayPlugins;
 
@@ -126,13 +126,64 @@ namespace TunnelRelay.Core
         }
 
         /// <summary>
+        /// Dispose the instance.
+        /// </summary>
+        public void Dispose()
+        {
+            this.httpClient.Dispose();
+        }
+
+        /// <summary>
+        /// Copies content headers.
+        /// </summary>
+        /// <param name="httpContent">Http content.</param>
+        /// <param name="headerCollection">Header collection.</param>
+        private static void CopyContentHeader(HttpContent httpContent, WebHeaderCollection headerCollection)
+        {
+            if (headerCollection["Content-Disposition"] != null)
+            {
+                httpContent.Headers.ContentDisposition = ContentDispositionHeaderValue.Parse(headerCollection["Content-Disposition"]);
+            }
+
+            if (headerCollection[HttpRequestHeader.ContentLocation] != null)
+            {
+                httpContent.Headers.ContentLocation = new Uri(headerCollection[HttpRequestHeader.ContentLocation]);
+            }
+
+            if (headerCollection[HttpRequestHeader.ContentRange] != null)
+            {
+                httpContent.Headers.ContentRange = ContentRangeHeaderValue.Parse(headerCollection[HttpRequestHeader.ContentRange]);
+            }
+
+            if (headerCollection[HttpRequestHeader.ContentType] != null)
+            {
+                httpContent.Headers.ContentType = MediaTypeHeaderValue.Parse(headerCollection[HttpRequestHeader.ContentType]);
+            }
+
+            if (headerCollection[HttpRequestHeader.Expires] != null)
+            {
+                httpContent.Headers.Expires = DateTimeOffset.Parse(headerCollection[HttpRequestHeader.Expires]);
+            }
+
+            if (headerCollection[HttpRequestHeader.LastModified] != null)
+            {
+                httpContent.Headers.LastModified = DateTimeOffset.Parse(headerCollection[HttpRequestHeader.LastModified]);
+            }
+
+            if (headerCollection[HttpRequestHeader.ContentLength] != null)
+            {
+                httpContent.Headers.ContentLength = long.Parse(headerCollection[HttpRequestHeader.ContentLength]);
+            }
+        }
+
+        /// <summary>
         /// Converts <see cref="RelayRequest"/> to <see cref="HttpRequestMessage"/>.
         /// </summary>
         /// <param name="relayRequest">Incoming relay request.</param>
         /// <returns>Http request message.</returns>
         private async Task<HttpRequestMessage> ToHttpRequestMessageAsync(RelayRequest relayRequest)
         {
-            Uri internalRequestUrl = new Uri(this.internalServiceUrl + "/" + relayRequest.RelativeUrl.TrimStart('/'));
+            Uri internalRequestUrl = new Uri(this.internalServiceUrl + "/" + relayRequest.RequestPathAndQuery.TrimStart('/'));
 
             HttpRequestMessage httpRequestMessage = new HttpRequestMessage(relayRequest.HttpMethod, internalRequestUrl);
 
@@ -145,7 +196,7 @@ namespace TunnelRelay.Core
                 memoryStream.Seek(0, SeekOrigin.Begin);
 
                 httpRequestMessage.Content.Headers.ContentLength = memoryStream.Length;
-                this.CopyContentHeader(httpRequestMessage.Content, relayRequest.Headers);
+                RelayRequestManager.CopyContentHeader(httpRequestMessage.Content, relayRequest.Headers);
             }
 
             // Try to blindly add the headers. Content headers will get filtered out here.
@@ -195,48 +246,9 @@ namespace TunnelRelay.Core
         }
 
         /// <summary>
-        /// Copies content headers.
+        /// Updates the settings for current instance.
         /// </summary>
-        /// <param name="httpContent">Http content.</param>
-        /// <param name="headerCollection">Header collection.</param>
-        private void CopyContentHeader(HttpContent httpContent, WebHeaderCollection headerCollection)
-        {
-            if (headerCollection["Content-Disposition"] != null)
-            {
-                httpContent.Headers.ContentDisposition = ContentDispositionHeaderValue.Parse(headerCollection["Content-Disposition"]);
-            }
-
-            if (headerCollection[HttpRequestHeader.ContentLocation] != null)
-            {
-                httpContent.Headers.ContentLocation = new Uri(headerCollection[HttpRequestHeader.ContentLocation]);
-            }
-
-            if (headerCollection[HttpRequestHeader.ContentRange] != null)
-            {
-                httpContent.Headers.ContentRange = ContentRangeHeaderValue.Parse(headerCollection[HttpRequestHeader.ContentRange]);
-            }
-
-            if (headerCollection[HttpRequestHeader.ContentType] != null)
-            {
-                httpContent.Headers.ContentType = MediaTypeHeaderValue.Parse(headerCollection[HttpRequestHeader.ContentType]);
-            }
-
-            if (headerCollection[HttpRequestHeader.Expires] != null)
-            {
-                httpContent.Headers.Expires = DateTimeOffset.Parse(headerCollection[HttpRequestHeader.Expires]);
-            }
-
-            if (headerCollection[HttpRequestHeader.LastModified] != null)
-            {
-                httpContent.Headers.LastModified = DateTimeOffset.Parse(headerCollection[HttpRequestHeader.LastModified]);
-            }
-
-            if (headerCollection[HttpRequestHeader.ContentLength] != null)
-            {
-                httpContent.Headers.ContentLength = long.Parse(headerCollection[HttpRequestHeader.ContentLength]);
-            }
-        }
-
+        /// <param name="relayRequestManagerOptions">Relay request manager options.</param>
         private void UpdateSettings(RelayRequestManagerOptions relayRequestManagerOptions)
         {
             if (relayRequestManagerOptions == null)

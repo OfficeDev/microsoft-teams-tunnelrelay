@@ -1,15 +1,12 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
-
+  
+  <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), .gitignore))\Build\Common.props"/>
+  
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <UseWPF>true</UseWPF>
     <IsPackable>false</IsPackable>
     <TargetFramework>net461</TargetFramework>
-    <CodeAnalysisRuleSet>..\..\Build\Analyzers.ruleset</CodeAnalysisRuleSet>
-    <SignAssembly>true</SignAssembly>
-    <AssemblyOriginatorKeyFile>..\..\TRSnkKey.snk</AssemblyOriginatorKeyFile>
-    <DocumentationFile>bin\$(Configuration)\$(TargetFramework)\$(AssemblyName).xml</DocumentationFile>
-    <DelaySign>false</DelaySign>
     <ApplicationIcon>TRLogo.ico</ApplicationIcon>
   </PropertyGroup>
 
@@ -24,16 +21,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <AdditionalFiles Include="..\..\Build\stylecop.json" Link="stylecop.json" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="AsyncUsageAnalyzers" Version="1.0.0-alpha003">
-      <PrivateAssets>all</PrivateAssets>
-    </PackageReference>
-    <PackageReference Include="StyleCop.Analyzers" Version="1.1.1-rc.114">
-      <PrivateAssets>all</PrivateAssets>
-    </PackageReference>
     <PackageReference Include="Microsoft.Azure.Management.Relay.Fluent" Version="1.9.1-beta" />
     <PackageReference Include="Microsoft.Azure.Relay" Version="2.0.0-preview1-20180523" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="2.2.0" />

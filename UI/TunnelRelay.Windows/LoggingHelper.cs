@@ -18,22 +18,12 @@ namespace TunnelRelay.Windows
     /// </summary>
     internal class LoggingHelper
     {
-        private static IServiceProvider serviceProvider;
-
-        /// <summary>
-        /// Initializes static members of the <see cref="LoggingHelper"/> class.
-        /// </summary>
-        static LoggingHelper()
-        {
-            ServiceCollection serviceDescriptors = new ServiceCollection();
-
-            serviceDescriptors.AddLogging(loggingBuilder =>
+        private static IServiceProvider serviceProvider = new ServiceCollection()
+            .AddLogging(loggingBuilder =>
             {
                 loggingBuilder.AddFileLogger();
-            });
-
-            serviceProvider = serviceDescriptors.BuildServiceProvider();
-        }
+            })
+            .BuildServiceProvider();
 
         /// <summary>
         /// Gets a logger.

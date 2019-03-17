@@ -5,15 +5,19 @@
 
 namespace TunnelRelay.Core
 {
+    using System;
+
     /// <summary>
     /// Hybrid connection manager options.
     /// </summary>
     public class HybridConnectionManagerOptions
     {
         /// <summary>
-        /// Gets or sets the service bus URL.
+        /// Gets or sets the service bus host.
         /// </summary>
-        public string ServiceBusUrl { get; set; }
+#pragma warning disable CA1056 // Uri properties should not be strings - Isn't actually a URI.
+        public string ServiceBusUrlHost { get; set; }
+#pragma warning restore CA1056 // Uri properties should not be strings - Isn't actually a URI.
 
         /// <summary>
         /// Gets or sets the name of the service bus key.

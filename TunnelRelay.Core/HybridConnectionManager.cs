@@ -41,14 +41,14 @@ namespace TunnelRelay.Core
                 throw new ArgumentNullException(nameof(hybridConnectionManagerOptions));
             }
 
-            if (string.IsNullOrEmpty(hybridConnectionManagerOptions.Value.ServiceBusUrl))
+            if (string.IsNullOrEmpty(hybridConnectionManagerOptions.Value.ServiceBusUrlHost))
             {
-                throw new ArgumentNullException(nameof(hybridConnectionManagerOptions.Value.ServiceBusUrl));
+                throw new ArgumentNullException(nameof(hybridConnectionManagerOptions.Value.ServiceBusUrlHost));
             }
 
             // Remove the / at the end.
-            hybridConnectionManagerOptions.Value.ServiceBusUrl = hybridConnectionManagerOptions.Value.ServiceBusUrl.TrimEnd('/');
-            hybridConnectionManagerOptions.Value.ServiceBusUrl = hybridConnectionManagerOptions.Value.ServiceBusUrl.Replace("https://", string.Empty);
+            hybridConnectionManagerOptions.Value.ServiceBusUrlHost = hybridConnectionManagerOptions.Value.ServiceBusUrlHost.TrimEnd('/');
+            hybridConnectionManagerOptions.Value.ServiceBusUrlHost = hybridConnectionManagerOptions.Value.ServiceBusUrlHost.Replace("https://", string.Empty);
 
             if (string.IsNullOrEmpty(hybridConnectionManagerOptions.Value.ConnectionPath))
             {
@@ -67,14 +67,14 @@ namespace TunnelRelay.Core
 
             string connectionString = string.Format(
                 ConnectionStringFormat,
-                hybridConnectionManagerOptions.Value.ServiceBusUrl,
+                hybridConnectionManagerOptions.Value.ServiceBusUrlHost,
                 hybridConnectionManagerOptions.Value.ServiceBusKeyName,
                 hybridConnectionManagerOptions.Value.ServiceBusSharedKey,
                 hybridConnectionManagerOptions.Value.ConnectionPath);
             this.hybridConnectionListener = new HybridConnectionListener(connectionString);
 
             // Figure out the prefix.
-            this.relayUrl = $"sb://{hybridConnectionManagerOptions.Value.ServiceBusUrl}/{hybridConnectionManagerOptions.Value.ConnectionPath}".ToLowerInvariant();
+            this.relayUrl = $"sb://{hybridConnectionManagerOptions.Value.ServiceBusUrlHost}/{hybridConnectionManagerOptions.Value.ConnectionPath}".ToUpperInvariant();
             this.relayManager = relayManager;
         }
 
@@ -116,7 +116,7 @@ namespace TunnelRelay.Core
                 Headers = context.Request.Headers,
                 HttpMethod = new HttpMethod(context.Request.HttpMethod),
                 InputStream = context.Request.InputStream,
-                RelativeUrl = context.Request.Url.AbsoluteUri.ToLowerInvariant().Replace(this.relayUrl, string.Empty),
+                RequestPathAndQuery = context.Request.Url.AbsoluteUri.ToUpperInvariant().Replace(this.relayUrl, string.Empty),
                 RequestStartDateTime = DateTimeOffset.Now,
             };
 

@@ -116,7 +116,7 @@ namespace TunnelRelay.Windows.Engine
                 ConnectionPath = TunnelRelayStateManager.ApplicationData.HybridConnectionName,
                 ServiceBusKeyName = TunnelRelayStateManager.ApplicationData.HybridConnectionKeyName,
                 ServiceBusSharedKey = TunnelRelayStateManager.ApplicationData.HybridConnectionSharedKey,
-                ServiceBusUrl = TunnelRelayStateManager.ApplicationData.HybridConnectionUrl,
+                ServiceBusUrlHost = TunnelRelayStateManager.ApplicationData.HybridConnectionUrl,
             };
 
             TunnelRelayStateManager.RelayRequestManagerOptions.CurrentValue = new RelayRequestManagerOptions

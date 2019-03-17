@@ -26,10 +26,12 @@ namespace TunnelRelay.Windows.Engine
         /// </summary>
         public string Method { get; set; }
 
+#pragma warning disable CA1056 // Uri properties should not be strings - Serialized by XAML.
         /// <summary>
         /// Gets or sets the URL.
         /// </summary>
         public string Url { get; set; }
+#pragma warning restore CA1056 // Uri properties should not be strings - Serialized by XAML.
 
         /// <summary>
         /// Gets or sets the status code.
@@ -44,7 +46,9 @@ namespace TunnelRelay.Windows.Engine
         /// <summary>
         /// Gets or sets the request headers.
         /// </summary>
+#pragma warning disable CA2227 // Collection properties should be read only - Data transfer object.
         public List<HeaderDetails> RequestHeaders { get; set; }
+#pragma warning restore CA2227 // Collection properties should be read only - Data transfer object.
 
         /// <summary>
         /// Gets or sets the request data.
@@ -54,7 +58,9 @@ namespace TunnelRelay.Windows.Engine
         /// <summary>
         /// Gets or sets the response headers.
         /// </summary>
+#pragma warning disable CA2227 // Collection properties should be read only - Data transfer object.
         public List<HeaderDetails> ResponseHeaders { get; set; }
+#pragma warning restore CA2227 // Collection properties should be read only - Data transfer object.
 
         /// <summary>
         /// Gets or sets the response data.

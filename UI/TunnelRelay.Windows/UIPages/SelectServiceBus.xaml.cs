@@ -203,7 +203,7 @@ namespace TunnelRelay.Windows
             string rgName = null;
             if (!string.IsNullOrEmpty(selectedServiceBus.Id))
             {
-                int startIndex = selectedServiceBus.Id.IndexOf("resourceGroups") + 15;
+                int startIndex = selectedServiceBus.Id.IndexOf("resourceGroups", StringComparison.OrdinalIgnoreCase) + 15;
                 rgName = selectedServiceBus.Id.Substring(startIndex, selectedServiceBus.Id.IndexOf('/', startIndex) - startIndex);
             }
 
