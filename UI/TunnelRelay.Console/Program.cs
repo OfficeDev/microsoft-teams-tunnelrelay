@@ -244,6 +244,10 @@ namespace TunnelRelay.Console
 
             ServiceBusResourceManager serviceBusResourceManager = serviceProvider.GetRequiredService<ServiceBusResourceManager>();
 
+            await userAuthenticator.AuthenticateUserAsync().ConfigureAwait(false);
+
+            Console.WriteLine("Please wait while we gather subscription information...");
+
             List<SubscriptionInner> userSubscriptions = await userAuthenticator.GetUserSubscriptionsAsync().ConfigureAwait(false);
 
             if (userSubscriptions.Count == 0)

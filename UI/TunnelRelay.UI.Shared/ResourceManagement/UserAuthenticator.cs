@@ -230,7 +230,7 @@ namespace TunnelRelay.UI.ResourceManagement
 #else
                     DeviceCodeResult deviceCodeResult = await authenticationContext.AcquireDeviceCodeAsync(AzureAADResource, PSClientId).ConfigureAwait(false);
 
-                    Console.WriteLine($"Interactive login required. {deviceCodeResult.Message}");
+                    Console.WriteLine($"Interactive login required. Please enter {deviceCodeResult.UserCode} when asked for in the browser window. If a browser windows does not open or is not supported, follow the instructions below (these can be followed on any device) {Environment.NewLine}{deviceCodeResult.Message}");
 
                     await Task.Delay(1000).ConfigureAwait(false);
 
