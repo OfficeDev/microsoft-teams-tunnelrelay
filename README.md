@@ -1,6 +1,6 @@
 # Tunnel Relay
 
-Tunnel relay allows you to expose local services to the outside world over HTTPS using [Azure Service Bus Relay](https://docs.microsoft.com/en-us/azure/service-bus-relay/relay-wcf-dotnet-get-started).
+Tunnel relay allows you to expose local services to the outside world over HTTPS using [Azure Relay](https://docs.microsoft.com/en-us/azure/service-bus-relay/relay-what-is-it#hybrid-connections).
 
 ![Tunnel Relay Logo](Documentation\TunnelRelaylogo-01.png "Tunnel Relay")
 
@@ -21,25 +21,28 @@ We wanted to build a solution which was easy to use and works out of the box. He
 ...__**and that is it!**__
 
 ## Get Started
-Following image explains the basic components of the app. User needs to login before they can start using the app. This is covered in [Configuration](Configuration.md).
+Following image explains the basic components of the app. User needs to login before they can start using the app. This is covered in [Configuration](Documenation\Configuration.md).
 ![Main Window](Documentation\MainWindow.png "Tunnel Relay Main Window")
 
 ## FAQs
+**Q.** How is TunnelRelayv2 different from TunnelRelayv1? </br>
+**A.** TunnelRelayv2 adds support for Linux and Mac Operation systems. To achieve this, it uses [Hybrid Connections](https://docs.microsoft.com/en-us/azure/service-bus-relay/relay-what-is-it#hybrid-connections).
+This also means that the Relays of v1 cannot be reused in v2. Additionally v2 adds support for commandline.
 
-Q. Do my clients need to change to understand that they are contacting server over Tunnel Relay vs directly? </br>
-A. Short answer no. All your clients need to see is the url exposed by Tunnel Relay. Rest everything remains the same.
+**Q.** Do my clients need to change to understand that they are contacting server over Tunnel Relay vs directly? </br>
+**A.** Short answer no. All your clients need to see is the url exposed by Tunnel Relay. Rest everything remains the same.
 
-Q. Can I share same Service bus namespace across multiple machines? </br>
-A. Yes, you can share same service bus namespace across multiple machines. Each relay is a unique combination of service bus and machine name.
+**Q.** Can I share same Service bus namespace across multiple machines? </br>
+**A.** Yes, you can share same service bus namespace across multiple machines. Each relay is a unique combination of service bus and machine name.
 
-Q. How much will this cost me? </br>
-A. Tunnel Relay itself is a free, open-source tool, although since Azure Service Bus back it, you will have to pay for the Service Bus itself. Pricing for service bus can be found [here](https://azure.microsoft.com/en-us/pricing/details/service-bus/). Tunnel Relay creates a service bus with __basic tier__. Please look for section WCF Relays to get the pricing information.
+**Q.** How much will this cost me? </br>
+**A.** Tunnel Relay itself is a free, open-source tool, although since Azure Service Bus back it, you will have to pay for the Service Bus itself. Pricing for service bus can be found [here](https://azure.microsoft.com/en-us/pricing/details/service-bus/). Tunnel Relay creates a service bus with __basic tier__. Please look for section WCF Relays to get the pricing information.
 
-Q. I have an issue which needs your attention how can I contact you? </br>
-A. We monitor this Github repo for issues. Please open a new issue or reply to an existing one. We will get back to you soon. 
+**Q.** I have an issue which needs your attention how can I contact you? </br>
+**A.** We monitor this Github repo for issues. Please open a new issue or reply to an existing one. We will get back to you soon. 
 
-Q. I want to extend Tunnel Relay. How can I do so? </br>
-A. Tunnel Relay is released under [MIT License](https://opensource.org/licenses/MIT). Please look at the contributing section below if you want to contribute to this project.
+**Q.** I want to extend Tunnel Relay. How can I do so? </br>
+**A.** Tunnel Relay is released under [MIT License](https://opensource.org/licenses/MIT). Please look at the contributing section below if you want to contribute to this project.
 
 ## Understand how Tunnel Relay works
 Please refer to following articles to learn more about Tunnel Relay and its internal workings
