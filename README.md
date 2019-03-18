@@ -2,12 +2,12 @@
 
 Tunnel relay allows you to expose local services to the outside world over HTTPS using [Azure Service Bus Relay](https://docs.microsoft.com/en-us/azure/service-bus-relay/relay-wcf-dotnet-get-started).
 
-![Tunnel Relay Logo](TunnelRelaylogo-01.png "Tunnel Relay")
+![Tunnel Relay Logo](Documentation\TunnelRelaylogo-01.png "Tunnel Relay")
 
 ## Overview
 Since most developers don't have static IP addresses for their development machines visible to the external world, it is incredibly cumbersome for them to develop and test services. Tunnel Relay is a free and open-source tool that provides you a static URL for your local service which can be accessed externally!
 
-![Overview](BotDevelopementTR.png "Overview")
+![Overview](Documentation\BotDevelopementTR.png "Overview")
 
 ## Download
 Latest release can be downloaded [here](https://github.com/OfficeDev/microsoft-teams-tunnelrelay/releases/latest) 
@@ -22,7 +22,7 @@ We wanted to build a solution which was easy to use and works out of the box. He
 
 ## Get Started
 Following image explains the basic components of the app. User needs to login before they can start using the app. This is covered in [Configuration](Configuration.md).
-![Main Window](MainWindow.png "Tunnel Relay Main Window")
+![Main Window](Documentation\MainWindow.png "Tunnel Relay Main Window")
 
 ## FAQs
 
@@ -44,11 +44,11 @@ A. Tunnel Relay is released under [MIT License](https://opensource.org/licenses/
 ## Understand how Tunnel Relay works
 Please refer to following articles to learn more about Tunnel Relay and its internal workings
 
-1. [Configuration](Configuration.md)
-2. [Request Handling](RequestHandling.md) 
-3. [Internal Design](InternalDesign.md)
-4. [Extending Tunnel Relay - Plugins](PluginManagement.md)
-5. [Advanced Functionality](AdvancedTopics.md)
+1. [Configuration](Documentation\Configuration.md)
+2. [Request Handling](Documentation\RequestHandling.md) 
+3. [Internal Design](Documentation\InternalDesign.md)
+4. [Extending Tunnel Relay - Plugins](Documentation\PluginManagement.md)
+5. [Advanced Functionality](Documentation\AdvancedTopics.md)
 
 ## Issues, problems, feedback, questions?
 Please report them [here](https://github.com/OfficeDev/microsoft-teams-tunnelrelay/issues)

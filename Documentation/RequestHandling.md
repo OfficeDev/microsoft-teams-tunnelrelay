@@ -12,8 +12,8 @@ Azure Service Bus relay backs Tunnel relay hence the request flow is like WCF Re
 5. Hosted service then does the necessary processing and returns a response this is then forward to the caller down the same pipeline.
 
 ## FAQs
-Q. Are requests to Tunnel Relay secure? </br>
-A. Endpoint exposed by Tunnel Relay is always an HTTPs url and hence secured by end to end encryption. Requests between Azure Service Bus and Tunnel Relay are also secure. Tunnel Relay to Hosted service the calls can be made over HTTP or HTTPs. Tunnel Relay does not check for certificate validity for the hosted services as most developers don't usually have SSL certificates for local development.
+**Q.** Are requests to Tunnel Relay secure? </br>
+**A.** Endpoint exposed by Tunnel Relay is always an HTTPs url and hence secured by end to end encryption. Requests between Azure Service Bus and Tunnel Relay are also secure. Tunnel Relay to Hosted service the calls can be made over HTTP or HTTPs. Tunnel Relay does not check for certificate validity for the hosted services as most developers don't usually have SSL certificates for local development.
 
-Q. What protocols does Tunnel Relay support for hosted services? </br>
-A. Tunnel Relay supports both HTTP and HTTPs for hosted services. Endpoint exposed by Tunnel relay is always HTTPs though. 
+**Q.** What protocols does Tunnel Relay support for hosted services? </br>
+**A.** Tunnel Relay supports both HTTP and HTTPs for hosted services. Endpoint exposed by Tunnel relay is always HTTPs though. 

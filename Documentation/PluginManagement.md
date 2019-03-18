@@ -7,7 +7,7 @@ Tunnel relay project contains a standalone assembly TunnelRelay.Plugins.dll. Thi
 
 ### Understanding ITunnelRelayPlugin interface
 ITunnelRelayPlugin interface is defined as follows
-
+```cs
     /// <summary>
     /// Interface for developing plugins.
     /// </summary>
@@ -27,7 +27,7 @@ ITunnelRelayPlugin interface is defined as follows
         /// Initializes this instance.
         /// </summary>
         /// <returns>Task tracking operation.</returns>
-        Task Initialize();
+        Task InitializeAsync();
 
         /// <summary>
         /// Performes required processing before request is made to service asynchronously.
@@ -43,31 +43,31 @@ ITunnelRelayPlugin interface is defined as follows
         /// <returns>Processed http web response.</returns>
         Task<HttpResponseMessage> PostProcessResponseFromServiceAsync(HttpResponseMessage webResponse);
     }
-
-- PreProcessRequestToServiceAsync - This method is executed _before_ call is made to hosted service and allows modification of this request, like adding\removing headers etc.
-- PostProcessResponseFromServiceAsync - This method is executed _after_ response is received from hosted service and _before_ it is sent to caller allowing modifications to outgoing response.
-- PluginName - This is the name of your plugin and is shown in plugin management UI (see below) and well as used to store plugin settings.
-- Initialize - This method can be used to initialize your plugin state. This is called when user enables your plugin.
-- HelpText - Describes what the plugin does. Is shown on the UI and is supposed to assist user on what operation the plugin performs.
+```
+- `PreProcessRequestToServiceAsync` - This method is executed _before_ call is made to hosted service and allows modification of this request, like adding\removing headers etc.
+- `PostProcessResponseFromServiceAsync` - This method is executed _after_ response is received from hosted service and _before_ it is sent to caller allowing modifications to outgoing response.
+- `PluginName` - This is the name of your plugin and is shown in plugin management UI (see below) and well as used to store plugin settings.
+- `InitializeAsync` - This method can be used to initialize your plugin state. This is called when user enables your plugin.
+- `HelpText` - Describes what the plugin does. Is shown on the UI and is supposed to assist user on what operation the plugin performs.
 
 ### Taking settings for plugins
 Plugins can require settings to be provided by the user. PluginSetting attribute allows you to specify the setting which is to be passed by the user and is auto populated in the UI. 
 
 PluginSetting attribute is defined as follows
-
+```cs
     /// <summary>
     /// Plugin settings.
     /// </summary>
     /// <seealso cref="System.Attribute" />
     [AttributeUsage(AttributeTargets.Property, AllowMultiple = false)]
-    public class PluginSetting : Attribute
+    public sealed class PluginSettingAttribute : Attribute
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="PluginSetting"/> class.
+        /// Initializes a new instance of the <see cref="PluginSettingAttribute"/> class.
         /// </summary>
         /// <param name="displayName">The display name to be shown to user..</param>
         /// <param name="helpText">The help text to be shown on hover..</param>
-        public PluginSetting(string displayName, string helpText)
+        public PluginSettingAttribute(string displayName, string helpText)
         {
             this.DisplayName = displayName;
             this.HelpText = helpText;
@@ -83,7 +83,7 @@ PluginSetting attribute is defined as follows
         /// </summary>
         public string HelpText { get; private set; }
     }
-
+```
 This attribute can only be applied on **string public properties**.
 
 - DisplayName - Display name of the settings
@@ -108,14 +108,14 @@ In the application main window. Clicking on __Plugin Management__ button will op
 - If a plugin fails to process a request and throws an exception, this exception will get sent to caller.
 
 ## FAQs
-Q. Are any plugins included in Tunnel Relay for example purposes? </br>
-A. Tunnel Relay includes 2 plugins HeaderAdditionPlugin and HeaderRemovalPlugin to serve as examples on how plugins can be developed.
+**Q.** Are any plugins included in Tunnel Relay for example purposes? </br>
+**A.** Tunnel Relay includes 2 plugins HeaderAdditionPlugin and HeaderRemovalPlugin to serve as examples on how plugins can be developed.
 
-Q. Do plugins need to be published anywhere to work? </br>
-A. No, plugins just need to be placed in Plugins directory in application's root directory to work.
+**Q.** Do plugins need to be published anywhere to work? </br>
+**A.** No, plugins just need to be placed in Plugins directory in application's root directory to work.
 
-Q. Can multiple plugins be enabled at once? </br>
-A. Yes, they will be called one by one in no fixed order. So, ensure your plugin does not assume any order or calling.
+**Q.** Can multiple plugins be enabled at once? </br>
+**A.** Yes, they will be called one by one in no fixed order. So, ensure your plugin does not assume any order or calling.
 
-Q. How many plugins can be loaded in Tunnel Relay? </br>
-A. There is no limit on how many plugins can be loaded. Though directory search loading plugin takes time, so too many plugins can slow the application during launch and request processing.
+**Q.** How many plugins can be loaded in Tunnel Relay? </br>
+**A.** There is no limit on how many plugins can be loaded. Though directory search loading plugin takes time, so too many plugins can slow the application during launch and request processing.

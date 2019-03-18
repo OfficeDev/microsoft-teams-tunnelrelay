@@ -154,6 +154,12 @@ namespace TunnelRelay.UI.StateManagement
                 this.EnableCredentialEncryption = true;
                 this.HybridConnectionUrl = null;
             }
+
+            // This allows repackaging the logged in TunnelRelay internally to others.
+            if (string.IsNullOrEmpty(this.HybridConnectionName))
+            {
+                this.HybridConnectionName = Environment.MachineName;
+            }
         }
 
         /// <summary>

@@ -11,7 +11,8 @@ Along with Service bus shared access key. We store the redirection url. Redirect
 
 Plugin data is also stored as a part of configuration along with the list of enabled plugins. This ensures that users don't have to enable or configure plugins every time they start the application. You can read about plugins more [here](PluginManagement.md).
 
-**Note:** Stored shared access key for the service bus is encrypted using [DPAPI](https://msdn.microsoft.com/en-us/library/ms995355.aspx) thus any one with access to the machine can decrypt it.
+Stored shared access key for the service bus is encrypted using [DPAPI](https://msdn.microsoft.com/en-us/library/ms995355.aspx) thus any one with access to the machine can decrypt it. You are however allowed during configuration process to
+allow storing the key without encryption. This can be useful if you want to skip logging in while using a different machine. *Disabling encryption can allow someone to copy the key from your config and perform operations against it.*
 
 ### How do I change selected service bus?
 Signing out of Tunnel Relay will remove the service bus information. You can restart the application to login again and select a service bus.
@@ -24,7 +25,7 @@ Signing out of Tunnel Relay will remove the service bus information. You can res
 ### Details
 
 1. Process begins with user clicking on __'Login with Azure'__ button to launch Azure login prompt. This allows the application to access user's Azure resources on its behalf. We utilize [ADAL](https://github.com/AzureAD/azure-activedirectory-library-for-dotnet) and [Azure Management Libraries](https://github.com/Azure/azure-sdk-for-net/tree/Fluent) to get list of user resources.
-2. Once the user has selected the subscription, user is presented with an option to either select an existing [Service Bus](https://azure.microsoft.com/en-us/services/service-bus/) namespace or create a new one. *Note that right now create a new service bus option will always create one with WestUS as location and SKU set to Basic.*
+2. Once the user has selected the subscription, user is presented with an option to either select an existing [Service Bus](https://azure.microsoft.com/en-us/services/service-bus/) namespace or create a new one. *Note that right now create a new service bus option will always create one with SKU set to Basic.*
 3. Based on user selection in option 2, service bus is either created or fetched.
 4. As a last step, we get the shared access key for the service bus with permission set to Send, Listen, Manage. This key is permanently stored in the config (appSettings.json) for future use. All other tokens are discarded and application at no point in the future will access any Azure resource except the selected service bus.
 5. Once the configuration is completed, application main window is launched. Traffic can now be routed to your application from the internet using the url shown on the application.
