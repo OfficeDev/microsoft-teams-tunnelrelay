@@ -74,6 +74,11 @@ namespace TunnelRelay.Console
                 "Endpoint to route requests to. Example http://localhost:4200",
                 CommandOptionType.SingleValue);
 
+            CommandOption deleteConfigurationOption = commandLineApplication.Option(
+                "-DeleteConfig | --DeleteConfiguration",
+                "Deletes the configuration and exits the app. You can relaunch to go through configuration again.",
+                CommandOptionType.NoValue);
+
             commandLineApplication.HelpOption("-h|--help|-?");
 
             commandLineApplication.ExtendedHelpText = "Commandline arguments takes preference over saved config. If no command line argument is specified" +
@@ -81,6 +86,15 @@ namespace TunnelRelay.Console
 
             commandLineApplication.OnExecute(async () =>
             {
+                if (deleteConfigurationOption.HasValue())
+                {
+                    if (File.Exists(Program.ConfigurationFilePath))
+                    {
+                        File.Delete(Program.ConfigurationFilePath);
+                        return 0;
+                    }
+                }
+
                 ServiceCollection serviceDescriptors = new ServiceCollection();
 
                 serviceDescriptors.AddLogging(loggingBuilder =>
@@ -351,7 +365,11 @@ namespace TunnelRelay.Console
 
             return new ApplicationData
             {
+#if NET461
                 EnableCredentialEncryption = true,
+#else
+                EnableCredentialEncryption = false,
+#endif
                 EnabledPlugins = new HashSet<string>(),
                 HybridConnectionKeyName = hybridConnectionDetails.HybridConnectionKeyName,
                 HybridConnectionName = hybridConnectionDetails.HybridConnectionName,

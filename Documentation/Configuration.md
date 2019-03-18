@@ -2,17 +2,17 @@
 
 As a part of configuration we configure the Service bus which will be used to open relay between Azure and local server. This requires user to login with their Azure credentials and select or create the Service bus namespace they want to use with Tunnel Relay. We __do not__ store Azure credentials. Configuration is stored in appSettings.json file in the Tunnel Relay folder. 
 
-Once a user has logged in and selected Service bus, appSettings.json file can be used on other machines too to skip the login process. To skip login just copy the full Tunnel Relay folder along with the appSettings.Json file to a different machine.
-
 ### What is stored?
 As a part of configuration we store shared access key for the selected Service bus. Refer [this](https://docs.microsoft.com/en-us/azure/service-bus-messaging/service-bus-authentication-and-authorization) document for more information. This key allows access to selected Service bus and no other resource in the Azure subscription.
 
-Along with Service bus shared access key. We store the redirection url. Redirection url refers to the url to which all incoming requests are routed to. This is usually a local server url in the format of http(s)://localhost:portnumber. Default is http://localhost:3979. This can be changed from the main UI post login at any point.
+Along with Service bus shared access key. We store the redirection url. Redirection url refers to the url to which all incoming requests are routed to. This is usually a local server url in the format of http(s)://localhost:portnumber. Default is http://localhost:3979. This can be changed from the GUI post login at any point. Command-line requires you to delete the configuration using `--DeleteConfiguration` option.
 
 Plugin data is also stored as a part of configuration along with the list of enabled plugins. This ensures that users don't have to enable or configure plugins every time they start the application. You can read about plugins more [here](PluginManagement.md).
 
-Stored shared access key for the service bus is encrypted using [DPAPI](https://msdn.microsoft.com/en-us/library/ms995355.aspx) thus any one with access to the machine can decrypt it. You are however allowed during configuration process to
+Stored shared access key for the service bus is encrypted using [DPAPI](https://msdn.microsoft.com/en-us/library/ms995355.aspx) on Windows thus any one with access to the machine can decrypt it. You are however allowed during configuration process to
 allow storing the key without encryption. This can be useful if you want to skip logging in while using a different machine. *Disabling encryption can allow someone to copy the key from your config and perform operations against it.*
+
+Shared key encryption is not yet supported in non-Windows OSes.
 
 ### How do I change selected service bus?
 Signing out of Tunnel Relay will remove the service bus information. You can restart the application to login again and select a service bus.
