@@ -145,7 +145,7 @@ namespace TunnelRelay.Windows.Engine
         {
             if (TunnelRelayStateManager.applicationData != null)
             {
-                File.WriteAllText("appSettings.json", JsonConvert.SerializeObject(TunnelRelayStateManager.ApplicationData));
+                File.WriteAllText("appSettings.json", JsonConvert.SerializeObject(TunnelRelayStateManager.ApplicationData, Formatting.Indented));
             }
         }
 
