@@ -15,7 +15,7 @@ Latest release can be downloaded [here](https://github.com/OfficeDev/microsoft-t
 ## Requirements
 We wanted to build a solution which was easy to use and works out of the box. Here are the things you need to run Tunnel Relay.
 
-1. Windows with .Net Framework 4.6.1
+1. Machine running Windows (.Net Framework 4.6.1 and above), Linux or Mac OSX and above
 2. Microsoft Azure subscription (you can sign up for a free trial [here](https://azure.microsoft.com/en-us/free/))
 
 ...__**and that is it!**__
