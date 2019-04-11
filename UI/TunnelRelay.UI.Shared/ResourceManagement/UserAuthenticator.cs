@@ -234,14 +234,21 @@ namespace TunnelRelay.UI.ResourceManagement
 
                     await Task.Delay(1000).ConfigureAwait(false);
 
-                    // Open the browser with the url.
-                    ProcessStartInfo processStartInfo = new ProcessStartInfo
+                    try
                     {
-                        FileName = deviceCodeResult.VerificationUrl,
-                        UseShellExecute = true,
-                    };
+                        // Open the browser with the url.
+                        ProcessStartInfo processStartInfo = new ProcessStartInfo
+                        {
+                            FileName = deviceCodeResult.VerificationUrl,
+                            UseShellExecute = true,
+                        };
 
-                    Process.Start(processStartInfo);
+                        Process.Start(processStartInfo);
+                    }
+                    catch (Exception)
+                    {
+                        Console.WriteLine($"Could not open the url for verification on this machine. Please open {deviceCodeResult.VerificationUrl} from any machine and enter code {deviceCodeResult.UserCode} when asked to do so to continue. The process will continue automatically once the login verification is done.");
+                    }
 
                     return await authenticationContext.AcquireTokenByDeviceCodeAsync(deviceCodeResult).ConfigureAwait(false);
 #endif
