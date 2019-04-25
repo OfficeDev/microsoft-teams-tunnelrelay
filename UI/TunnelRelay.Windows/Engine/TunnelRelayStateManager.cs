@@ -129,6 +129,7 @@ namespace TunnelRelay.Windows.Engine
             RelayRequestManager relayManager = new RelayRequestManager(
                 TunnelRelayStateManager.RelayRequestManagerOptions,
                 Plugins.Where(details => details.IsEnabled).Select(details => details.PluginInstance),
+                LoggingHelper.GetLogger<RelayRequestManager>(),
                 RelayRequestEventListener);
 
             TunnelRelayStateManager.hybridConnectionManager = new HybridConnectionManager(

@@ -63,7 +63,8 @@ namespace TunnelRelay.UI.Logger
                 {
                     if (this.streamWriter == null)
                     {
-                        this.streamWriter = new StreamWriter(new FileStream(this.logFileName, FileMode.Append, FileAccess.Write, FileShare.Write))
+                        // Opening in shared mode because other logger instances are also using the same file. So all of them can write to the same file.
+                        this.streamWriter = new StreamWriter(new FileStream(this.logFileName, FileMode.Append, FileAccess.Write, FileShare.ReadWrite))
                         {
                             AutoFlush = true,
                             NewLine = Environment.NewLine,

@@ -12,6 +12,7 @@ namespace TunnelRelay.Core
     using System.Net.Http;
     using System.Net.Http.Headers;
     using System.Threading.Tasks;
+    using Microsoft.Extensions.Logging;
     using Microsoft.Extensions.Options;
     using TunnelRelay.PluginEngine;
 
@@ -21,6 +22,8 @@ namespace TunnelRelay.Core
     public sealed class RelayRequestManager : IRelayRequestManager, IDisposable
     {
         private readonly IEnumerable<ITunnelRelayPlugin> tunnelRelayPlugins;
+
+        private readonly ILogger<RelayRequestManager> logger;
 
         private readonly IRelayRequestEventListener relayRequestEventListener;
 
@@ -33,13 +36,16 @@ namespace TunnelRelay.Core
         /// </summary>
         /// <param name="relayRequestManagerOptions">Relay request manager options.</param>
         /// <param name="tunnelRelayPlugins">Instances of the plugins to use.</param>
+        /// <param name="logger">Logger.</param>
         /// <param name="relayRequestEventListener">Optional relay request event listener instance.</param>
         public RelayRequestManager(
             IOptionsMonitor<RelayRequestManagerOptions> relayRequestManagerOptions,
             IEnumerable<ITunnelRelayPlugin> tunnelRelayPlugins,
+            ILogger<RelayRequestManager> logger,
             IRelayRequestEventListener relayRequestEventListener = null)
         {
             this.tunnelRelayPlugins = tunnelRelayPlugins;
+            this.logger = logger;
             this.relayRequestEventListener = relayRequestEventListener;
 
             this.UpdateSettings(relayRequestManagerOptions?.CurrentValue);
@@ -59,6 +65,8 @@ namespace TunnelRelay.Core
         {
             string requestId = Guid.NewGuid().ToString();
 
+            this.logger.LogTrace("Received request with Id '{0}'", requestId);
+
             // Inform listener that a request has been received.
             if (this.relayRequestEventListener != null)
             {
@@ -70,41 +78,85 @@ namespace TunnelRelay.Core
                     {
                         await this.relayRequestEventListener.RequestReceivedAsync(requestId, clonedRequest).ConfigureAwait(false);
                     }
-                    catch (Exception)
+                    catch (Exception ex)
                     {
                         // Ignoring exceptions from listeners.
+                        this.logger.LogWarning("Relay request event listener failed for request Id '{0}' during 'RequestReceivedAsync' phase with exception '{1}'. Ignoring.", requestId, ex);
                     }
                 });
 #pragma warning restore CS4014 // We want eventing pipeline to run in parallel and not block the actual request execution.
             }
 
-            HttpRequestMessage httpRequestMessage = await this.ToHttpRequestMessageAsync(relayRequest).ConfigureAwait(false);
+            HttpRequestMessage httpRequestMessage = null;
+
+            try
+            {
+                httpRequestMessage = await this.ToHttpRequestMessageAsync(relayRequest, requestId).ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                this.logger.LogError("CRITICAL ERROR!!! Failed to convert Relay request into outgoing request. Error - '{0}'. Request Id - '{1}'", ex, requestId);
+                throw;
+            }
 
             // Pass the request through all the plugins.
             foreach (ITunnelRelayPlugin tunnelRelayPlugin in this.tunnelRelayPlugins)
             {
-                httpRequestMessage = await tunnelRelayPlugin.PreProcessRequestToServiceAsync(httpRequestMessage).ConfigureAwait(false);
+                try
+                {
+                    httpRequestMessage = await tunnelRelayPlugin.PreProcessRequestToServiceAsync(httpRequestMessage).ConfigureAwait(false);
+                }
+                catch (Exception ex)
+                {
+                    this.logger.LogError("CRITICAL ERROR!!! Plugin '{0}' failed with error - '{1}' for request Id '{2}' during 'PreProcessRequestToServiceAsync' phase", tunnelRelayPlugin.PluginName, ex, requestId);
+                    throw;
+                }
             }
 
             HttpResponseMessage httpResponseMessage;
 
             try
             {
+                this.logger.LogTrace("Making external request to server for request Id '{0}'", requestId);
                 httpResponseMessage = await this.httpClient.SendAsync(httpRequestMessage).ConfigureAwait(false);
+                this.logger.LogTrace("Received response from server for request Id '{0}'", requestId);
             }
             catch (HttpRequestException httpException)
             {
+                this.logger.LogError("Hit exception while sending request to server for request Id '{0}'. Error '{1}'", requestId, httpException);
                 httpResponseMessage = new HttpResponseMessage(HttpStatusCode.BadGateway);
                 httpResponseMessage.Content = new StringContent(httpException.ToString());
+            }
+            catch (Exception ex)
+            {
+                this.logger.LogError("Hit critical exception while processing request '{0}'. Error '{1}'", requestId, ex);
+                throw;
             }
 
             // Pass the response through all the plugins.
             foreach (ITunnelRelayPlugin tunnelRelayPlugin in this.tunnelRelayPlugins)
             {
-                httpResponseMessage = await tunnelRelayPlugin.PostProcessResponseFromServiceAsync(httpResponseMessage).ConfigureAwait(false);
+                try
+                {
+                    httpResponseMessage = await tunnelRelayPlugin.PostProcessResponseFromServiceAsync(httpResponseMessage).ConfigureAwait(false);
+                }
+                catch (Exception ex)
+                {
+                    this.logger.LogError("CRITICAL ERROR!!! Plugin '{0}' failed with error - '{1}' for request Id '{2}' during 'PostProcessResponseFromServiceAsync' phase", tunnelRelayPlugin.PluginName, ex, requestId);
+                    throw;
+                }
             }
 
-            RelayResponse relayResponse = await this.ToRelayResponseAsync(httpResponseMessage).ConfigureAwait(false);
+            RelayResponse relayResponse = null;
+
+            try
+            {
+                relayResponse = await this.ToRelayResponseAsync(httpResponseMessage).ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                this.logger.LogError("Failed to convert outgoing response into relay response for request '{0}'. Error '{1}'", requestId, ex);
+            }
 
             if (this.relayRequestEventListener != null)
             {
@@ -116,9 +168,10 @@ namespace TunnelRelay.Core
                     {
                         await this.relayRequestEventListener.ResponseSentAsync(requestId, clonedResponse).ConfigureAwait(false);
                     }
-                    catch (Exception)
+                    catch (Exception ex)
                     {
                         // Ignoring exceptions from listeners.
+                        this.logger.LogWarning("Relay request event listener failed for request Id '{0}' during 'ResponseSentAsync' phase with exception '{1}'. Ignoring.", requestId, ex);
                     }
                 });
 #pragma warning restore CS4014 // We want eventing pipeline to run in parallel and not slowdown the actual request execution.
@@ -182,15 +235,20 @@ namespace TunnelRelay.Core
         /// Converts <see cref="RelayRequest"/> to <see cref="HttpRequestMessage"/>.
         /// </summary>
         /// <param name="relayRequest">Incoming relay request.</param>
+        /// <param name="requestId">Request Id.</param>
         /// <returns>Http request message.</returns>
-        private async Task<HttpRequestMessage> ToHttpRequestMessageAsync(RelayRequest relayRequest)
+        private async Task<HttpRequestMessage> ToHttpRequestMessageAsync(RelayRequest relayRequest, string requestId)
         {
             Uri internalRequestUrl = new Uri(this.internalServiceUrl + "/" + relayRequest.RequestPathAndQuery.TrimStart('/'));
 
             HttpRequestMessage httpRequestMessage = new HttpRequestMessage(relayRequest.HttpMethod, internalRequestUrl);
 
             // Prepare request content.
-            if (relayRequest.InputStream != null)
+            // Caveat here! .NetFX uses WebRequest behind HttpClient so it does not allow body content in GET requests
+            // but NetCore uses an entirely different stack and thus allows body in GET.
+            // Once ADAL Library starts allowing UI based auth in NetCore we can get rid of NetFX altogether and allow users
+            // to pass request body in GET too.
+            if (relayRequest.InputStream != null && relayRequest.HttpMethod != HttpMethod.Get && relayRequest.HttpMethod != HttpMethod.Head)
             {
                 MemoryStream memoryStream = new MemoryStream((int)relayRequest.InputStream.Length);
                 await relayRequest.InputStream.CopyToAsync(memoryStream).ConfigureAwait(false);
@@ -199,6 +257,15 @@ namespace TunnelRelay.Core
 
                 httpRequestMessage.Content.Headers.ContentLength = memoryStream.Length;
                 RelayRequestManager.CopyContentHeader(httpRequestMessage.Content, relayRequest.Headers);
+
+                if (httpRequestMessage.Content.Headers.ContentLength != memoryStream.Length)
+                {
+                    this.logger.LogWarning(
+                        "Content-Length header mismatch for request Id '{0}'. Value from request '{1}'. Value from actual content stream '{2}'",
+                        requestId,
+                        httpRequestMessage.Content.Headers.ContentLength.GetValueOrDefault(),
+                        memoryStream.Length);
+                }
             }
 
             // Try to blindly add the headers. Content headers will get filtered out here.

@@ -79,6 +79,11 @@ namespace TunnelRelay.Console
                 "Deletes the configuration and exits the app. You can relaunch to go through configuration again.",
                 CommandOptionType.NoValue);
 
+            CommandOption disableLoggingOption = commandLineApplication.Option(
+                "-NoLog | --DisableLogging",
+                "Disables logging for the application. If you going to run this for a very long time, it might be better to disable logging to not overrun disk space.",
+                CommandOptionType.NoValue);
+
             commandLineApplication.HelpOption("-h|--help|-?");
 
             commandLineApplication.ExtendedHelpText = "Commandline arguments takes preference over saved config. If no command line argument is specified" +
@@ -99,12 +104,15 @@ namespace TunnelRelay.Console
 
                 serviceDescriptors.AddLogging(loggingBuilder =>
                 {
-                    loggingBuilder.Services.Configure<FileLoggerProviderOptions>((fileLoggerOptions) =>
+                    if (!disableLoggingOption.HasValue())
                     {
-                        fileLoggerOptions.FileName = "TunnelRelayConsole.log";
-                    });
+                        loggingBuilder.Services.Configure<FileLoggerProviderOptions>((fileLoggerOptions) =>
+                        {
+                            fileLoggerOptions.FileName = "TunnelRelayConsole.log";
+                        });
 
-                    loggingBuilder.AddFileLogger();
+                        loggingBuilder.AddFileLogger();
+                    }
                 });
 
                 serviceDescriptors.AddSingleton<UserAuthenticator>();
