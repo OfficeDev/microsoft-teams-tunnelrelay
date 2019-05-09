@@ -74,7 +74,7 @@ namespace TunnelRelay.Core
             this.hybridConnectionListener = new HybridConnectionListener(connectionString);
 
             // Figure out the prefix.
-            this.relayUrl = $"sb://{hybridConnectionManagerOptions.Value.ServiceBusUrlHost}/{hybridConnectionManagerOptions.Value.ConnectionPath}".ToUpperInvariant();
+            this.relayUrl = $"sb://{hybridConnectionManagerOptions.Value.ServiceBusUrlHost}/{hybridConnectionManagerOptions.Value.ConnectionPath}";
             this.relayManager = relayManager;
         }
 
@@ -116,7 +116,7 @@ namespace TunnelRelay.Core
                 Headers = context.Request.Headers,
                 HttpMethod = new HttpMethod(context.Request.HttpMethod),
                 InputStream = context.Request.InputStream,
-                RequestPathAndQuery = context.Request.Url.AbsoluteUri.ToUpperInvariant().Replace(this.relayUrl, string.Empty),
+                RequestPathAndQuery = context.Request.Url.AbsoluteUri.Substring(this.relayUrl.Length),
                 RequestStartDateTime = DateTimeOffset.Now,
             };
 
