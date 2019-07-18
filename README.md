@@ -1,10 +1,10 @@
 ---
 topic: sample
 products:
-- Microsoft Teams
-- Office 365
+- office-teams
+- office-365
 languages:
-- C#
+- csharp
 extensions:
   contentType: tools
   createdDate: 6/2/2017 5:30:01 PM
