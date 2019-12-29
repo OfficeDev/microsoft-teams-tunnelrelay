@@ -41,12 +41,13 @@ namespace TunnelRelay.UI.ResourceManagement
         /// <returns>List of relay namespaces.</returns>
         public async Task<List<RelayNamespaceInner>> GetRelayNamespacesAsync(SubscriptionInner subscription)
         {
-            AuthenticationResult authenticationResult = this.userAuthenticator.GetSubscriptionSpecificUserToken(subscription);
+            string accessToken = this.userAuthenticator.GetSubscriptionSpecificUserToken(subscription);
 
-            TokenCredentials tokenCredentials = new TokenCredentials(authenticationResult.AccessToken);
-            RelayManagementClient relayManagementClient = new RelayManagementClient(tokenCredentials);
-
-            relayManagementClient.SubscriptionId = subscription.SubscriptionId;
+            TokenCredentials tokenCredentials = new TokenCredentials(accessToken);
+            RelayManagementClient relayManagementClient = new RelayManagementClient(tokenCredentials)
+            {
+                SubscriptionId = subscription.SubscriptionId,
+            };
 
             List<RelayNamespaceInner> serviceBusList = new List<RelayNamespaceInner>();
             IPage<RelayNamespaceInner> resp = await relayManagementClient.Namespaces.ListAsync().ConfigureAwait(false);
@@ -73,11 +74,13 @@ namespace TunnelRelay.UI.ResourceManagement
             RelayNamespaceInner relayNamespace,
             string hybridConnectionName)
         {
-            AuthenticationResult authenticationResult = this.userAuthenticator.GetSubscriptionSpecificUserToken(subscription);
+            string accessToken = this.userAuthenticator.GetSubscriptionSpecificUserToken(subscription);
 
-            TokenCredentials tokenCredentials = new TokenCredentials(authenticationResult.AccessToken);
-            RelayManagementClient relayManagementClient = new RelayManagementClient(tokenCredentials);
-            relayManagementClient.SubscriptionId = subscription.SubscriptionId;
+            TokenCredentials tokenCredentials = new TokenCredentials(accessToken);
+            RelayManagementClient relayManagementClient = new RelayManagementClient(tokenCredentials)
+            {
+                SubscriptionId = subscription.SubscriptionId,
+            };
 
             int startIndex = relayNamespace.Id.IndexOf("resourceGroups", StringComparison.OrdinalIgnoreCase) + 15;
             string rgName = rgName = relayNamespace.Id.Substring(startIndex, relayNamespace.Id.IndexOf('/', startIndex) - startIndex);
@@ -94,7 +97,7 @@ namespace TunnelRelay.UI.ResourceManagement
                 }).ConfigureAwait(false);
             }
 
-            return await this.GetHybridConnectionDetailsAsync(rgName, hybridConnectionName, relayManagementClient, relayNamespace).ConfigureAwait(false);
+            return await ServiceBusResourceManager.GetHybridConnectionDetailsAsync(rgName, hybridConnectionName, relayManagementClient, relayNamespace).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -111,17 +114,21 @@ namespace TunnelRelay.UI.ResourceManagement
             string hybridConnectionName,
             string locationName)
         {
-            AuthenticationResult authenticationResult = this.userAuthenticator.GetSubscriptionSpecificUserToken(subscription);
+            string accessToken = this.userAuthenticator.GetSubscriptionSpecificUserToken(subscription);
 
-            TokenCredentials tokenCredentials = new TokenCredentials(authenticationResult.AccessToken);
+            TokenCredentials tokenCredentials = new TokenCredentials(accessToken);
 
-            RM.ResourceManagementClient resourceManagementClient = new RM.ResourceManagementClient(tokenCredentials);
-            resourceManagementClient.SubscriptionId = subscription.SubscriptionId;
+            ResourceManagementClient resourceManagementClient = new ResourceManagementClient(tokenCredentials)
+            {
+                SubscriptionId = subscription.SubscriptionId,
+            };
 
-            RelayManagementClient relayManagementClient = new RelayManagementClient(tokenCredentials);
-            relayManagementClient.SubscriptionId = subscription.SubscriptionId;
+            RelayManagementClient relayManagementClient = new RelayManagementClient(tokenCredentials)
+            {
+                SubscriptionId = subscription.SubscriptionId,
+            };
 
-            RM.Models.ResourceGroupInner resourceGroup = null;
+            ResourceGroupInner resourceGroup = null;
             RelayNamespaceInner relayNamespace = null;
 
             Location location = this.userAuthenticator.GetSubscriptionLocations(subscription).First(region =>
@@ -132,11 +139,11 @@ namespace TunnelRelay.UI.ResourceManagement
             {
                 resourceGroup = await resourceManagementClient.ResourceGroups.GetAsync("TunnelRelay").ConfigureAwait(false);
             }
-            catch (Microsoft.Rest.Azure.CloudException httpEx)
+            catch (CloudException httpEx)
             {
                 if (httpEx.Response.StatusCode == System.Net.HttpStatusCode.NotFound)
                 {
-                    resourceGroup = await resourceManagementClient.ResourceGroups.CreateOrUpdateAsync("TunnelRelay", new RM.Models.ResourceGroupInner
+                    resourceGroup = await resourceManagementClient.ResourceGroups.CreateOrUpdateAsync("TunnelRelay", new ResourceGroupInner
                     {
                         Location = location.Name,
                         Name = "TunnelRelay",
@@ -159,7 +166,7 @@ namespace TunnelRelay.UI.ResourceManagement
                 RequiresClientAuthorization = false,
             }).ConfigureAwait(false);
 
-            return await this.GetHybridConnectionDetailsAsync(rgName, hybridConnectionName, relayManagementClient, relayNamespace).ConfigureAwait(false);
+            return await ServiceBusResourceManager.GetHybridConnectionDetailsAsync(rgName, hybridConnectionName, relayManagementClient, relayNamespace).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -169,7 +176,7 @@ namespace TunnelRelay.UI.ResourceManagement
         /// <param name="hybridConnectionName">Hybrid connection name.</param>
         /// <param name="relayManagementClient">The service bus management client.</param>
         /// <param name="relayNamespace">The selected service bus.</param>
-        private async Task<HybridConnectionDetails> GetHybridConnectionDetailsAsync(
+        private static async Task<HybridConnectionDetails> GetHybridConnectionDetailsAsync(
             string rgName,
             string hybridConnectionName,
             RelayManagementClient relayManagementClient,

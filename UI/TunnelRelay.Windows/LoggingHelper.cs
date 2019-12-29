@@ -6,6 +6,8 @@
 namespace TunnelRelay.Windows
 {
     using System;
+    using System.Globalization;
+    using System.IO;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
     using TunnelRelay.UI.Logger;
@@ -15,12 +17,12 @@ namespace TunnelRelay.Windows
     /// </summary>
     internal class LoggingHelper
     {
-        private static IServiceProvider serviceProvider = new ServiceCollection()
+        private static readonly IServiceProvider ServiceProvider = new ServiceCollection()
             .AddLogging(loggingBuilder =>
             {
                 loggingBuilder.Services.Configure<FileLoggerProviderOptions>((fileLoggerProviderOptions) =>
                 {
-                    fileLoggerProviderOptions.FileName = "TunnelRelayWindows.log";
+                    fileLoggerProviderOptions.FileName = Path.Combine(Path.GetTempPath(), $"TunnelRelay{DateTimeOffset.Now.ToString("yyyy-MM-dd_hh-mm-ss-tt", CultureInfo.InvariantCulture)}.log");
                 });
 
                 loggingBuilder.AddFileLogger();
@@ -34,7 +36,7 @@ namespace TunnelRelay.Windows
         /// <returns>Logger for logging traces to.</returns>
         public static ILogger<T> GetLogger<T>()
         {
-            return serviceProvider.GetRequiredService<ILogger<T>>();
+            return ServiceProvider.GetRequiredService<ILogger<T>>();
         }
     }
 }

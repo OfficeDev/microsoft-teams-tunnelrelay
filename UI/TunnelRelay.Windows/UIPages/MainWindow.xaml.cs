@@ -150,7 +150,7 @@ namespace TunnelRelay.Windows
 
             string data = new StreamReader(stream).ReadToEnd();
 
-            if (!string.IsNullOrEmpty(contentType) && contentType.Contains("json") && data.Length > 0)
+            if (!string.IsNullOrEmpty(contentType) && contentType.Contains("json", StringComparison.OrdinalIgnoreCase) && data.Length > 0)
             {
                 try
                 {

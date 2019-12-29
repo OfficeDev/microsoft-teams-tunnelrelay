@@ -6,6 +6,7 @@
 namespace TunnelRelay.Core
 {
     using System;
+    using System.Globalization;
     using System.Net;
     using System.Net.Http;
     using System.Text;
@@ -43,7 +44,7 @@ namespace TunnelRelay.Core
 
             if (string.IsNullOrEmpty(hybridConnectionManagerOptions.Value.ServiceBusUrlHost))
             {
-                throw new ArgumentNullException(nameof(hybridConnectionManagerOptions.Value.ServiceBusUrlHost));
+                throw new ArgumentNullException(nameof(hybridConnectionManagerOptions), "Service bus url host can't be null or empty.");
             }
 
             // Remove the / at the end.
@@ -52,20 +53,21 @@ namespace TunnelRelay.Core
 
             if (string.IsNullOrEmpty(hybridConnectionManagerOptions.Value.ConnectionPath))
             {
-                throw new ArgumentNullException(nameof(hybridConnectionManagerOptions.Value.ConnectionPath));
+                throw new ArgumentNullException(nameof(hybridConnectionManagerOptions), "Connection path can't be null or empty.");
             }
 
             if (string.IsNullOrEmpty(hybridConnectionManagerOptions.Value.ServiceBusKeyName))
             {
-                throw new ArgumentNullException(nameof(hybridConnectionManagerOptions.Value.ServiceBusKeyName));
+                throw new ArgumentNullException(nameof(hybridConnectionManagerOptions), "Service Bus Key Name can't be null or empty.");
             }
 
             if (string.IsNullOrEmpty(hybridConnectionManagerOptions.Value.ServiceBusSharedKey))
             {
-                throw new ArgumentNullException(nameof(hybridConnectionManagerOptions.Value.ServiceBusSharedKey));
+                throw new ArgumentNullException(nameof(hybridConnectionManagerOptions), "Shared key can't be null or empty.");
             }
 
             string connectionString = string.Format(
+                CultureInfo.InvariantCulture,
                 ConnectionStringFormat,
                 hybridConnectionManagerOptions.Value.ServiceBusUrlHost,
                 hybridConnectionManagerOptions.Value.ServiceBusKeyName,

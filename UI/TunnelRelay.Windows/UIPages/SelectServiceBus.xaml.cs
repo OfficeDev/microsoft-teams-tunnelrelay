@@ -194,7 +194,7 @@ namespace TunnelRelay.Windows
         /// Handles the Click event of the Done control.
         /// </summary>
         /// <param name="sender">The source of the event.</param>
-        /// <param name="e">The <see cref="System.Windows.RoutedEventArgs" /> instance containing the event data.</param>
+        /// <param name="e">The <see cref="RoutedEventArgs" /> instance containing the event data.</param>
         private void Done_Click(object sender, RoutedEventArgs e)
         {
             this.progressBar.Visibility = Visibility.Visible;

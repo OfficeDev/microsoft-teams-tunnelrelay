@@ -10,7 +10,7 @@ namespace TunnelRelay.Windows.Engine
     /// <summary>
     /// Request received event arguments.
     /// </summary>
-    /// <seealso cref="System.EventArgs" />
+    /// <seealso cref="EventArgs" />
     public class RequestEventArgs : EventArgs
     {
         /// <summary>

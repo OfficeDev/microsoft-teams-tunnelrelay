@@ -15,13 +15,13 @@ namespace TunnelRelay.Plugins
     /// <summary>
     /// Plugin to add or replace headers.
     /// </summary>
-    /// <seealso cref="TunnelRelay.PluginEngine.ITunnelRelayPlugin" />
+    /// <seealso cref="ITunnelRelayPlugin" />
     public class HeaderAdditionPlugin : ITunnelRelayPlugin
     {
         /// <summary>
         /// The headers to remove.
         /// </summary>
-        private Dictionary<string, string> headersToAdd = new Dictionary<string, string>();
+        private readonly Dictionary<string, string> headersToAdd = new Dictionary<string, string>();
 
         /// <summary>
         /// The plugin data.
@@ -46,7 +46,7 @@ namespace TunnelRelay.Plugins
 
             set
             {
-                this.pluginData = value;
+                this.pluginData = value ?? throw new ArgumentNullException(nameof(this.PluginData));
 
                 string[] headers = this.pluginData.Split(new string[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
 
@@ -93,6 +93,11 @@ namespace TunnelRelay.Plugins
         /// </returns>
         public Task<HttpRequestMessage> PreProcessRequestToServiceAsync(HttpRequestMessage webRequest)
         {
+            if (webRequest is null)
+            {
+                throw new ArgumentNullException(nameof(webRequest));
+            }
+
             foreach (KeyValuePair<string, string> headerToAdd in this.headersToAdd)
             {
                 if (webRequest.Headers.Contains(headerToAdd.Key))
@@ -100,7 +105,7 @@ namespace TunnelRelay.Plugins
                     webRequest.Headers.Remove(headerToAdd.Key);
                 }
 
-                bool val = webRequest.Headers.TryAddWithoutValidation(headerToAdd.Key, headerToAdd.Value);
+                webRequest.Headers.TryAddWithoutValidation(headerToAdd.Key, headerToAdd.Value);
             }
 
             return Task.FromResult(webRequest);

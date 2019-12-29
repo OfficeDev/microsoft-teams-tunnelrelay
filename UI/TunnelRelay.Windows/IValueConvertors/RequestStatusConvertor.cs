@@ -16,7 +16,7 @@ namespace TunnelRelay.Windows
     /// <summary>
     /// Decides the color of row in secret management.
     /// </summary>
-    /// <seealso cref="System.Windows.Data.IValueConverter" />
+    /// <seealso cref="IValueConverter" />
     internal class RequestStatusConvertor : IValueConverter
     {
         /// <summary>Converts a value.</summary>

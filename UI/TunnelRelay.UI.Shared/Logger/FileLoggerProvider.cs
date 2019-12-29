@@ -24,7 +24,7 @@ namespace TunnelRelay.UI.Logger
         /// <summary>
         /// The lock object used for synchronizing stream opening.
         /// </summary>
-        private object lockObject = new object();
+        private readonly object lockObject = new object();
 
         /// <summary>
         /// The stream writer.

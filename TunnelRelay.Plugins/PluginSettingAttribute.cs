@@ -10,7 +10,7 @@ namespace TunnelRelay.PluginEngine
     /// <summary>
     /// Plugin settings.
     /// </summary>
-    /// <seealso cref="System.Attribute" />
+    /// <seealso cref="Attribute" />
     [AttributeUsage(AttributeTargets.Property, AllowMultiple = false)]
     public sealed class PluginSettingAttribute : Attribute
     {

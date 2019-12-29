@@ -12,8 +12,8 @@ namespace System.Windows.Workarounds
     /// <summary>
     /// Auto scroll handler.
     /// </summary>
-    /// <seealso cref="System.Windows.DependencyObject" />
-    /// <seealso cref="System.IDisposable" />
+    /// <seealso cref="DependencyObject" />
+    /// <seealso cref="IDisposable" />
     public sealed class AutoScrollHandler : DependencyObject, IDisposable
     {
         /// <summary>
@@ -32,13 +32,13 @@ namespace System.Windows.Workarounds
         /// <summary>
         /// The target.
         /// </summary>
-        private System.Windows.Controls.ListBox target;
+        private Controls.ListBox target;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="AutoScrollHandler"/> class.
         /// </summary>
         /// <param name="target">The target.</param>
-        public AutoScrollHandler(System.Windows.Controls.ListBox target)
+        public AutoScrollHandler(Controls.ListBox target)
         {
             this.target = target;
             Binding b = new Binding("ItemsSource");

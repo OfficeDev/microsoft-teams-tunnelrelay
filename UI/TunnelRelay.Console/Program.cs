@@ -11,6 +11,7 @@ namespace TunnelRelay.Console
     using System.IO;
     using System.Linq;
     using System.Reflection;
+    using System.Runtime.InteropServices;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Azure.Management.Relay.Fluent.Models;
@@ -196,6 +197,11 @@ namespace TunnelRelay.Console
                     hybridConnectionOptions.ServiceBusUrlHost = applicationData.HybridConnectionUrl;
                 });
 
+                if (string.IsNullOrEmpty(applicationData.RedirectionUrl))
+                {
+                    applicationData.RedirectionUrl = "http://localhost:8080";
+                }
+
                 serviceDescriptors.Configure<RelayRequestManagerOptions>((relayRequestManagerOptions) =>
                 {
                     relayRequestManagerOptions.InternalServiceUrl = new Uri(applicationData.RedirectionUrl);
@@ -205,7 +211,7 @@ namespace TunnelRelay.Console
 
                 serviceDescriptors.AddSingleton<PluginManager>();
 
-                serviceDescriptors.AddSingleton<IEnumerable<ITunnelRelayPlugin>>((provider) =>
+                serviceDescriptors.AddSingleton((provider) =>
                 {
                     PluginManager pluginManager = provider.GetRequiredService<PluginManager>();
 
@@ -355,6 +361,7 @@ namespace TunnelRelay.Console
                     break;
                 }
 
+                Console.WriteLine("Please wait while the new Relay is being created");
                 hybridConnectionDetails = await serviceBusResourceManager.CreateHybridConnectionAsync(
                     selectedSubscription,
                     serviceBusName,
@@ -363,6 +370,7 @@ namespace TunnelRelay.Console
             }
             else
             {
+                Console.WriteLine("Please wait while the details for Relay are fetched");
                 hybridConnectionDetails = await serviceBusResourceManager.GetHybridConnectionAsync(
                     selectedSubscription,
                     relayNamespaces[selectedRelayIndex - 1],
@@ -377,11 +385,8 @@ namespace TunnelRelay.Console
 
             return new ApplicationData
             {
-#if NET461
-                EnableCredentialEncryption = true,
-#else
-                EnableCredentialEncryption = false,
-#endif
+                // DPAPI APIs used for encryption are only present on Windows.
+                EnableCredentialEncryption = RuntimeInformation.IsOSPlatform(OSPlatform.Windows),
                 EnabledPlugins = new HashSet<string>(),
                 HybridConnectionKeyName = hybridConnectionDetails.HybridConnectionKeyName,
                 HybridConnectionName = hybridConnectionDetails.HybridConnectionName,

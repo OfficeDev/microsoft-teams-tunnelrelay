@@ -121,6 +121,11 @@ namespace TunnelRelay.Windows.Engine
                 ServiceBusUrlHost = TunnelRelayStateManager.ApplicationData.HybridConnectionUrl,
             };
 
+            if (string.IsNullOrEmpty(TunnelRelayStateManager.ApplicationData.RedirectionUrl))
+            {
+                TunnelRelayStateManager.ApplicationData.RedirectionUrl = "http://localhost:8080";
+            }
+
             TunnelRelayStateManager.RelayRequestManagerOptions.CurrentValue = new RelayRequestManagerOptions
             {
                 InternalServiceUrl = new Uri(TunnelRelayStateManager.ApplicationData.RedirectionUrl),

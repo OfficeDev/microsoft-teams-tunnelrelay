@@ -7,6 +7,7 @@ namespace TunnelRelay.Console
 {
     using System;
     using System.Collections.Generic;
+    using System.Globalization;
     using System.Threading.Tasks;
     using TunnelRelay.Core;
 
@@ -40,6 +41,7 @@ namespace TunnelRelay.Console
                 Console.SetCursorPosition(0, this.requestCount);
 
                 Console.Write(string.Format(
+                    CultureInfo.InvariantCulture,
                     "{0} - {1}",
                     relayRequest.HttpMethod,
                     relayRequest.RequestPathAndQuery));
@@ -76,6 +78,7 @@ namespace TunnelRelay.Console
                     requestConsoleDetails.RequestConsoleTopCursor + 1);
 
                 Console.Write(string.Format(
+                    CultureInfo.InvariantCulture,
                     " -----> {0} - {1}",
                     relayResponse.HttpStatusCode.ToString(),
                     (DateTime.Now - requestConsoleDetails.RequestStartTime).TotalMilliseconds));

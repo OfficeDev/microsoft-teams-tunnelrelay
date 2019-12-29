@@ -15,7 +15,7 @@ namespace TunnelRelay.Plugins
     /// <summary>
     /// Removed unrequired headers.
     /// </summary>
-    /// <seealso cref="TunnelRelay.PluginEngine.ITunnelRelayPlugin" />
+    /// <seealso cref="ITunnelRelayPlugin" />
     public class HeaderRemovalPlugin : ITunnelRelayPlugin
     {
         /// <summary>
@@ -46,6 +46,11 @@ namespace TunnelRelay.Plugins
 
             set
             {
+                if (value is null)
+                {
+                    throw new ArgumentNullException(nameof(this.PluginData));
+                }
+
                 this.pluginData = value;
                 this.headersToRemove = this.pluginData.Split(new string[] { "," }, StringSplitOptions.RemoveEmptyEntries).Select(str => str.Trim()).ToList();
             }

@@ -7,6 +7,7 @@ namespace TunnelRelay.Core
 {
     using System;
     using System.Collections.Generic;
+    using System.Globalization;
     using System.IO;
     using System.Net;
     using System.Net.Http;
@@ -63,6 +64,11 @@ namespace TunnelRelay.Core
         /// <returns>Response from the internal service.</returns>
         public async Task<RelayResponse> HandleRelayRequestAsync(RelayRequest relayRequest)
         {
+            if (relayRequest is null)
+            {
+                throw new ArgumentNullException(nameof(relayRequest));
+            }
+
             string requestId = Guid.NewGuid().ToString();
 
             this.logger.LogTrace("Received request with Id '{0}'", requestId);
@@ -124,8 +130,10 @@ namespace TunnelRelay.Core
             catch (HttpRequestException httpException)
             {
                 this.logger.LogError("Hit exception while sending request to server for request Id '{0}'. Error '{1}'", requestId, httpException);
-                httpResponseMessage = new HttpResponseMessage(HttpStatusCode.BadGateway);
-                httpResponseMessage.Content = new StringContent(httpException.ToString());
+                httpResponseMessage = new HttpResponseMessage(HttpStatusCode.BadGateway)
+                {
+                    Content = new StringContent(httpException.ToString()),
+                };
             }
             catch (Exception ex)
             {
@@ -217,17 +225,17 @@ namespace TunnelRelay.Core
 
             if (headerCollection[HttpRequestHeader.Expires] != null)
             {
-                httpContent.Headers.Expires = DateTimeOffset.Parse(headerCollection[HttpRequestHeader.Expires]);
+                httpContent.Headers.Expires = DateTimeOffset.Parse(headerCollection[HttpRequestHeader.Expires], CultureInfo.InvariantCulture);
             }
 
             if (headerCollection[HttpRequestHeader.LastModified] != null)
             {
-                httpContent.Headers.LastModified = DateTimeOffset.Parse(headerCollection[HttpRequestHeader.LastModified]);
+                httpContent.Headers.LastModified = DateTimeOffset.Parse(headerCollection[HttpRequestHeader.LastModified], CultureInfo.InvariantCulture);
             }
 
             if (headerCollection[HttpRequestHeader.ContentLength] != null)
             {
-                httpContent.Headers.ContentLength = long.Parse(headerCollection[HttpRequestHeader.ContentLength]);
+                httpContent.Headers.ContentLength = long.Parse(headerCollection[HttpRequestHeader.ContentLength], CultureInfo.InvariantCulture);
             }
         }
 
@@ -327,7 +335,7 @@ namespace TunnelRelay.Core
 
             if (relayRequestManagerOptions.InternalServiceUrl == null)
             {
-                throw new ArgumentNullException(nameof(relayRequestManagerOptions.InternalServiceUrl));
+                throw new ArgumentNullException(nameof(relayRequestManagerOptions), "Internal service url can't be null or empty.");
             }
 
             this.internalServiceUrl = relayRequestManagerOptions.InternalServiceUrl.AbsoluteUri.TrimEnd('/');

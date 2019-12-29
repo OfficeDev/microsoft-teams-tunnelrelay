@@ -14,7 +14,7 @@ namespace System.Windows.Workarounds
         /// The automatic scroll handler property.
         /// </summary>
         public static readonly DependencyProperty AutoScrollHandlerProperty =
-            DependencyProperty.RegisterAttached("AutoScrollHandler", typeof(AutoScrollHandler), typeof(System.Windows.Controls.ListBox));
+            DependencyProperty.RegisterAttached("AutoScrollHandler", typeof(AutoScrollHandler), typeof(Controls.ListBox));
 
         /// <summary>
         /// The automatic scroll property.
@@ -23,7 +23,7 @@ namespace System.Windows.Workarounds
             DependencyProperty.RegisterAttached(
                 "AutoScroll",
                 typeof(bool),
-                typeof(System.Windows.Controls.ListBox),
+                typeof(Controls.ListBox),
                 new PropertyMetadata(false));
 
         /// <summary>
@@ -39,8 +39,13 @@ namespace System.Windows.Workarounds
         /// </summary>
         /// <param name="instance">The instance.</param>
         /// <returns>true is auto scoll is enabled false otherwise.</returns>
-        public static bool GetAutoScroll(System.Windows.Controls.ListBox instance)
+        public static bool GetAutoScroll(Controls.ListBox instance)
         {
+            if (instance is null)
+            {
+                throw new ArgumentNullException(nameof(instance));
+            }
+
             return (bool)instance.GetValue(AutoScrollProperty);
         }
 
@@ -49,8 +54,13 @@ namespace System.Windows.Workarounds
         /// </summary>
         /// <param name="instance">The instance.</param>
         /// <param name="value">Value to set for Automatic scroll.</param>
-        public static void SetAutoScroll(System.Windows.Controls.ListBox instance, bool value)
+        public static void SetAutoScroll(Controls.ListBox instance, bool value)
         {
+            if (instance is null)
+            {
+                throw new ArgumentNullException(nameof(instance));
+            }
+
             AutoScrollHandler oldHandler = (AutoScrollHandler)instance.GetValue(AutoScrollHandlerProperty);
             if (oldHandler != null)
             {
