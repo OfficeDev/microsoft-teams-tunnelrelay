@@ -49,6 +49,9 @@
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
     <!-- Include the PDB in the built .nupkg -->
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
+  </PropertyGroup>
+  
+  <PropertyGroup Condition="'$(SignAssembly)' == 'True'">
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), .gitignore))\Build\272MSSharedLibSN2048.snk</AssemblyOriginatorKeyFile>
     <DelaySign>true</DelaySign>
