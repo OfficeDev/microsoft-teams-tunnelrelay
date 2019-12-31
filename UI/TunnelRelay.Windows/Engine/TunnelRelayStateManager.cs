@@ -67,7 +67,7 @@ namespace TunnelRelay.Windows.Engine
                         TunnelRelayStateManager.Logger.LogInformation("Appsettings don't exist. Creating new one.");
                         TunnelRelayStateManager.applicationData = new ApplicationData
                         {
-                            RedirectionUrl = "http://localhost:3979/",
+                            RedirectionUrl = "http://localhost:8080/",
                         };
                     }
                 }
