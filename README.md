@@ -36,6 +36,8 @@ Tunnel Relay uses [Azure Relays](https://docs.microsoft.com/en-us/azure/service-
 
 Tunnel Relay supports 2 variants. GUI and CUI based. GUI is only supported in Windows, while CUI is supported in all 3 supported OSes (Windows, Linux and OSX).
 
+Both of these will guide the user through the setup process. All settings are stored in appSettings.json in the executable directory. You can delete this file at anytime to reset and start over.
+
 Following image explains the basic components of the app when GUI mode is being used. User needs to login before they can start using the app. This is covered in [Configuration](Documenation/Configuration.md).
 ![Main Window](Documentation/MainWindow.png "Tunnel Relay Main Window")
 
