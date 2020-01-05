@@ -3,7 +3,7 @@
 Tunnel relay allows developers to route requests to a local server. Though there are cases where local servers handle request differently as compared to production machines. This is usually true in the case how authentication is done. For example, production server might support a different Azure Active directory token as compared to local server. This makes it hard to redirect requests from production clients\services to local server as authentication fails to work. Authentication is one such case. There can be multiple such cases dealing with differences between local deployments and production deployments. We developed a plugin engine for Tunnel Relay which allows you to process request before it is send to your hosted service and process response before it is sent back to caller.
 
 ## How to build plugin
-Tunnel relay project contains a standalone assembly TunnelRelay.Plugins.dll. This dll contains ITunnelRelayPlugin interface. Any class implementing this interface can be loaded into TunnelRelay separately without the need to be compiled along with Tunnel relay.
+Use the TunnelRelay.Plugins nuget package from releases. This library contains ITunnelRelayPlugin interface. Any class implementing this interface can be loaded into TunnelRelay separately without the need to be compiled along with Tunnel relay.
 
 ### Understanding ITunnelRelayPlugin interface
 ITunnelRelayPlugin interface is defined as follows

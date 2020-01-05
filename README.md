@@ -18,36 +18,40 @@ Tunnel relay allows you to expose local services to the outside world over HTTPS
 ## Overview
 Since most developers don't have static IP addresses for their development machines visible to the external world, it is incredibly cumbersome for them to develop and test services. Tunnel Relay is a free and open-source tool that provides you a static URL for your local service which can be accessed externally!
 
-![Overview](Documentation/BotDevelopementTR.png "Overview")
+![Overview](Documentation/DevelopementTR.png "Overview")
 
 ## Download
 Latest release can be downloaded [here](https://github.com/OfficeDev/microsoft-teams-tunnelrelay/releases/latest) 
 
 ## Requirements
-We wanted to build a solution which was easy to use and works out of the box. Here are the things you need to run Tunnel Relay.
 
-1. Machine running Windows (.Net Framework 4.6.1 and above), Linux or Mac OSX and above
-2. Microsoft Azure subscription (you can sign up for a free trial [here](https://azure.microsoft.com/en-us/free/))
+### Supported Operation Systems
+Tunnel Relay is written on top of [.Net Core 3.1](https://devblogs.microsoft.com/dotnet/announcing-net-core-3-1/). Thus the minimum OS requirements are same as .Net Core 3.1. You can check these requirements [here](https://github.com/dotnet/core/blob/master/release-notes/3.1/3.1-supported-os.md)
 
-...__**and that is it!**__
+### Microsoft Azure
+
+Tunnel Relay uses [Azure Relays](https://docs.microsoft.com/en-us/azure/service-bus-relay/relay-what-is-it) so you need a Microsoft Azure Subscription. You can sign up for a free trial [here](https://azure.microsoft.com/en-us/free/)
 
 ## Get Started
-Following image explains the basic components of the app. User needs to login before they can start using the app. This is covered in [Configuration](Documenation/Configuration.md).
+
+Tunnel Relay supports 2 variants. GUI and CUI based. GUI is only supported in Windows, while CUI is supported in all 3 supported OSes (Windows, Linux and OSX).
+
+Following image explains the basic components of the app when GUI mode is being used. User needs to login before they can start using the app. This is covered in [Configuration](Documenation/Configuration.md).
 ![Main Window](Documentation/MainWindow.png "Tunnel Relay Main Window")
 
 ## FAQs
-**Q.** How is TunnelRelayv2 different from TunnelRelayv1? </br>
-**A.** TunnelRelayv2 adds support for Linux and Mac Operation systems. To achieve this, it uses [Hybrid Connections](https://docs.microsoft.com/en-us/azure/service-bus-relay/relay-what-is-it#hybrid-connections).
+**Q.** How is Tunnel Relay v2 different from Tunnel Relay v1? </br>
+**A.** Tunnel Relay v2 adds support for Linux and Mac Operation systems. To achieve this, it uses [Hybrid Connections](https://docs.microsoft.com/en-us/azure/service-bus-relay/relay-what-is-it#hybrid-connections).
 This also means that the Relays of v1 cannot be reused in v2. Additionally v2 adds support for commandline.
 
 **Q.** Do my clients need to change to understand that they are contacting server over Tunnel Relay vs directly? </br>
 **A.** Short answer no. All your clients need to see is the url exposed by Tunnel Relay. Rest everything remains the same.
 
-**Q.** Can I share same Service bus namespace across multiple machines? </br>
+**Q.** Can I share same Relay namespace across multiple machines? </br>
 **A.** Yes, you can share same service bus namespace across multiple machines. Each relay is a unique combination of service bus and machine name.
 
 **Q.** How much will this cost me? </br>
-**A.** Tunnel Relay itself is a free, open-source tool, although since Azure Service Bus back it, you will have to pay for the Service Bus itself. Pricing for service bus can be found [here](https://azure.microsoft.com/en-us/pricing/details/service-bus/). Tunnel Relay creates a service bus with __basic tier__. Please look for section WCF Relays to get the pricing information.
+**A.** Tunnel Relay itself is a free, open-source tool, you will have to pay for the Service Bus itself. Pricing for Azure Relay can be found [here](https://azure.microsoft.com/en-us/pricing/details/service-bus/). Please look for section *Hybrid connections and Windows Communication Foundation (WCF) relays* to get the pricing information.
 
 **Q.** I have an issue which needs your attention how can I contact you? </br>
 **A.** We monitor this Github repo for issues. Please open a new issue or reply to an existing one. We will get back to you soon. 
