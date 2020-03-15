@@ -6,14 +6,14 @@
 namespace TunnelRelay.UI.ResourceManagement
 {
     /// <summary>
-    /// Service bus details.
+    /// Relay details.
     /// </summary>
     internal class HybridConnectionDetails
     {
         /// <summary>
-        /// Gets or sets the service bus URL.
+        /// Gets or sets the Relay URL.
         /// </summary>
-        public string ServiceBusUrl { get; set; }
+        public string RelayUrl { get; set; }
 
         /// <summary>
         /// Gets or sets the hybrid connection name.

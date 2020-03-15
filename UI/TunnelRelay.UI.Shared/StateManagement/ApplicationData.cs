@@ -22,11 +22,11 @@ namespace TunnelRelay.UI.StateManagement
         internal const int CurrentVersion = 2;
 
         /// <summary>
-        /// Gets or sets the service bus shared key bytes.
+        /// Gets or sets the relay shared key bytes.
         /// These can be encrypted if <see cref="EnableCredentialEncryption"/> is set to true.
         /// </summary>
-        [JsonProperty(PropertyName = "serviceBusSharedKey")]
-        private byte[] serviceBusSharedKeyBytes;
+        [JsonProperty(PropertyName = "relaySharedKey")]
+        private byte[] relaySharedKeyBytes;
 
         /// <summary>
         /// Gets or sets the redirection URL.
@@ -68,11 +68,11 @@ namespace TunnelRelay.UI.StateManagement
             {
                 if (this.EnableCredentialEncryption)
                 {
-                    return Convert.ToBase64String(DataProtection.Unprotect(this.serviceBusSharedKeyBytes));
+                    return Convert.ToBase64String(DataProtection.Unprotect(this.relaySharedKeyBytes));
                 }
                 else
                 {
-                    return Convert.ToBase64String(this.serviceBusSharedKeyBytes);
+                    return Convert.ToBase64String(this.relaySharedKeyBytes);
                 }
             }
 
@@ -80,11 +80,11 @@ namespace TunnelRelay.UI.StateManagement
             {
                 if (this.EnableCredentialEncryption)
                 {
-                    this.serviceBusSharedKeyBytes = DataProtection.Protect(Convert.FromBase64String(value));
+                    this.relaySharedKeyBytes = DataProtection.Protect(Convert.FromBase64String(value));
                 }
                 else
                 {
-                    this.serviceBusSharedKeyBytes = Convert.FromBase64String(value);
+                    this.relaySharedKeyBytes = Convert.FromBase64String(value);
                 }
             }
         }
@@ -119,7 +119,7 @@ namespace TunnelRelay.UI.StateManagement
             // Encrypt the data with DPAPI.
             if (applicationData.EnableCredentialEncryption)
             {
-                applicationData.serviceBusSharedKeyBytes = DataProtection.Protect(applicationData.serviceBusSharedKeyBytes);
+                applicationData.relaySharedKeyBytes = DataProtection.Protect(applicationData.relaySharedKeyBytes);
             }
 
             return applicationData;
@@ -135,7 +135,7 @@ namespace TunnelRelay.UI.StateManagement
             ApplicationData applicationData = JObject.FromObject(this).ToObject<ApplicationData>();
 
             // Unprotect the data before exporting.
-            applicationData.serviceBusSharedKeyBytes = DataProtection.Unprotect(applicationData.serviceBusSharedKeyBytes);
+            applicationData.relaySharedKeyBytes = DataProtection.Unprotect(applicationData.relaySharedKeyBytes);
 
             return JsonConvert.SerializeObject(applicationData);
         }
@@ -150,7 +150,7 @@ namespace TunnelRelay.UI.StateManagement
             if (this.Version < CurrentVersion)
             {
                 this.HybridConnectionKeyName = null;
-                this.serviceBusSharedKeyBytes = null;
+                this.relaySharedKeyBytes = null;
                 this.EnableCredentialEncryption = true;
                 this.HybridConnectionUrl = null;
             }

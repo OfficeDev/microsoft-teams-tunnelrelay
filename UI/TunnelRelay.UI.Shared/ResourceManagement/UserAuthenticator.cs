@@ -10,7 +10,7 @@ namespace TunnelRelay.UI.ResourceManagement
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.Linq;
-    using System.Runtime.InteropServices;
+    using System.Text;
     using System.Threading.Tasks;
     using Microsoft.Azure.Management.ResourceManager.Fluent;
     using Microsoft.Azure.Management.ResourceManager.Fluent.Models;
@@ -18,6 +18,7 @@ namespace TunnelRelay.UI.ResourceManagement
     using Microsoft.Identity.Client;
     using Microsoft.Rest;
     using Microsoft.Rest.Azure;
+    using Newtonsoft.Json;
 
     /// <summary>
     /// User authentication details.
@@ -95,7 +96,7 @@ namespace TunnelRelay.UI.ResourceManagement
                 AuthenticationResult authToken = await this.AcquireAzureManagementTokenAsync("common", Prompt.SelectAccount).ConfigureAwait(false);
 
                 this.userIdentifier = authToken.Account;
-                this.tenantBasedTokenMap[authToken.TenantId] = authToken;
+                this.tenantBasedTokenMap[this.GetTenantOnToken(authToken)] = authToken;
             }
         }
 
@@ -137,8 +138,16 @@ namespace TunnelRelay.UI.ResourceManagement
                             // Optimization to skip refetching tokens. AAD tokens live for 1 hour.
                             if (!this.tenantBasedTokenMap.ContainsKey(tenant.TenantId))
                             {
-                                this.logger.LogInformation("Get token with '{0}' tenant info", tenant.TenantId);
-                                this.tenantBasedTokenMap[tenant.TenantId] = await this.AcquireAzureManagementTokenAsync(tenant.TenantId, Prompt.NoPrompt, this.userIdentifier).ConfigureAwait(false);
+                                try
+                                {
+                                    this.logger.LogInformation("Get token with '{0}' tenant info", tenant.TenantId);
+                                    AuthenticationResult tenantizedToken = await this.AcquireAzureManagementTokenAsync(tenant.TenantId, Prompt.NoPrompt, this.userIdentifier).ConfigureAwait(false);
+                                    this.tenantBasedTokenMap[this.GetTenantOnToken(tenantizedToken)] = tenantizedToken;
+                                }
+                                catch (Exception ex)
+                                {
+                                    this.logger.LogWarning(ex, $"Failed to acquire token for tenant with Id '{tenant.TenantId}'");
+                                }
                             }
                         }));
                     });
@@ -147,30 +156,33 @@ namespace TunnelRelay.UI.ResourceManagement
 
                 // Get all subscriptions for given tenants
                 List<Task> subscriptionTasks = new List<Task>();
-                tenantList.ForEach(
-                    (tenant) =>
-                     {
-                         subscriptionTasks.Add(Task.Run(async () =>
-                         {
-                             List<SubscriptionInner> subscriptionList = new List<SubscriptionInner>();
-                             this.logger.LogTrace("Getting subscriptions for '{0}' tenant.", tenant.TenantId);
-                             TokenCredentials subsCreds = new TokenCredentials(this.tenantBasedTokenMap[tenant.TenantId].AccessToken);
-                             SubscriptionClient subscriptionClient = new SubscriptionClient(subsCreds);
 
-                             IPage<SubscriptionInner> resp = await subscriptionClient.Subscriptions.ListAsync().ConfigureAwait(false);
-                             subscriptionList.AddRange(resp);
+                // Generating a filtered tenant list to ensure we have tokens before we make the call.
+                IEnumerable<TenantIdDescription> filteredTenantList = tenantList.Where((tenant) => this.tenantBasedTokenMap.ContainsKey(tenant.TenantId));
 
-                             while (!string.IsNullOrEmpty(resp.NextPageLink))
-                             {
-                                 resp = await subscriptionClient.Subscriptions.ListNextAsync(resp.NextPageLink).ConfigureAwait(false);
-                                 subscriptionList.AddRange(resp);
-                             }
+                foreach (TenantIdDescription tenant in filteredTenantList)
+                {
+                    subscriptionTasks.Add(Task.Run(async () =>
+                    {
+                        List<SubscriptionInner> subscriptionList = new List<SubscriptionInner>();
+                        this.logger.LogTrace("Getting subscriptions for '{0}' tenant.", tenant.TenantId);
+                        TokenCredentials subsCreds = new TokenCredentials(this.tenantBasedTokenMap[tenant.TenantId].AccessToken);
+                        SubscriptionClient subscriptionClient = new SubscriptionClient(subsCreds);
 
-                             this.logger.LogTrace("Fetched total of '{0}' subscriptions for tenant '{1}'", subscriptionList.Count, tenant.TenantId);
+                        IPage<SubscriptionInner> resp = await subscriptionClient.Subscriptions.ListAsync().ConfigureAwait(false);
+                        subscriptionList.AddRange(resp);
 
-                             subscriptionList.ForEach(subscription => this.subscriptionToTenantMap[subscription] = tenant);
-                         }));
-                     });
+                        while (!string.IsNullOrEmpty(resp.NextPageLink))
+                        {
+                            resp = await subscriptionClient.Subscriptions.ListNextAsync(resp.NextPageLink).ConfigureAwait(false);
+                            subscriptionList.AddRange(resp);
+                        }
+
+                        this.logger.LogTrace("Fetched total of '{0}' subscriptions for tenant '{1}'", subscriptionList.Count, tenant.TenantId);
+
+                        subscriptionList.ForEach(subscription => this.subscriptionToTenantMap[subscription] = tenant);
+                    }));
+                }
 
                 await Task.WhenAll(subscriptionTasks).ConfigureAwait(false);
 
@@ -215,6 +227,41 @@ namespace TunnelRelay.UI.ResourceManagement
         }
 
         /// <summary>
+        /// Gets the tenantId on the issued token.
+        /// </summary>
+        /// <param name="authenticationResult">Authentication result token.</param>
+        /// <returns>Tenant on the token.</returns>
+        private string GetTenantOnToken(AuthenticationResult authenticationResult)
+        {
+            try
+            {
+                string tokenBody = authenticationResult.AccessToken.Split('.')[1];
+
+                // Add padding to base64 string if needed.
+                string paddedString = tokenBody;
+                for (int i = 0; i < paddedString.Length % 4; i++)
+                {
+                    paddedString = paddedString + "=";
+                }
+
+                string tenantIdOnToken = JsonConvert.DeserializeObject<Dictionary<string, object>>(Encoding.UTF8.GetString(Convert.FromBase64String(paddedString)))["tid"].ToString();
+
+                if (!tenantIdOnToken.Equals(authenticationResult.TenantId, StringComparison.OrdinalIgnoreCase))
+                {
+                    this.logger.LogWarning(
+                        $"TenantId mismatch!! TenantId in response '{authenticationResult.TenantId}'. TenantId on token '{tenantIdOnToken}'");
+                }
+
+                return tenantIdOnToken;
+            }
+            catch (Exception ex)
+            {
+                this.logger.LogWarning(ex, "Hit exception during tenantId extraction process");
+                return authenticationResult.TenantId;
+            }
+        }
+
+        /// <summary>
         /// Acquires the Azure management token asynchronously.
         /// </summary>
         /// <param name="tenantId">The tenant identifier.</param>
@@ -226,6 +273,10 @@ namespace TunnelRelay.UI.ResourceManagement
             Prompt promptBehavior,
             IAccount userIdentifier = null)
         {
+            Guid correlationId = Guid.NewGuid();
+
+            this.logger.LogInformation($"Acquiring token with correlation Id set to '{correlationId}'");
+
             try
             {
                 if (userIdentifier == null)
@@ -235,6 +286,7 @@ namespace TunnelRelay.UI.ResourceManagement
                         return await this.publicClientApplication
                             .AcquireTokenInteractive(new List<string>() { AzureAADResourceScope })
                             .WithAuthority($"{UserAuthenticator.AADLoginAuthority}{tenantId}", validateAuthority: false)
+                            .WithCorrelationId(correlationId)
                             .WithPrompt(promptBehavior)
                             .ExecuteAsync().ConfigureAwait(false);
                     }
@@ -265,6 +317,7 @@ namespace TunnelRelay.UI.ResourceManagement
                                     }
                                 })
                             .WithAuthority($"{UserAuthenticator.AADLoginAuthority}{tenantId}", validateAuthority: false)
+                            .WithCorrelationId(correlationId)
                             .ExecuteAsync().ConfigureAwait(false);
                     }
                 }
@@ -273,12 +326,13 @@ namespace TunnelRelay.UI.ResourceManagement
                     return await this.publicClientApplication
                         .AcquireTokenSilent(new List<string>() { AzureAADResourceScope }, userIdentifier)
                         .WithAuthority($"{UserAuthenticator.AADLoginAuthority}{tenantId}", validateAuthority: false)
+                        .WithCorrelationId(correlationId)
                         .ExecuteAsync().ConfigureAwait(false);
                 }
             }
             catch (Exception ex)
             {
-                this.logger.LogError(ex, "Failed to acquire token");
+                this.logger.LogError(ex, $"Failed to acquire token. Correlation Id '{correlationId}'");
                 throw;
             }
         }

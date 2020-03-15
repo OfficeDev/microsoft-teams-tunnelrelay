@@ -30,16 +30,16 @@
                 <Hyperlink 
                     NavigateUri="https://docs.microsoft.com/en-us/azure/service-bus-relay/relay-what-is-it"
                     RequestNavigate="Hyperlink_RequestNavigate">
-                    Azure Service Bus
+                    Azure Relay
                 </Hyperlink>.
         </TextBlock>
 
-        <TextBlock Grid.Row="3" Text="You will an Azure subscription to use this application" FontWeight="Bold" FontSize="15" Grid.Column="1"/>
+        <TextBlock Grid.Row="3" Text="You will need an Azure subscription to use this application" FontWeight="Bold" FontSize="15" Grid.Column="1"/>
         <TextBlock Grid.Row="4" FontSize="15" Grid.Column="1">
             <Hyperlink 
                     NavigateUri="https://azure.microsoft.com/en-us/free/"
                     RequestNavigate="Hyperlink_RequestNavigate">
-                    Go here to start an Azure subscription
+                    Click here to start a free trial
                 </Hyperlink>.
         </TextBlock>
 

@@ -21,7 +21,6 @@ namespace TunnelRelay.Console
     using Microsoft.Extensions.Logging;
     using Newtonsoft.Json;
     using TunnelRelay.Core;
-    using TunnelRelay.PluginEngine;
     using TunnelRelay.UI.Logger;
     using TunnelRelay.UI.PluginManagement;
     using TunnelRelay.UI.ResourceManagement;
@@ -50,18 +49,18 @@ namespace TunnelRelay.Console
         public static int Main(string[] args)
         {
             CommandLineApplication commandLineApplication = new CommandLineApplication(false);
-            CommandOption serviceBusUrlOption = commandLineApplication.Option(
-                "-BusUrl | --ServiceBusUrl",
-                "Url for the Service bus you want to use. This should be in format sbname.servicebus.windows.net",
+            CommandOption relayUrlOption = commandLineApplication.Option(
+                "-RelayUrl | --AzureRelayUrl",
+                "Url for the Azure Relay you want to use. This should be in format sbname.servicebus.windows.net",
                 CommandOptionType.SingleValue);
 
-            CommandOption serviceBusSharedKeyNameOption = commandLineApplication.Option(
-                "-KeyName | --ServiceBusKeyName",
+            CommandOption relaySharedKeyNameOption = commandLineApplication.Option(
+                "-KeyName | --AzureRelayKeyName",
                 "Name of the shared key. For example RootManageSharedAccessKey",
                 CommandOptionType.SingleValue);
 
-            CommandOption serviceBusSharedKeyOption = commandLineApplication.Option(
-                "-Key | --ServiceBusKey",
+            CommandOption relaySharedKeyOption = commandLineApplication.Option(
+                "-Key | --AzureRelayKey",
                 "Shared access key. This key should have Manage, Send and Listen permissions",
                 CommandOptionType.SingleValue);
 
@@ -117,24 +116,24 @@ namespace TunnelRelay.Console
                 });
 
                 serviceDescriptors.AddSingleton<UserAuthenticator>();
-                serviceDescriptors.AddSingleton<ServiceBusResourceManager>();
+                serviceDescriptors.AddSingleton<AzureRelayResourceManager>();
 
                 ApplicationData applicationData = null;
 
                 // If command line arguments were specified.
-                if (!string.IsNullOrEmpty(serviceBusUrlOption.Value()))
+                if (!string.IsNullOrEmpty(relayUrlOption.Value()))
                 {
                     bool paramsPresent = true;
 
-                    if (string.IsNullOrEmpty(serviceBusSharedKeyNameOption.Value()))
+                    if (string.IsNullOrEmpty(relaySharedKeyNameOption.Value()))
                     {
-                        Console.Error.WriteLine("Missing required Service Bus shared key name");
+                        Console.Error.WriteLine("Missing required Relay shared key name");
                         paramsPresent = false;
                     }
 
-                    if (string.IsNullOrEmpty(serviceBusSharedKeyOption.Value()))
+                    if (string.IsNullOrEmpty(relaySharedKeyOption.Value()))
                     {
-                        Console.Error.WriteLine("Missing required Service Bus shared key");
+                        Console.Error.WriteLine("Missing required Relay shared key");
                         paramsPresent = false;
                     }
 
@@ -157,10 +156,10 @@ namespace TunnelRelay.Console
 
                     applicationData = new ApplicationData
                     {
-                        HybridConnectionKeyName = serviceBusSharedKeyNameOption.Value(),
+                        HybridConnectionKeyName = relaySharedKeyNameOption.Value(),
                         HybridConnectionName = connectionNameOption.Value(),
-                        HybridConnectionSharedKey = serviceBusSharedKeyOption.Value(),
-                        HybridConnectionUrl = serviceBusUrlOption.Value(),
+                        HybridConnectionSharedKey = relaySharedKeyOption.Value(),
+                        HybridConnectionUrl = relayUrlOption.Value(),
                         RedirectionUrl = serviceAddressOption.Value(),
                     };
                 }
@@ -192,9 +191,9 @@ namespace TunnelRelay.Console
                 serviceDescriptors.Configure<HybridConnectionManagerOptions>((hybridConnectionOptions) =>
                 {
                     hybridConnectionOptions.ConnectionPath = applicationData.HybridConnectionName;
-                    hybridConnectionOptions.ServiceBusKeyName = applicationData.HybridConnectionKeyName;
-                    hybridConnectionOptions.ServiceBusSharedKey = applicationData.HybridConnectionSharedKey;
-                    hybridConnectionOptions.ServiceBusUrlHost = applicationData.HybridConnectionUrl;
+                    hybridConnectionOptions.AzureRelayKeyName = applicationData.HybridConnectionKeyName;
+                    hybridConnectionOptions.AzureRelaySharedKey = applicationData.HybridConnectionSharedKey;
+                    hybridConnectionOptions.AzureRelayUrlHost = applicationData.HybridConnectionUrl;
                 });
 
                 if (string.IsNullOrEmpty(applicationData.RedirectionUrl))
@@ -256,7 +255,7 @@ namespace TunnelRelay.Console
 
             UserAuthenticator userAuthenticator = serviceProvider.GetRequiredService<UserAuthenticator>();
 
-            ServiceBusResourceManager serviceBusResourceManager = serviceProvider.GetRequiredService<ServiceBusResourceManager>();
+            AzureRelayResourceManager relayResourceManager = serviceProvider.GetRequiredService<AzureRelayResourceManager>();
 
             await userAuthenticator.AuthenticateUserAsync().ConfigureAwait(false);
 
@@ -297,14 +296,14 @@ namespace TunnelRelay.Console
 
             SubscriptionInner selectedSubscription = userSubscriptions[selectedSubscriptionIndex - 1];
 
-            List<RelayNamespaceInner> relayNamespaces = await serviceBusResourceManager.GetRelayNamespacesAsync(selectedSubscription).ConfigureAwait(false);
+            List<RelayNamespaceInner> relayNamespaces = await relayResourceManager.GetRelayNamespacesAsync(selectedSubscription).ConfigureAwait(false);
 
             int selectedRelayIndex = 0;
             if (relayNamespaces.Count != 0)
             {
-                Console.WriteLine("Select the Service Bus you want to use.");
+                Console.WriteLine("Select the Azure Relay you want to use.");
 
-                Console.WriteLine("0 - Create a new service bus");
+                Console.WriteLine("0 - Create a new Azure Relay");
                 for (int i = 0; i < relayNamespaces.Count; i++)
                 {
                     Console.WriteLine($"{i + 1} - {relayNamespaces[i].Name}");
@@ -331,10 +330,10 @@ namespace TunnelRelay.Console
             HybridConnectionDetails hybridConnectionDetails = null;
             if (selectedRelayIndex == 0)
             {
-                Console.Write("Enter the name for the new Service Bus. This must be atleast 6 character long. ");
-                string serviceBusName = Console.ReadLine();
+                Console.Write("Enter the name for the new Azure Relay. This must be atleast 6 character long and globally unique. ");
+                string relayName = Console.ReadLine();
 
-                Console.WriteLine("Select the location for the new service bus from the list below");
+                Console.WriteLine("Select the location for the new Relay from the list below");
 
                 List<Location> subscriptionLocations = userAuthenticator.GetSubscriptionLocations(selectedSubscription).ToList();
 
@@ -362,16 +361,16 @@ namespace TunnelRelay.Console
                 }
 
                 Console.WriteLine("Please wait while the new Relay is being created");
-                hybridConnectionDetails = await serviceBusResourceManager.CreateHybridConnectionAsync(
+                hybridConnectionDetails = await relayResourceManager.CreateHybridConnectionAsync(
                     selectedSubscription,
-                    serviceBusName,
+                    relayName,
                     Environment.MachineName,
                     subscriptionLocations[selectedLocationIndex - 1].DisplayName).ConfigureAwait(false);
             }
             else
             {
                 Console.WriteLine("Please wait while the details for Relay are fetched");
-                hybridConnectionDetails = await serviceBusResourceManager.GetHybridConnectionAsync(
+                hybridConnectionDetails = await relayResourceManager.GetHybridConnectionAsync(
                     selectedSubscription,
                     relayNamespaces[selectedRelayIndex - 1],
                     Environment.MachineName).ConfigureAwait(false);
@@ -391,7 +390,7 @@ namespace TunnelRelay.Console
                 HybridConnectionKeyName = hybridConnectionDetails.HybridConnectionKeyName,
                 HybridConnectionName = hybridConnectionDetails.HybridConnectionName,
                 HybridConnectionSharedKey = hybridConnectionDetails.HybridConnectionSharedKey,
-                HybridConnectionUrl = hybridConnectionDetails.ServiceBusUrl,
+                HybridConnectionUrl = hybridConnectionDetails.RelayUrl,
                 PluginSettingsMap = new Dictionary<string, Dictionary<string, string>>(),
                 RedirectionUrl = redirectionUrl,
             };

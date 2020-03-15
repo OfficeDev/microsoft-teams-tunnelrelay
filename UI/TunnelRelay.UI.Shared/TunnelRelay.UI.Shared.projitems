@@ -10,7 +10,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)ResourceManagement\HybridConnectionDetails.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)ResourceManagement\ServiceBusResourceManager.cs" />
+    <Compile Include="..\TunnelRelay.UI.Shared\ResourceManagement\AzureRelayResourceManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ResourceManagement\UserAuthenticator.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)PluginManagement\PluginDetails.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)PluginManagement\PluginManager.cs" />

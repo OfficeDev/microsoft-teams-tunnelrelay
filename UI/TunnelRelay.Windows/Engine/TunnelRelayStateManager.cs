@@ -116,9 +116,9 @@ namespace TunnelRelay.Windows.Engine
             HybridConnectionManagerOptions hybridConnectionManagerOptions = new HybridConnectionManagerOptions
             {
                 ConnectionPath = TunnelRelayStateManager.ApplicationData.HybridConnectionName,
-                ServiceBusKeyName = TunnelRelayStateManager.ApplicationData.HybridConnectionKeyName,
-                ServiceBusSharedKey = TunnelRelayStateManager.ApplicationData.HybridConnectionSharedKey,
-                ServiceBusUrlHost = TunnelRelayStateManager.ApplicationData.HybridConnectionUrl,
+                AzureRelayKeyName = TunnelRelayStateManager.ApplicationData.HybridConnectionKeyName,
+                AzureRelaySharedKey = TunnelRelayStateManager.ApplicationData.HybridConnectionSharedKey,
+                AzureRelayUrlHost = TunnelRelayStateManager.ApplicationData.HybridConnectionUrl,
             };
 
             if (string.IsNullOrEmpty(TunnelRelayStateManager.ApplicationData.RedirectionUrl))

@@ -29,16 +29,16 @@
             <ColumnDefinition Width="10"/>
         </Grid.ColumnDefinitions>
         <TextBlock Text="Configure" Grid.Column="1" FontSize="25" FontWeight="SemiBold"/>
-        <TextBlock Text="Select the Azure Service Bus" Grid.Column="1" Grid.Row="1" FontSize="20" FontWeight="DemiBold"/>
+        <TextBlock Text="Select the Azure Relay" Grid.Column="1" Grid.Row="1" FontSize="20" FontWeight="DemiBold"/>
         <Label Content="Select the Azure subscription" Grid.Column="1" Grid.Row="2" VerticalAlignment="Bottom" />
         <ComboBox Name="comboSubscriptionList" Grid.Column="1" Grid.Row="3" DisplayMemberPath="DisplayName" SelectedValuePath="Id" SelectionChanged="SubscriptionList_SelectionChanged" />
-        <Label Content="Select the Azure service bus" Grid.Column="1" Grid.Row="4" VerticalAlignment="Bottom" />
+        <Label Content="Select the Azure Relay" Grid.Column="1" Grid.Row="4" VerticalAlignment="Bottom" />
         <ComboBox Name="comboServiceBusList" Grid.Column="1" Grid.Row="5" DisplayMemberPath="Name" SelectedValuePath="Id" SelectionChanged="ServiceBusList_SelectionChanged" />
-        <Label Name="lblServiceBusName" Content="Enter the name for Service Bus" Grid.Column="1" Grid.Row="6" VerticalAlignment="Bottom" Visibility="Collapsed"/>
+        <Label Name="lblServiceBusName" Content="Enter the name for Azure Relay" Grid.Column="1" Grid.Row="6" VerticalAlignment="Bottom" Visibility="Collapsed"/>
         <TextBox Name="txtServiceBusName" Grid.Column="1" Grid.Row="7" Height="30" Visibility="{Binding ElementName=lblServiceBusName, Path=Visibility }" TextChanged="ServiceBusName_TextChanged"/>
-        <Label Content="Select location for new Service Bus" Grid.Column="1" Grid.Row="8" VerticalAlignment="Bottom" Visibility="{Binding ElementName=lblServiceBusName, Path=Visibility }" HorizontalAlignment="Left" Width="200"/>
+        <Label Content="Select location for new Azure Relay" Grid.Column="1" Grid.Row="8" VerticalAlignment="Bottom" Visibility="{Binding ElementName=lblServiceBusName, Path=Visibility }" HorizontalAlignment="Left" Width="200"/>
         <ComboBox Name="listBoxSubscriptionLocations" Grid.Column="1" Grid.Row="8" HorizontalAlignment="Right" Visibility="{Binding ElementName=lblServiceBusName, Path=Visibility }" IsEditable="False" Margin="0,2,0,0"/>
-        <CheckBox Name="chkEnableEncryption" Grid.Column="1" Grid.Row="10" IsChecked="True" Content="Encrypt service bus key" VerticalAlignment="Center" HorizontalAlignment="Right" Unchecked="ChkEnableEncryption_Unchecked"/>
+        <CheckBox Name="chkEnableEncryption" Grid.Column="1" Grid.Row="10" IsChecked="True" Content="Encrypt Azure Relay key" VerticalAlignment="Center" HorizontalAlignment="Right" Unchecked="ChkEnableEncryption_Unchecked"/>
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Grid.Column="1" Grid.Row="11" Name="stcPerformOperation">
             <ProgressBar Name="progressBar" IsIndeterminate="True" Width="250" Margin="0,0,20,0" Visibility="Hidden"/>
             <Button Content="Cancel" Width="80" Margin="0,0,20,0" Click="Cancel_Click" />

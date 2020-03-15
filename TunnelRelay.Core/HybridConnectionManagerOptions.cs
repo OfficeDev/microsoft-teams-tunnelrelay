@@ -11,21 +11,21 @@ namespace TunnelRelay.Core
     public class HybridConnectionManagerOptions
     {
         /// <summary>
-        /// Gets or sets the service bus host.
+        /// Gets or sets the relay host.
         /// </summary>
 #pragma warning disable CA1056 // Uri properties should not be strings - Isn't actually a URI.
-        public string ServiceBusUrlHost { get; set; }
+        public string AzureRelayUrlHost { get; set; }
 #pragma warning restore CA1056 // Uri properties should not be strings - Isn't actually a URI.
 
         /// <summary>
-        /// Gets or sets the name of the service bus key.
+        /// Gets or sets the name of the relay key.
         /// </summary>
-        public string ServiceBusKeyName { get; set; }
+        public string AzureRelayKeyName { get; set; }
 
         /// <summary>
-        /// Gets or sets the service bus shared key.
+        /// Gets or sets the service Relay key.
         /// </summary>
-        public string ServiceBusSharedKey { get; set; }
+        public string AzureRelaySharedKey { get; set; }
 
         /// <summary>
         /// Gets or sets the Connection path. This is the entity path of the hybrid connection.

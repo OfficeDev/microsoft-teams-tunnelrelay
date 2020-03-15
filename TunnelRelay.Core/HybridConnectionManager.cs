@@ -42,26 +42,26 @@ namespace TunnelRelay.Core
                 throw new ArgumentNullException(nameof(hybridConnectionManagerOptions));
             }
 
-            if (string.IsNullOrEmpty(hybridConnectionManagerOptions.Value.ServiceBusUrlHost))
+            if (string.IsNullOrEmpty(hybridConnectionManagerOptions.Value.AzureRelayUrlHost))
             {
-                throw new ArgumentNullException(nameof(hybridConnectionManagerOptions), "Service bus url host can't be null or empty.");
+                throw new ArgumentNullException(nameof(hybridConnectionManagerOptions), "Relay url host can't be null or empty.");
             }
 
             // Remove the / at the end.
-            hybridConnectionManagerOptions.Value.ServiceBusUrlHost = hybridConnectionManagerOptions.Value.ServiceBusUrlHost.TrimEnd('/');
-            hybridConnectionManagerOptions.Value.ServiceBusUrlHost = hybridConnectionManagerOptions.Value.ServiceBusUrlHost.Replace("https://", string.Empty);
+            hybridConnectionManagerOptions.Value.AzureRelayUrlHost = hybridConnectionManagerOptions.Value.AzureRelayUrlHost.TrimEnd('/');
+            hybridConnectionManagerOptions.Value.AzureRelayUrlHost = hybridConnectionManagerOptions.Value.AzureRelayUrlHost.Replace("https://", string.Empty);
 
             if (string.IsNullOrEmpty(hybridConnectionManagerOptions.Value.ConnectionPath))
             {
                 throw new ArgumentNullException(nameof(hybridConnectionManagerOptions), "Connection path can't be null or empty.");
             }
 
-            if (string.IsNullOrEmpty(hybridConnectionManagerOptions.Value.ServiceBusKeyName))
+            if (string.IsNullOrEmpty(hybridConnectionManagerOptions.Value.AzureRelayKeyName))
             {
-                throw new ArgumentNullException(nameof(hybridConnectionManagerOptions), "Service Bus Key Name can't be null or empty.");
+                throw new ArgumentNullException(nameof(hybridConnectionManagerOptions), "Relay Key Name can't be null or empty.");
             }
 
-            if (string.IsNullOrEmpty(hybridConnectionManagerOptions.Value.ServiceBusSharedKey))
+            if (string.IsNullOrEmpty(hybridConnectionManagerOptions.Value.AzureRelaySharedKey))
             {
                 throw new ArgumentNullException(nameof(hybridConnectionManagerOptions), "Shared key can't be null or empty.");
             }
@@ -69,14 +69,14 @@ namespace TunnelRelay.Core
             string connectionString = string.Format(
                 CultureInfo.InvariantCulture,
                 ConnectionStringFormat,
-                hybridConnectionManagerOptions.Value.ServiceBusUrlHost,
-                hybridConnectionManagerOptions.Value.ServiceBusKeyName,
-                hybridConnectionManagerOptions.Value.ServiceBusSharedKey,
+                hybridConnectionManagerOptions.Value.AzureRelayUrlHost,
+                hybridConnectionManagerOptions.Value.AzureRelayKeyName,
+                hybridConnectionManagerOptions.Value.AzureRelaySharedKey,
                 hybridConnectionManagerOptions.Value.ConnectionPath);
             this.hybridConnectionListener = new HybridConnectionListener(connectionString);
 
             // Figure out the prefix.
-            this.relayUrl = $"sb://{hybridConnectionManagerOptions.Value.ServiceBusUrlHost}/{hybridConnectionManagerOptions.Value.ConnectionPath}";
+            this.relayUrl = $"sb://{hybridConnectionManagerOptions.Value.AzureRelayUrlHost}/{hybridConnectionManagerOptions.Value.ConnectionPath}";
             this.relayManager = relayManager;
         }
 

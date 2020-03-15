@@ -6,6 +6,7 @@
 namespace TunnelRelay.Windows
 {
     using System;
+    using System.Diagnostics;
     using System.IO;
     using System.Windows;
     using System.Windows.Navigation;
@@ -40,7 +41,13 @@ namespace TunnelRelay.Windows
         /// <param name="e">The <see cref="RequestNavigateEventArgs"/> instance containing the event data.</param>
         private void Hyperlink_RequestNavigate(object sender, RequestNavigateEventArgs e)
         {
-            System.Diagnostics.Process.Start(e.Uri.ToString());
+            ProcessStartInfo processStartInfo = new ProcessStartInfo
+            {
+                FileName = e.Uri.ToString(),
+                UseShellExecute = true,
+            };
+
+            Process.Start(processStartInfo);
         }
 
         /// <summary>

@@ -24,9 +24,9 @@ namespace TunnelRelay.Windows
     public partial class SelectServiceBus : Window
     {
         /// <summary>
-        /// The new service bus template.
+        /// The new relay template.
         /// </summary>
-        private static RelayNamespaceInner newServiceBus = new RelayNamespaceInner("WestUS", null, "Create a new Service Bus")
+        private static RelayNamespaceInner newRelay = new RelayNamespaceInner("WestUS", null, "Create a new Azure Relay")
         {
             Sku = new Sku(SkuTier.Standard),
             Tags = new Dictionary<string, string>() { { "CreatedBy", "TunnelRelayv2" } },
@@ -43,9 +43,9 @@ namespace TunnelRelay.Windows
         private readonly UserAuthenticator userAuthenticator;
 
         /// <summary>
-        /// Service bus resource manager.
+        /// Relay resource manager.
         /// </summary>
-        private readonly ServiceBusResourceManager serviceBusResourceManager;
+        private readonly AzureRelayResourceManager relayResourceManager;
 
         /// <summary>
         /// List of Azure subscription.
@@ -53,9 +53,9 @@ namespace TunnelRelay.Windows
         private ObservableCollection<RM.Models.SubscriptionInner> subscriptions = new ObservableCollection<RM.Models.SubscriptionInner>();
 
         /// <summary>
-        /// List of Azure service buses.
+        /// List of Azure relays.
         /// </summary>
-        private ObservableCollection<RelayNamespaceInner> serviceBuses = new ObservableCollection<RelayNamespaceInner>();
+        private ObservableCollection<RelayNamespaceInner> relays = new ObservableCollection<RelayNamespaceInner>();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SelectServiceBus"/> class.
@@ -66,10 +66,10 @@ namespace TunnelRelay.Windows
             this.ContentRendered += this.Window_ContentRendered;
             this.InitializeComponent();
             this.userAuthenticator = authenticationDetails;
-            this.serviceBusResourceManager = new ServiceBusResourceManager(this.userAuthenticator);
+            this.relayResourceManager = new AzureRelayResourceManager(this.userAuthenticator);
 
             this.comboSubscriptionList.ItemsSource = this.subscriptions;
-            this.comboServiceBusList.ItemsSource = this.serviceBuses;
+            this.comboServiceBusList.ItemsSource = this.relays;
 
             // Disable controls to begin with.
             this.comboSubscriptionList.IsEnabled = false;
@@ -127,15 +127,15 @@ namespace TunnelRelay.Windows
             {
                 try
                 {
-                    List<RelayNamespaceInner> serviceBusList = this.serviceBusResourceManager.GetRelayNamespacesAsync(selectedSubscription).ConfigureAwait(false).GetAwaiter().GetResult();
+                    List<RelayNamespaceInner> serviceBusList = this.relayResourceManager.GetRelayNamespacesAsync(selectedSubscription).ConfigureAwait(false).GetAwaiter().GetResult();
 
                     this.Dispatcher.Invoke(() =>
                     {
-                        this.serviceBuses.Clear();
+                        this.relays.Clear();
 
-                        // Add a fake service bus. This guides people to create a new one.
-                        this.serviceBuses.Add(newServiceBus);
-                        serviceBusList.ForEach(sub => this.serviceBuses.Add(sub));
+                        // Add a fake relay. This guides people to create a new one.
+                        this.relays.Add(newRelay);
+                        serviceBusList.ForEach(sub => this.relays.Add(sub));
                         this.comboServiceBusList.IsEnabled = true;
                         this.progressBar.Visibility = Visibility.Hidden;
 
@@ -171,7 +171,7 @@ namespace TunnelRelay.Windows
             RM.Models.SubscriptionInner selectedSubscription = (this.comboSubscriptionList as ComboBox).SelectedItem as RM.Models.SubscriptionInner;
             RelayNamespaceInner selectedServiceBus = (sender as ComboBox).SelectedItem as RelayNamespaceInner;
 
-            // Selected service bus Id is null when it is the value we added manually i.e. newServiceBus above.
+            // Selected service bus Id is null when it is the value we added manually i.e. newRelay above.
             if (selectedServiceBus.Id == null)
             {
                 this.lblServiceBusName.Visibility = Visibility.Visible;
@@ -205,31 +205,31 @@ namespace TunnelRelay.Windows
 
             string newBusName = this.txtServiceBusName.Text;
 
-            // Case 1. When user used existing service bus.
+            // Case 1. When user used existing Relay.
             Thread existingServiceBusThread = new Thread(new ThreadStart(() =>
             {
                 try
                 {
-                    HybridConnectionDetails hybridConnectionDetails = this.serviceBusResourceManager.GetHybridConnectionAsync(selectedSubscription, selectedServiceBus, Environment.MachineName).ConfigureAwait(false).GetAwaiter().GetResult();
+                    HybridConnectionDetails hybridConnectionDetails = this.relayResourceManager.GetHybridConnectionAsync(selectedSubscription, selectedServiceBus, Environment.MachineName).ConfigureAwait(false).GetAwaiter().GetResult();
 
                     this.SetApplicationData(hybridConnectionDetails);
                 }
                 catch (Exception ex)
                 {
-                    this.logger.LogError(ex, "Failed to connect to service bus namespace");
+                    this.logger.LogError(ex, "Failed to connect to relay namespace");
 
-                    this.Dispatcher.Invoke(() => MessageBox.Show("Failed to connect to service bus namespace!!", "Azure Error", MessageBoxButton.OKCancel, MessageBoxImage.Error));
+                    this.Dispatcher.Invoke(() => MessageBox.Show("Failed to connect to Azure Relay namespace!!", "Azure Error", MessageBoxButton.OKCancel, MessageBoxImage.Error));
                 }
             }));
 
-            // Case 2. When user created a new service bus.
+            // Case 2. When user created a new Relay.
             Thread newServiceBusThread = new Thread(new ThreadStart(() =>
             {
                 try
                 {
                     if (string.IsNullOrEmpty(newBusName))
                     {
-                        MessageBox.Show("Please enter the name for service bus.");
+                        MessageBox.Show("Please enter the name for Azure Relay.");
                         this.Dispatcher.Invoke(() =>
                         {
                             this.progressBar.Visibility = Visibility.Hidden;
@@ -240,7 +240,7 @@ namespace TunnelRelay.Windows
 
                     if (newBusName.Length < 6)
                     {
-                        MessageBox.Show("Name of service bus must be at least 6 characters.");
+                        MessageBox.Show("Name of Azure Relay must be at least 6 characters.");
                         this.Dispatcher.Invoke(() =>
                         {
                             this.progressBar.Visibility = Visibility.Hidden;
@@ -249,7 +249,7 @@ namespace TunnelRelay.Windows
                         return;
                     }
 
-                    HybridConnectionDetails hybridConnectionDetails = this.serviceBusResourceManager.CreateHybridConnectionAsync(
+                    HybridConnectionDetails hybridConnectionDetails = this.relayResourceManager.CreateHybridConnectionAsync(
                         selectedSubscription,
                         newBusName,
                         Environment.MachineName,
@@ -259,7 +259,7 @@ namespace TunnelRelay.Windows
                 }
                 catch (CloudException cloudEx)
                 {
-                    this.logger.LogError(cloudEx, "Cloud exception while creating service bus namespace.");
+                    this.logger.LogError(cloudEx, "Cloud exception while creating Azure Relay namespace.");
 
                     this.Dispatcher.Invoke(() =>
                     {
@@ -270,18 +270,18 @@ namespace TunnelRelay.Windows
                 }
                 catch (Exception ex)
                 {
-                    this.logger.LogError(ex, "Failed to create new service bus namespace");
+                    this.logger.LogError(ex, "Failed to create new Azure Relay namespace");
 
                     this.Dispatcher.Invoke(() =>
                     {
-                        MessageBox.Show("Failed to create new service bus namespace!!", "Azure Error", MessageBoxButton.OKCancel, MessageBoxImage.Error);
+                        MessageBox.Show("Failed to create new Azure Relay namespace!!", "Azure Error", MessageBoxButton.OKCancel, MessageBoxImage.Error);
                         this.progressBar.Visibility = Visibility.Hidden;
                         this.btnDone.IsEnabled = true;
                     });
                 }
             }));
 
-            // If the user selected to new service bus entry we added.
+            // If the user selected to new Relay entry we added.
             if (selectedServiceBus.Id == null)
             {
                 newServiceBusThread.Start();
@@ -335,7 +335,7 @@ namespace TunnelRelay.Windows
             TunnelRelayStateManager.ApplicationData.EnableCredentialEncryption = encryptionEnabled;
             TunnelRelayStateManager.ApplicationData.HybridConnectionSharedKey = hybridConnectionDetails.HybridConnectionSharedKey;
             TunnelRelayStateManager.ApplicationData.HybridConnectionKeyName = hybridConnectionDetails.HybridConnectionKeyName;
-            TunnelRelayStateManager.ApplicationData.HybridConnectionUrl = hybridConnectionDetails.ServiceBusUrl;
+            TunnelRelayStateManager.ApplicationData.HybridConnectionUrl = hybridConnectionDetails.RelayUrl;
             TunnelRelayStateManager.ApplicationData.HybridConnectionName = hybridConnectionDetails.HybridConnectionName;
 
             this.Dispatcher.Invoke(() =>
@@ -359,8 +359,8 @@ namespace TunnelRelay.Windows
             }
 
             MessageBoxResult messageBoxResult = MessageBox.Show(
-                "WARNING: This will disable Azure Service Bus SAS key encryption, if the configuration is copied out of this machine " +
-                    "it can be used by someone else to connect to the Azure Service Bus. Do you want to continue?",
+                "WARNING: This will disable Azure Relay Shared Access Secret encryption, if the configuration is copied out of this machine " +
+                    "it can be used by someone else to connect to the Azure Relay. Do you want to continue?",
                 "Key encryption setting",
                 MessageBoxButton.YesNo,
                 MessageBoxImage.Warning);
