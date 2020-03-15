@@ -108,6 +108,19 @@ namespace TunnelRelay.UI.StateManagement
         public int Version { get; private set; }
 
         /// <summary>
+        /// Sets the legacy property for service bus key.
+        /// </summary>
+        [JsonProperty(PropertyName = "serviceBusSharedKey")]
+        [Obsolete("Use relaySharedKeyBytes instead. This is just for backcompat.", error: true)]
+        private byte[] ServiceBusSharedKeyBytes
+        {
+            set
+            {
+                this.relaySharedKeyBytes = value;
+            }
+        }
+
+        /// <summary>
         /// Imports the settings.
         /// </summary>
         /// <param name="serializedSettings">The serialized settings.</param>

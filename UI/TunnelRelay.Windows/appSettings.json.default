@@ -1,5 +1,5 @@
 {
-  "RedirectionUrl": "http://localhost:3979",
+  "RedirectionUrl": "http://localhost:8080",
   "EnabledPlugins": [
   ],
   "PluginSettingsMap": {

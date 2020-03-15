@@ -1,4 +1,4 @@
-﻿// <copyright file="SelectServiceBus.xaml.cs" company="Microsoft Corporation">
+﻿// <copyright file="SelectAzureRelay.xaml.cs" company="Microsoft Corporation">
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 // </copyright>
@@ -21,7 +21,7 @@ namespace TunnelRelay.Windows
     /// <summary>
     /// Interaction logic for SelectServiceBus.xaml.
     /// </summary>
-    public partial class SelectServiceBus : Window
+    public partial class SelectAzureRelay : Window
     {
         /// <summary>
         /// The new relay template.
@@ -35,7 +35,7 @@ namespace TunnelRelay.Windows
         /// <summary>
         /// Logger.
         /// </summary>
-        private readonly ILogger<SelectServiceBus> logger = LoggingHelper.GetLogger<SelectServiceBus>();
+        private readonly ILogger<SelectAzureRelay> logger = LoggingHelper.GetLogger<SelectAzureRelay>();
 
         /// <summary>
         /// User authentication manager.
@@ -58,10 +58,10 @@ namespace TunnelRelay.Windows
         private ObservableCollection<RelayNamespaceInner> relays = new ObservableCollection<RelayNamespaceInner>();
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="SelectServiceBus"/> class.
+        /// Initializes a new instance of the <see cref="SelectAzureRelay"/> class.
         /// </summary>
         /// <param name="authenticationDetails">The authentication details for the user.</param>
-        internal SelectServiceBus(UserAuthenticator authenticationDetails)
+        internal SelectAzureRelay(UserAuthenticator authenticationDetails)
         {
             this.ContentRendered += this.Window_ContentRendered;
             this.InitializeComponent();
@@ -69,11 +69,11 @@ namespace TunnelRelay.Windows
             this.relayResourceManager = new AzureRelayResourceManager(this.userAuthenticator);
 
             this.comboSubscriptionList.ItemsSource = this.subscriptions;
-            this.comboServiceBusList.ItemsSource = this.relays;
+            this.comboAzureRelayList.ItemsSource = this.relays;
 
             // Disable controls to begin with.
             this.comboSubscriptionList.IsEnabled = false;
-            this.comboServiceBusList.IsEnabled = false;
+            this.comboAzureRelayList.IsEnabled = false;
         }
 
         /// <summary>
@@ -123,11 +123,11 @@ namespace TunnelRelay.Windows
             this.progressBar.Visibility = Visibility.Visible;
             RM.Models.SubscriptionInner selectedSubscription = (sender as ComboBox).SelectedItem as RM.Models.SubscriptionInner;
 
-            Thread serviceBusThread = new Thread(new ThreadStart(() =>
+            Thread relayThread = new Thread(new ThreadStart(() =>
             {
                 try
                 {
-                    List<RelayNamespaceInner> serviceBusList = this.relayResourceManager.GetRelayNamespacesAsync(selectedSubscription).ConfigureAwait(false).GetAwaiter().GetResult();
+                    List<RelayNamespaceInner> relayList = this.relayResourceManager.GetRelayNamespacesAsync(selectedSubscription).ConfigureAwait(false).GetAwaiter().GetResult();
 
                     this.Dispatcher.Invoke(() =>
                     {
@@ -135,8 +135,8 @@ namespace TunnelRelay.Windows
 
                         // Add a fake relay. This guides people to create a new one.
                         this.relays.Add(newRelay);
-                        serviceBusList.ForEach(sub => this.relays.Add(sub));
-                        this.comboServiceBusList.IsEnabled = true;
+                        relayList.ForEach(sub => this.relays.Add(sub));
+                        this.comboAzureRelayList.IsEnabled = true;
                         this.progressBar.Visibility = Visibility.Hidden;
 
                         this.listBoxSubscriptionLocations.Items.Clear();
@@ -151,32 +151,31 @@ namespace TunnelRelay.Windows
                 }
                 catch (Exception ex)
                 {
-                    this.logger.LogError(ex, "Failed to get list of Service bus namespaces");
+                    this.logger.LogError(ex, "Failed to get list of Azure Relay namespaces");
 
-                    this.Dispatcher.Invoke(() => MessageBox.Show("Failed to get list of Service bus namespaces!!. Exiting", "Azure Error", MessageBoxButton.OKCancel, MessageBoxImage.Error));
+                    this.Dispatcher.Invoke(() => MessageBox.Show("Failed to get list of Azure Relay namespaces!!. Exiting", "Azure Error", MessageBoxButton.OKCancel, MessageBoxImage.Error));
                     Application.Current.Shutdown();
                 }
             }));
 
-            serviceBusThread.Start();
+            relayThread.Start();
         }
 
         /// <summary>
-        /// Handles the SelectionChanged event of the ServiceBusList control.
+        /// Handles the SelectionChanged event of the AzureRelayList control.
         /// </summary>
         /// <param name="sender">The source of the event.</param>
         /// <param name="e">The <see cref="SelectionChangedEventArgs"/> instance containing the event data.</param>
-        private void ServiceBusList_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void AzureRelayList_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            RM.Models.SubscriptionInner selectedSubscription = (this.comboSubscriptionList as ComboBox).SelectedItem as RM.Models.SubscriptionInner;
-            RelayNamespaceInner selectedServiceBus = (sender as ComboBox).SelectedItem as RelayNamespaceInner;
+            RelayNamespaceInner selectedAzureRelay = (sender as ComboBox).SelectedItem as RelayNamespaceInner;
 
-            // Selected service bus Id is null when it is the value we added manually i.e. newRelay above.
-            if (selectedServiceBus.Id == null)
+            // Selected Relay Id is null when it is the value we added manually i.e. newRelay above.
+            if (selectedAzureRelay.Id == null)
             {
-                this.lblServiceBusName.Visibility = Visibility.Visible;
+                this.lblAzureRelayName.Visibility = Visibility.Visible;
 
-                if (!string.IsNullOrEmpty(this.txtServiceBusName.Text))
+                if (!string.IsNullOrEmpty(this.txtAzureRelayName.Text))
                 {
                     this.btnDone.IsEnabled = true;
                 }
@@ -185,7 +184,7 @@ namespace TunnelRelay.Windows
             }
             else
             {
-                this.lblServiceBusName.Visibility = Visibility.Collapsed;
+                this.lblAzureRelayName.Visibility = Visibility.Collapsed;
                 this.btnDone.IsEnabled = true;
             }
         }
@@ -200,17 +199,17 @@ namespace TunnelRelay.Windows
             this.progressBar.Visibility = Visibility.Visible;
             this.btnDone.IsEnabled = false;
             RM.Models.SubscriptionInner selectedSubscription = (this.comboSubscriptionList as ComboBox).SelectedItem as RM.Models.SubscriptionInner;
-            RelayNamespaceInner selectedServiceBus = (this.comboServiceBusList as ComboBox).SelectedItem as RelayNamespaceInner;
+            RelayNamespaceInner selectedAzureRelay = (this.comboAzureRelayList as ComboBox).SelectedItem as RelayNamespaceInner;
             string selectedLocation = this.listBoxSubscriptionLocations.SelectedItem.ToString();
 
-            string newBusName = this.txtServiceBusName.Text;
+            string newRelayName = this.txtAzureRelayName.Text;
 
             // Case 1. When user used existing Relay.
-            Thread existingServiceBusThread = new Thread(new ThreadStart(() =>
+            Thread existingAzureRelayThread = new Thread(new ThreadStart(() =>
             {
                 try
                 {
-                    HybridConnectionDetails hybridConnectionDetails = this.relayResourceManager.GetHybridConnectionAsync(selectedSubscription, selectedServiceBus, Environment.MachineName).ConfigureAwait(false).GetAwaiter().GetResult();
+                    HybridConnectionDetails hybridConnectionDetails = this.relayResourceManager.GetHybridConnectionAsync(selectedSubscription, selectedAzureRelay, Environment.MachineName).ConfigureAwait(false).GetAwaiter().GetResult();
 
                     this.SetApplicationData(hybridConnectionDetails);
                 }
@@ -223,11 +222,11 @@ namespace TunnelRelay.Windows
             }));
 
             // Case 2. When user created a new Relay.
-            Thread newServiceBusThread = new Thread(new ThreadStart(() =>
+            Thread newAzureRelayThread = new Thread(new ThreadStart(() =>
             {
                 try
                 {
-                    if (string.IsNullOrEmpty(newBusName))
+                    if (string.IsNullOrEmpty(newRelayName))
                     {
                         MessageBox.Show("Please enter the name for Azure Relay.");
                         this.Dispatcher.Invoke(() =>
@@ -238,7 +237,7 @@ namespace TunnelRelay.Windows
                         return;
                     }
 
-                    if (newBusName.Length < 6)
+                    if (newRelayName.Length < 6)
                     {
                         MessageBox.Show("Name of Azure Relay must be at least 6 characters.");
                         this.Dispatcher.Invoke(() =>
@@ -251,7 +250,7 @@ namespace TunnelRelay.Windows
 
                     HybridConnectionDetails hybridConnectionDetails = this.relayResourceManager.CreateHybridConnectionAsync(
                         selectedSubscription,
-                        newBusName,
+                        newRelayName,
                         Environment.MachineName,
                         selectedLocation).ConfigureAwait(false).GetAwaiter().GetResult();
 
@@ -282,22 +281,22 @@ namespace TunnelRelay.Windows
             }));
 
             // If the user selected to new Relay entry we added.
-            if (selectedServiceBus.Id == null)
+            if (selectedAzureRelay.Id == null)
             {
-                newServiceBusThread.Start();
+                newAzureRelayThread.Start();
             }
             else
             {
-                existingServiceBusThread.Start();
+                existingAzureRelayThread.Start();
             }
         }
 
         /// <summary>
-        /// Handles the TextChanged event of the ServiceBusName control.
+        /// Handles the TextChanged event of the AzureRelayName control.
         /// </summary>
         /// <param name="sender">The source of the event.</param>
         /// <param name="e">The <see cref="TextChangedEventArgs"/> instance containing the event data.</param>
-        private void ServiceBusName_TextChanged(object sender, TextChangedEventArgs e)
+        private void AzureRelayName_TextChanged(object sender, TextChangedEventArgs e)
         {
             if (string.IsNullOrEmpty((sender as TextBox).Text))
             {

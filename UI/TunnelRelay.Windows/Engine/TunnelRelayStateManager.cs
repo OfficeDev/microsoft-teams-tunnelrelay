@@ -166,7 +166,7 @@ namespace TunnelRelay.Windows.Engine
             await TunnelRelayStateManager.ShutdownTunnelRelayAsync().ConfigureAwait(false);
             TunnelRelayStateManager.ApplicationData = new ApplicationData
             {
-                RedirectionUrl = "http://localhost:3979/",
+                RedirectionUrl = "http://localhost:8080/",
             };
         }
 

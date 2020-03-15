@@ -67,11 +67,11 @@ namespace TunnelRelay.Windows
                 userAuthDetails.AuthenticateUserAsync().ConfigureAwait(false).GetAwaiter().GetResult();
                 this.logger.LogInformation("Token acquire complete.");
 
-                SelectServiceBus selectServiceBus = new SelectServiceBus(userAuthDetails);
-                selectServiceBus.Left = this.Left;
-                selectServiceBus.Top = this.Top;
+                SelectAzureRelay selectAzureRelay = new SelectAzureRelay(userAuthDetails);
+                selectAzureRelay.Left = this.Left;
+                selectAzureRelay.Top = this.Top;
 
-                selectServiceBus.Show();
+                selectAzureRelay.Show();
                 this.Close();
             }
             catch (Exception ex)

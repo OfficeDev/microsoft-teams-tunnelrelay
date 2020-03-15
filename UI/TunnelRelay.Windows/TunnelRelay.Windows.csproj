@@ -53,7 +53,7 @@
     <Page Update="UIPages\PluginManagement.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Update="UIPages\SelectServiceBus.xaml">
+    <Page Update="UIPages\SelectAzureRelay.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
   </ItemGroup>
