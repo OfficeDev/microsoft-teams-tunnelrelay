@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <!-- 
+      Semantic Version. See http://semver.org for full details. 
+      Update for every public release. 
+    -->
+    <SemanticVersionMajor>2</SemanticVersionMajor>
+    <SemanticVersionMinor>0</SemanticVersionMinor>
+    <SemanticVersionPatch>0</SemanticVersionPatch>
+    <!--Valid values: beta1, beta2, EMPTY for stable -->
+    <PreReleaseMilestone></PreReleaseMilestone>
+    <!-- 
+      Date when Semantic Version was changed. 
+      Update for every public release.
+      NOTE!!!!!! Do not update when updating PreReleaseMilestone update 
+      as it will restart file versions so 2.4.0-beta1 may have higher 
+      file version (like 2.4.0.2222) than 2.4.0-beta2 (like 2.4.0.1111)
+    -->
+    <SemanticVersionDate>2019-03-16</SemanticVersionDate>
+
+    <PreReleaseVersion Condition="'$(PreReleaseVersion)'==''">$([MSBuild]::Divide($([System.DateTime]::Now.Subtract($([System.DateTime]::Parse($(SemanticVersionDate)))).TotalMinutes), 5).ToString('F0'))</PreReleaseVersion>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(PackageVersion)'==''">
+    <PackageVersion>$(SemanticVersionMajor).$(SemanticVersionMinor).$(SemanticVersionPatch)</PackageVersion>
+    <PackageVersion Condition="'$(PreReleaseMilestone)' != ''">$(PackageVersion)-$(PreReleaseMilestone)</PackageVersion>
+    <PackageVersion Condition="'$(TF_BUILD)' != 'True'">$(PackageVersion)-build$(PreReleaseVersion)</PackageVersion>
+    <Version>$(PackageVersion)</Version>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <Version>2.0.0-beta2</Version>
+    <Authors>Microsoft</Authors>
+    <Company>Microsoft</Company>
+    <Product>Tunnel Relay</Product>
+    <Description>Allows user to open a tunnel between Azure and local network</Description>
+    <PackageProjectUrl>https://github.com/OfficeDev/microsoft-teams-tunnelrelay</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/OfficeDev/microsoft-teams-tunnelrelay</RepositoryUrl>
+    <PackageTags>Teams; Microsoft; Azure; TunnelRelay; Tunnel Relay;</PackageTags>
+    <DocumentationFile>bin\$(Configuration)\$(TargetFramework)\$(AssemblyName).xml</DocumentationFile>
+    <CodeAnalysisRuleSet>$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), .gitignore))\Build\Analyzer.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(TF_BUILD)' == 'True'">
+    <!-- Publish the repository URL in the built .nupkg (in the NuSpec <Repository> element) -->
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <!-- Embed source files that are not tracked by the source control manager in the PDB -->
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <!-- Include the PDB in the built .nupkg -->
+    <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
+  </PropertyGroup>
+  
+  <PropertyGroup Condition="'$(SignAssembly)' == 'True'">
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), .gitignore))\Build\272MSSharedLibSN2048.snk</AssemblyOriginatorKeyFile>
+    <DelaySign>true</DelaySign>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <AdditionalFiles Include="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), .gitignore))\Build\stylecop.json"/>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AsyncUsageAnalyzers" Version="1.0.0-alpha003">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="2.9.8">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="StyleCop.Analyzers" Version="1.2.0-beta.113">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+</Project>

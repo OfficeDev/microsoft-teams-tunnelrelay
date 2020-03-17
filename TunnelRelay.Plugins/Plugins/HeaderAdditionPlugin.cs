@@ -1,48 +1,27 @@
-﻿// <copyright file="HeaderAdditionPlugin.cs" company="Microsoft">
-// Copyright (c) Microsoft. All rights reserved.
+﻿// <copyright file="HeaderAdditionPlugin.cs" company="Microsoft Corporation">
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
 // </copyright>
-// Licensed under the MIT license.
-// MIT License:
-// Permission is hereby granted, free of charge, to any person obtaining
-// a copy of this software and associated documentation files (the
-// "Software"), to deal in the Software without restriction, including
-// without limitation the rights to use, copy, modify, merge, publish,
-// distribute, sublicense, and/or sell copies of the Software, and to
-// permit persons to whom the Software is furnished to do so, subject to
-// the following conditions:
-//
-// The above copyright notice and this permission notice shall be
-// included in all copies or substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED ""AS IS"", WITHOUT WARRANTY OF ANY KIND,
-// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
-// LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
-// OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
-// WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 namespace TunnelRelay.Plugins
 {
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using System.Net;
     using System.Net.Http;
-    using System.Text;
     using System.Threading.Tasks;
     using TunnelRelay.PluginEngine;
 
     /// <summary>
     /// Plugin to add or replace headers.
     /// </summary>
-    /// <seealso cref="TunnelRelay.PluginEngine.ITunnelRelayPlugin" />
+    /// <seealso cref="ITunnelRelayPlugin" />
     public class HeaderAdditionPlugin : ITunnelRelayPlugin
     {
         /// <summary>
         /// The headers to remove.
         /// </summary>
-        private Dictionary<string, string> headersToAdd = new Dictionary<string, string>();
+        private readonly Dictionary<string, string> headersToAdd = new Dictionary<string, string>();
 
         /// <summary>
         /// The plugin data.
@@ -67,7 +46,7 @@ namespace TunnelRelay.Plugins
 
             set
             {
-                this.pluginData = value;
+                this.pluginData = value ?? throw new ArgumentNullException(nameof(this.PluginData));
 
                 string[] headers = this.pluginData.Split(new string[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
 
@@ -88,7 +67,7 @@ namespace TunnelRelay.Plugins
         /// Initializes this instance.
         /// </summary>
         /// <returns>Task tracking operation.</returns>
-        public Task Initialize()
+        public Task InitializeAsync()
         {
             return Task.FromResult(0);
         }
@@ -114,14 +93,19 @@ namespace TunnelRelay.Plugins
         /// </returns>
         public Task<HttpRequestMessage> PreProcessRequestToServiceAsync(HttpRequestMessage webRequest)
         {
-            foreach (var headerToAdd in this.headersToAdd)
+            if (webRequest is null)
+            {
+                throw new ArgumentNullException(nameof(webRequest));
+            }
+
+            foreach (KeyValuePair<string, string> headerToAdd in this.headersToAdd)
             {
                 if (webRequest.Headers.Contains(headerToAdd.Key))
                 {
                     webRequest.Headers.Remove(headerToAdd.Key);
                 }
 
-                bool val = webRequest.Headers.TryAddWithoutValidation(headerToAdd.Key, headerToAdd.Value);
+                webRequest.Headers.TryAddWithoutValidation(headerToAdd.Key, headerToAdd.Value);
             }
 
             return Task.FromResult(webRequest);

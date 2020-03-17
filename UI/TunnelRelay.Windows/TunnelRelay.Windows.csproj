@@ -1,0 +1,63 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+  
+  <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), .gitignore))\Build\Common.props" />
+  
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <UseWPF>true</UseWPF>
+    <IsPackable>false</IsPackable>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <ApplicationIcon>TRLogo.ico</ApplicationIcon>
+    <SelfContained>true</SelfContained>
+    <PublishSingleFile>true</PublishSingleFile>
+  </PropertyGroup>
+  
+  <ItemGroup>
+    <ProjectReference Include="..\..\TunnelRelay.Core\TunnelRelay.Core.csproj" />
+    <ProjectReference Include="..\..\TunnelRelay.Plugins\TunnelRelay.Plugins.csproj" />
+  </ItemGroup>
+
+  <!-- Packages needed by shared project -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Azure.Management.Relay.Fluent" Version="1.9.1-beta" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="3.1.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="3.1.0" />
+    <PackageReference Include="Microsoft.Identity.Client" Version="4.7.1" />
+    <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="4.7.0" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <Folder Include="Properties\" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <None Update="App.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </None>
+    <None Update="appSettings.json.default">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+  
+  <ItemGroup>
+    <Page Update="Startup.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Update="UIPages\LoginToAzure.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Update="UIPages\MainWindow.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Update="UIPages\PluginManagement.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Update="UIPages\SelectAzureRelay.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+  </ItemGroup>
+  
+  <Import Project="..\TunnelRelay.UI.Shared\TunnelRelay.UI.Shared.projitems" Label="Shared" />
+
+</Project>
