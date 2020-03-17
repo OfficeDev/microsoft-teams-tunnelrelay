@@ -10,7 +10,9 @@ Since most developers don't have static IP addresses for their development machi
 ![Overview](Documentation/DevelopementTR.png "Overview")
 
 ## Download
-Latest release can be downloaded [here](https://github.com/OfficeDev/microsoft-teams-tunnelrelay/releases/latest) 
+Latest release can be downloaded [here](https://github.com/OfficeDev/microsoft-teams-tunnelrelay/releases/latest).
+</br>
+You can also access the latest nuget packages for extending Tunnel Relay at https://www.myget.org/F/tunnelrelay/api/v3/index.json
 
 ## Requirements
 
