@@ -37,11 +37,6 @@ namespace TunnelRelay.Console
         private const string SettingsFileName = "appSettings.json";
 
         /// <summary>
-        /// Path to the configuration file.
-        /// </summary>
-        private static readonly string ConfigurationFilePath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), Program.SettingsFileName);
-
-        /// <summary>
         /// Program invocation point.
         /// </summary>
         /// <param name="args">Commandline arguments.</param>
@@ -93,9 +88,9 @@ namespace TunnelRelay.Console
             {
                 if (deleteConfigurationOption.HasValue())
                 {
-                    if (File.Exists(Program.ConfigurationFilePath))
+                    if (File.Exists(Program.SettingsFileName))
                     {
-                        File.Delete(Program.ConfigurationFilePath);
+                        File.Delete(Program.SettingsFileName);
                         return 0;
                     }
                 }
@@ -163,9 +158,9 @@ namespace TunnelRelay.Console
                         RedirectionUrl = serviceAddressOption.Value(),
                     };
                 }
-                else if (File.Exists(Program.ConfigurationFilePath))
+                else if (File.Exists(Program.SettingsFileName))
                 {
-                    applicationData = JsonConvert.DeserializeObject<ApplicationData>(File.ReadAllText(Program.ConfigurationFilePath));
+                    applicationData = JsonConvert.DeserializeObject<ApplicationData>(File.ReadAllText(Program.SettingsFileName));
 
                     // Discard old settings and run interactive flow again.
                     if (applicationData.Version < ApplicationData.CurrentVersion)
@@ -186,7 +181,7 @@ namespace TunnelRelay.Console
 
                 serviceDescriptors.AddSingleton(applicationData);
 
-                File.WriteAllText(Program.ConfigurationFilePath, JsonConvert.SerializeObject(applicationData, Formatting.Indented));
+                File.WriteAllText(Program.SettingsFileName, JsonConvert.SerializeObject(applicationData, Formatting.Indented));
 
                 serviceDescriptors.Configure<HybridConnectionManagerOptions>((hybridConnectionOptions) =>
                 {

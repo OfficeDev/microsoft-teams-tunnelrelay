@@ -46,7 +46,7 @@ namespace TunnelRelay.UI.PluginManagement
             ObservableCollection<PluginDetails> plugins = new ObservableCollection<PluginDetails>();
             pluginInstances.Add(new HeaderAdditionPlugin());
             pluginInstances.Add(new HeaderRemovalPlugin());
-            string pluginDirectory = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Plugins");
+            string pluginDirectory = Path.Combine(Directory.GetCurrentDirectory(), "Plugins");
 
             if (Directory.Exists(pluginDirectory))
             {
