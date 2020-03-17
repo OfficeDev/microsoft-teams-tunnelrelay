@@ -1,14 +1,3 @@
----
-topic: sample
-products:
-- Microsoft Teams
-- Office 365
-languages:
-- C#
-extensions:
-  contentType: tools
-  createdDate: 6/2/2017 5:30:01 PM
----
 # Tunnel Relay
 
 Tunnel relay allows you to expose local services to the outside world over HTTPS using [Azure Relay](https://docs.microsoft.com/en-us/azure/service-bus-relay/relay-what-is-it#hybrid-connections).

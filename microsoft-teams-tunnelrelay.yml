@@ -1,0 +1,11 @@
+page_type: sample
+products:
+  - office-teams
+  - office-365
+languages:
+  - csharp
+extensions:
+  contentType: tools
+  createdDate: '6/2/2017 5:30:01 PM'
+title: Tunnel Relay
+description: Tunnel relay allows you to expose local services to the outside world over HTTPS
