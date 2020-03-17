@@ -115,7 +115,7 @@ In the application main window. Clicking on __Plugin Management__ button will op
 **A.** No, plugins just need to be placed in Plugins directory in application's root directory to work.
 
 **Q.** Can multiple plugins be enabled at once? </br>
-**A.** Yes, they will be called one by one in no fixed order. So, ensure your plugin does not assume any order or calling.
+**A.** Yes, they will be called one by one in no fixed order. So, ensure your plugin does not assume any order of calling.
 
 **Q.** How many plugins can be loaded in Tunnel Relay? </br>
 **A.** There is no limit on how many plugins can be loaded. Though directory search loading plugin takes time, so too many plugins can slow the application during launch and request processing.

@@ -1,11 +1,11 @@
-#Tunnel Relay Request Handling
+# Tunnel Relay Request Handling
 
 ## Understand data flow
 Following diagram explains how the requests and responses flows through various layers to the system.
 ![Request Handling](TunnelRelayWorking.png "Tunnel Relay Request handling.")
 
 ## Step-by-step description
-1. Actor (user or service) sends the request to hosted service using the url shown on the Tunnel Relay. Azure Relay relay receives this request.
+1. Actor (user or service) sends the request to hosted service using the url shown on the Tunnel Relay. Azure Relay relay (backed by Service Bus) receives this request.
 2. Azure Relay then checks for the listeners to the specific relay. The listener in this case is Tunnel Relay application running on developer machine.
 3. Request is sent to Tunnel Relay.
 4. Tunnel Relay receives the request and does the necessary processing (you can read up more about this in [Plugin Management](PluginManagement.md)) and forwards the request to hosted service.

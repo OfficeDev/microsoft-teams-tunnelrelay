@@ -38,7 +38,7 @@ Tunnel Relay supports 2 variants. GUI and CUI based. GUI is only supported in Wi
 
 Both of these will guide the user through the setup process. All settings are stored in appSettings.json in the executable directory. You can delete this file at anytime to reset and start over.
 
-Following image explains the basic components of the app when GUI mode is being used. User needs to login before they can start using the app. This is covered in [Configuration](Documenation/Configuration.md).
+Following image explains the basic components of the app when GUI mode is being used. User needs to login before they can start using the app. This is covered in [Configuration](Documentation/Configuration.md).
 ![Main Window](Documentation/MainWindow.png "Tunnel Relay Main Window")
 
 ## FAQs
@@ -50,10 +50,10 @@ This also means that the Relays of v1 cannot be reused in v2. Additionally v2 ad
 **A.** Short answer no. All your clients need to see is the url exposed by Tunnel Relay. Rest everything remains the same.
 
 **Q.** Can I share same Relay namespace across multiple machines? </br>
-**A.** Yes, you can share same service bus namespace across multiple machines. Each relay is a unique combination of service bus and machine name.
+**A.** Yes, you can share same Azure Relay namespace across multiple machines. Each relay is a unique combination of Azure Relay and machine name.
 
 **Q.** How much will this cost me? </br>
-**A.** Tunnel Relay itself is a free, open-source tool, you will have to pay for the Service Bus itself. Pricing for Azure Relay can be found [here](https://azure.microsoft.com/en-us/pricing/details/service-bus/). Please look for section *Hybrid connections and Windows Communication Foundation (WCF) relays* to get the pricing information.
+**A.** Tunnel Relay itself is a free, open-source tool, you will have to pay for the Azure Relay itself. Pricing for Azure Relay can be found [here](https://azure.microsoft.com/en-us/pricing/details/service-bus/). Please look for section *Hybrid connections and Windows Communication Foundation (WCF) relays* to get the pricing information.
 
 **Q.** I have an issue which needs your attention how can I contact you? </br>
 **A.** We monitor this Github repo for issues. Please open a new issue or reply to an existing one. We will get back to you soon. 
