@@ -10,7 +10,7 @@ namespace TunnelRelay.Console
     using System.Collections.ObjectModel;
     using System.IO;
     using System.Linq;
-    using System.Reflection;
+    using System.Net.Http;
     using System.Runtime.InteropServices;
     using System.Threading;
     using System.Threading.Tasks;
@@ -21,6 +21,7 @@ namespace TunnelRelay.Console
     using Microsoft.Extensions.Logging;
     using Newtonsoft.Json;
     using TunnelRelay.Core;
+    using TunnelRelay.PluginEngine;
     using TunnelRelay.UI.Logger;
     using TunnelRelay.UI.PluginManagement;
     using TunnelRelay.UI.ResourceManagement;
@@ -179,7 +180,7 @@ namespace TunnelRelay.Console
                         serviceAddressOption.Value()).ConfigureAwait(false);
                 }
 
-                serviceDescriptors.AddSingleton(applicationData);
+                serviceDescriptors.AddSingleton<ApplicationData>(applicationData);
 
                 File.WriteAllText(Program.SettingsFileName, JsonConvert.SerializeObject(applicationData, Formatting.Indented));
 
@@ -201,11 +202,11 @@ namespace TunnelRelay.Console
                     relayRequestManagerOptions.InternalServiceUrl = new Uri(applicationData.RedirectionUrl);
                 });
 
-                serviceDescriptors.AddSingleton<IRelayRequestEventListener, RelayRequestEventListener>();
+                serviceDescriptors.AddTransient<IRelayRequestEventListener, RelayRequestEventListener>();
 
                 serviceDescriptors.AddSingleton<PluginManager>();
 
-                serviceDescriptors.AddSingleton((provider) =>
+                serviceDescriptors.AddSingleton<IEnumerable<ITunnelRelayPlugin>>((provider) =>
                 {
                     PluginManager pluginManager = provider.GetRequiredService<PluginManager>();
 
@@ -214,7 +215,16 @@ namespace TunnelRelay.Console
                     return plugins.Where(details => details.IsEnabled).Select(details => details.PluginInstance);
                 });
 
-                serviceDescriptors.AddSingleton<IRelayRequestManager, RelayRequestManager>();
+                serviceDescriptors
+                    .AddHttpClient<IRelayRequestManager, RelayRequestManager>()
+                    .ConfigurePrimaryHttpMessageHandler((serviceProvider) =>
+                    {
+                        return new HttpClientHandler
+                        {
+                            ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator,
+                        };
+                    })
+                    .SetHandlerLifetime(TimeSpan.FromHours(1));
 
                 serviceDescriptors.AddSingleton<IHybridConnectionManager, HybridConnectionManager>();
 

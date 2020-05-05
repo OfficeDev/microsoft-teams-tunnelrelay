@@ -9,6 +9,7 @@ namespace TunnelRelay.Windows.Engine
     using System.Collections.ObjectModel;
     using System.IO;
     using System.Linq;
+    using System.Net.Http;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.Logging;
@@ -131,11 +132,17 @@ namespace TunnelRelay.Windows.Engine
                 InternalServiceUrl = new Uri(TunnelRelayStateManager.ApplicationData.RedirectionUrl),
             };
 
+#pragma warning disable CA5400 // Ensure HttpClient certificate revocation list check is not disabled - Allowing developers to use invalid certificates
             RelayRequestManager relayManager = new RelayRequestManager(
+                new HttpClient(new HttpClientHandler
+                {
+                    ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator,
+                }),
                 TunnelRelayStateManager.RelayRequestManagerOptions,
                 Plugins.Where(details => details.IsEnabled).Select(details => details.PluginInstance),
                 LoggingHelper.GetLogger<RelayRequestManager>(),
                 RelayRequestEventListener);
+#pragma warning restore CA5400 // Ensure HttpClient certificate revocation list check is not disabled - Allowing developers to use invalid certificates
 
             TunnelRelayStateManager.hybridConnectionManager = new HybridConnectionManager(
                 Options.Create(hybridConnectionManagerOptions),

@@ -6,7 +6,7 @@
       Update for every public release. 
     -->
     <SemanticVersionMajor>2</SemanticVersionMajor>
-    <SemanticVersionMinor>0</SemanticVersionMinor>
+    <SemanticVersionMinor>1</SemanticVersionMinor>
     <SemanticVersionPatch>0</SemanticVersionPatch>
     <!--Valid values: beta1, beta2, EMPTY for stable -->
     <PreReleaseMilestone></PreReleaseMilestone>
