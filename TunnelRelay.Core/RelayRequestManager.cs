@@ -28,23 +28,26 @@ namespace TunnelRelay.Core
 
         private readonly IRelayRequestEventListener relayRequestEventListener;
 
-        private readonly HttpClient httpClient = new HttpClient();
+        private readonly HttpClient httpClient;
 
         private string internalServiceUrl;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="RelayRequestManager"/> class.
         /// </summary>
+        /// <param name="httpClient">Http client.</param>
         /// <param name="relayRequestManagerOptions">Relay request manager options.</param>
         /// <param name="tunnelRelayPlugins">Instances of the plugins to use.</param>
         /// <param name="logger">Logger.</param>
         /// <param name="relayRequestEventListener">Optional relay request event listener instance.</param>
         public RelayRequestManager(
+            HttpClient httpClient,
             IOptionsMonitor<RelayRequestManagerOptions> relayRequestManagerOptions,
             IEnumerable<ITunnelRelayPlugin> tunnelRelayPlugins,
             ILogger<RelayRequestManager> logger,
             IRelayRequestEventListener relayRequestEventListener = null)
         {
+            this.httpClient = httpClient;
             this.tunnelRelayPlugins = tunnelRelayPlugins;
             this.logger = logger;
             this.relayRequestEventListener = relayRequestEventListener;
