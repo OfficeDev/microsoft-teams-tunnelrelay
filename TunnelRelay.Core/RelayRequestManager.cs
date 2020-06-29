@@ -35,7 +35,6 @@ namespace TunnelRelay.Core
     /// <summary>
     /// Initializes a new instance of the <see cref="RelayRequestManager"/> class.
     /// </summary>
-    /// <param name="httpClient">Http client.</param>
     /// <param name="relayRequestManagerOptions">Relay request manager options.</param>
     /// <param name="tunnelRelayPlugins">Instances of the plugins to use.</param>
     /// <param name="logger">Logger.</param>
