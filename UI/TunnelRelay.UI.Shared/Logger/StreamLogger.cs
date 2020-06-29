@@ -6,6 +6,7 @@
 namespace TunnelRelay.UI.Logger
 {
     using System;
+    using System.Diagnostics;
     using System.IO;
     using Microsoft.Extensions.Logging;
 
@@ -15,18 +16,18 @@ namespace TunnelRelay.UI.Logger
     /// <seealso cref="ILogger" />
     internal class StreamLogger : ILogger
     {
-        private readonly StreamWriter streamWriter;
+        private readonly TextWriter textWriter;
         private readonly string categoryName;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="StreamLogger"/> class.
         /// </summary>
-        /// <param name="streamWriter">The stream writer.</param>
+        /// <param name="textWriter">The text writer.</param>
         /// <param name="categoryName">Name of the category.</param>
         /// <exception cref="ArgumentNullException">streamWriter.</exception>
-        public StreamLogger(StreamWriter streamWriter, string categoryName)
+        public StreamLogger(TextWriter textWriter, string categoryName)
         {
-            this.streamWriter = streamWriter ?? throw new ArgumentNullException(nameof(streamWriter));
+            this.textWriter = textWriter ?? throw new ArgumentNullException(nameof(textWriter));
             this.categoryName = categoryName;
         }
 
@@ -79,7 +80,19 @@ namespace TunnelRelay.UI.Logger
                 message = message + "Exception - " + exception;
             }
 
-            this.streamWriter.WriteLine(message);
+            try
+            {
+                this.textWriter.WriteLine(message);
+            }
+#pragma warning disable CS0168 // Variable is declared but never used - Kept here for debugging purposes.
+            catch (Exception ex)
+#pragma warning restore CS0168 // Variable is declared but never used - Kept here for debugging purposes.
+            {
+                if (Debugger.IsAttached)
+                {
+                    Debugger.Break();
+                }
+            }
         }
     }
 }

@@ -5,33 +5,56 @@
 
 namespace TunnelRelay.Windows.Engine
 {
-    using System.Collections.Generic;
-    using System.Net;
+  using System.Collections.Generic;
+  using System.Linq;
+  using System.Net;
+  using System.Net.Http.Headers;
+
+  /// <summary>
+  /// Relay request extensions.
+  /// </summary>
+  internal static class RelayRequestExtensions
+  {
+    /// <summary>
+    /// Converts header collection into UI format.
+    /// </summary>
+    /// <param name="headerCollection">Header collection.</param>
+    /// <returns>Headers in UI format.</returns>
+    public static List<HeaderDetails> GetHeaderMap(this WebHeaderCollection headerCollection)
+    {
+      List<HeaderDetails> headers = new List<HeaderDetails>();
+
+      foreach (string headerName in headerCollection.AllKeys)
+      {
+        headers.Add(new HeaderDetails
+        {
+          HeaderName = headerName,
+          HeaderValue = headerCollection[headerName],
+        });
+      }
+
+      return headers;
+    }
 
     /// <summary>
-    /// Relay request extensions.
+    /// Converts httpResponseHeaders collection into UI format.
     /// </summary>
-    internal static class RelayRequestExtensions
+    /// <param name="headerCollection">Header collection.</param>
+    /// <returns>Headers in UI format.</returns>
+    public static List<HeaderDetails> GetHeaderMap(this HttpResponseHeaders headerCollection)
     {
-        /// <summary>
-        /// Converts header collection into UI format.
-        /// </summary>
-        /// <param name="headerCollection">Header collection.</param>
-        /// <returns>Headers in UI format.</returns>
-        public static List<HeaderDetails> GetHeaderMap(this WebHeaderCollection headerCollection)
+      List<HeaderDetails> headers = new List<HeaderDetails>();
+
+      foreach (var headerName in headerCollection)
+      {
+        headers.Add(new HeaderDetails
         {
-            List<HeaderDetails> headers = new List<HeaderDetails>();
+          HeaderName = headerName.Key,
+          HeaderValue = string.Join(';', headerName.Value),
+        });
+      }
 
-            foreach (string headerName in headerCollection.AllKeys)
-            {
-                headers.Add(new HeaderDetails
-                {
-                    HeaderName = headerName,
-                    HeaderValue = headerCollection[headerName],
-                });
-            }
-
-            return headers;
-        }
+      return headers;
     }
+  }
 }
