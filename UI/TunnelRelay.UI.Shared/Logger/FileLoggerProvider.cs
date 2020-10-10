@@ -27,9 +27,9 @@ namespace TunnelRelay.UI.Logger
         private readonly object lockObject = new object();
 
         /// <summary>
-        /// The stream writer.
+        /// The text writer.
         /// </summary>
-        private StreamWriter streamWriter = null;
+        private TextWriter textWriter = null;
 
         /// <summary>
         /// The external scope provider to allow setting scope data in messages.
@@ -57,23 +57,23 @@ namespace TunnelRelay.UI.Logger
         /// <returns>An <see cref="ILogger"/> instance to be used for logging.</returns>
         public ILogger CreateLogger(string categoryName)
         {
-            if (this.streamWriter == null)
+            if (this.textWriter == null)
             {
                 lock (this.lockObject)
                 {
-                    if (this.streamWriter == null)
+                    if (this.textWriter == null)
                     {
                         // Opening in shared mode because other logger instances are also using the same file. So all of them can write to the same file.
-                        this.streamWriter = new StreamWriter(new FileStream(this.logFileName, FileMode.Append, FileAccess.Write, FileShare.ReadWrite))
+                        this.textWriter = TextWriter.Synchronized(new StreamWriter(new FileStream(this.logFileName, FileMode.Append, FileAccess.Write, FileShare.ReadWrite))
                         {
                             AutoFlush = true,
                             NewLine = Environment.NewLine,
-                        };
+                        });
                     }
                 }
             }
 
-            return new StreamLogger(this.streamWriter, categoryName)
+            return new StreamLogger(this.textWriter, categoryName)
             {
                 ExternalScopeProvider = this.externalScopeProvider,
             };
@@ -103,11 +103,11 @@ namespace TunnelRelay.UI.Logger
         /// <param name="releasedManagedResources">Release managed resources.</param>
         protected virtual void Dispose(bool releasedManagedResources)
         {
-            if (this.streamWriter != null)
+            if (this.textWriter != null)
             {
-                this.streamWriter.Flush();
-                this.streamWriter.Close();
-                this.streamWriter.Dispose();
+                this.textWriter.Flush();
+                this.textWriter.Close();
+                this.textWriter.Dispose();
             }
         }
     }

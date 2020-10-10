@@ -147,19 +147,7 @@ namespace TunnelRelay.UI.ResourceManagement
                         tokenAcquireTasks.Add(Task.Run(async () =>
                         {
                             // Optimization to skip refetching tokens. AAD tokens live for 1 hour.
-                            if (!this.tenantBasedTokenMap.ContainsKey(tenant.TenantId))
-                            {
-                                try
-                                {
-                                    this.logger.LogInformation("Get token with '{0}' tenant info", tenant.TenantId);
-                                    UserAuthenticationDetails tenantizedToken = await this.AcquireAzureManagementTokenAsync(tenant.TenantId, usePrompt: false, this.userIdentifier).ConfigureAwait(false);
-                                    this.tenantBasedTokenMap[this.GetTenantOnToken(tenantizedToken)] = tenantizedToken;
-                                }
-                                catch (Exception ex)
-                                {
-                                    this.logger.LogWarning(ex, $"Failed to acquire token for tenant with Id '{tenant.TenantId}'");
-                                }
-                            }
+                            await this.TryUpdateTokenCacheForTenantAsync(tenant.TenantId).ConfigureAwait(false);
                         }));
                     });
 
@@ -175,21 +163,7 @@ namespace TunnelRelay.UI.ResourceManagement
                 {
                     subscriptionTasks.Add(Task.Run(async () =>
                     {
-                        List<SubscriptionInner> subscriptionList = new List<SubscriptionInner>();
-                        this.logger.LogTrace("Getting subscriptions for '{0}' tenant.", tenant.TenantId);
-                        TokenCredentials subsCreds = new TokenCredentials(this.tenantBasedTokenMap[tenant.TenantId].AccessToken);
-                        SubscriptionClient subscriptionClient = new SubscriptionClient(subsCreds);
-
-                        IPage<SubscriptionInner> resp = await subscriptionClient.Subscriptions.ListAsync().ConfigureAwait(false);
-                        subscriptionList.AddRange(resp);
-
-                        while (!string.IsNullOrEmpty(resp.NextPageLink))
-                        {
-                            resp = await subscriptionClient.Subscriptions.ListNextAsync(resp.NextPageLink).ConfigureAwait(false);
-                            subscriptionList.AddRange(resp);
-                        }
-
-                        this.logger.LogTrace("Fetched total of '{0}' subscriptions for tenant '{1}'", subscriptionList.Count, tenant.TenantId);
+                        List<SubscriptionInner> subscriptionList = await this.GetSubcriptionsForATenantAsync(tenant.TenantId).ConfigureAwait(false);
 
                         subscriptionList.ForEach(subscription => this.subscriptionToTenantMap[subscription] = tenant);
                     }));
@@ -198,20 +172,33 @@ namespace TunnelRelay.UI.ResourceManagement
                 await Task.WhenAll(subscriptionTasks).ConfigureAwait(false);
 
                 List<Task> locationTasks = new List<Task>();
+
+                List<SubscriptionInner> markedForRemovalSubscriptions = new List<SubscriptionInner>();
                 foreach (KeyValuePair<SubscriptionInner, TenantIdDescription> subscription in this.subscriptionToTenantMap)
                 {
                     locationTasks.Add(Task.Run(async () =>
                     {
-                        TokenCredentials subsCreds = new TokenCredentials(this.tenantBasedTokenMap[subscription.Value.TenantId].AccessToken);
-                        SubscriptionClient subscriptionClient = new SubscriptionClient(subsCreds);
-
-                        IEnumerable<Location> locations = await subscriptionClient.Subscriptions.ListLocationsAsync(subscription.Key.SubscriptionId).ConfigureAwait(false);
-
-                        this.subscriptionToLocationMap[subscription.Key] = locations;
+                        try
+                        {
+                            IEnumerable<Location> locations = await this.GetLocationsForSubscriptionAsync(subscription.Key, subscription.Value.TenantId).ConfigureAwait(false);
+                            this.subscriptionToLocationMap[subscription.Key] = locations;
+                        }
+                        catch (Exception ex)
+                        {
+                            this.logger.LogError($"Hit exception while getting locations for subscription Id '{subscription.Key.Id}'. Error '{ex}'");
+                            markedForRemovalSubscriptions.Add(subscription.Key);
+                        }
                     }));
                 }
 
                 await Task.WhenAll(locationTasks).ConfigureAwait(false);
+
+                markedForRemovalSubscriptions.ForEach(subscriptionToRemove =>
+                {
+                    this.logger.LogWarning($"Removing subscription '{subscriptionToRemove.Id}' from the list since location lookup failed!");
+
+                    this.subscriptionToTenantMap.TryRemove(subscriptionToRemove, out TenantIdDescription _);
+                });
             }
 
             return this.subscriptionToTenantMap.Keys.OrderBy(subs => subs.DisplayName).ToList();
@@ -235,6 +222,145 @@ namespace TunnelRelay.UI.ResourceManagement
         public string GetSubscriptionSpecificUserToken(SubscriptionInner subscription)
         {
             return this.tenantBasedTokenMap[this.subscriptionToTenantMap[subscription].TenantId].AccessToken;
+        }
+
+        /// <summary>
+        /// Gets subscriptions associated with a tenantId.
+        /// </summary>
+        /// <param name="tenantId">Tenant Id.</param>
+        /// <returns>List of subscriptions under that tenant.</returns>
+        private async Task<List<SubscriptionInner>> GetSubcriptionsForATenantAsync(string tenantId)
+        {
+            List<SubscriptionInner> subscriptionList = new List<SubscriptionInner>();
+            this.logger.LogTrace("Getting subscriptions for '{0}' tenant.", tenantId);
+
+            await this.TryUpdateTokenCacheForTenantAsync(tenantId).ConfigureAwait(false);
+
+            if (this.tenantBasedTokenMap.ContainsKey(tenantId))
+            {
+                TokenCredentials subsCreds = new TokenCredentials(this.tenantBasedTokenMap[tenantId].AccessToken);
+                SubscriptionClient subscriptionClient = new SubscriptionClient(subsCreds);
+
+                IPage<SubscriptionInner> resp = await subscriptionClient.Subscriptions.ListAsync().ConfigureAwait(false);
+                subscriptionList.AddRange(resp);
+
+                while (!string.IsNullOrEmpty(resp.NextPageLink))
+                {
+                    resp = await subscriptionClient.Subscriptions.ListNextAsync(resp.NextPageLink).ConfigureAwait(false);
+                    subscriptionList.AddRange(resp);
+                }
+
+                this.logger.LogTrace("Fetched total of '{0}' subscriptions for tenant '{1}'", subscriptionList.Count, tenantId);
+            }
+            else
+            {
+                this.logger.LogWarning($"Could not get token for tenant with Id '{tenantId}'. Returning 0 subscriptions");
+            }
+
+            return subscriptionList;
+        }
+
+        /// <summary>
+        /// Gets the list of locations enabled in a subscription.
+        /// </summary>
+        /// <param name="subscription">Subscription to look for in details.</param>
+        /// <param name="preferredTenantId">Preferred tenant Id.</param>
+        /// <returns>Collection of locations.</returns>
+        private async Task<IEnumerable<Location>> GetLocationsForSubscriptionAsync(SubscriptionInner subscription, string preferredTenantId)
+        {
+            await this.TryUpdateTokenCacheForTenantAsync(preferredTenantId).ConfigureAwait(false);
+
+            HashSet<string> secondaryTenantLookups;
+
+            if (this.tenantBasedTokenMap.ContainsKey(preferredTenantId))
+            {
+                TokenCredentials subsCreds = new TokenCredentials(this.tenantBasedTokenMap[preferredTenantId].AccessToken);
+
+                SubscriptionClient subscriptionClient = new SubscriptionClient(subsCreds);
+
+                try
+                {
+                    return await subscriptionClient.Subscriptions.ListLocationsAsync(subscription.SubscriptionId).ConfigureAwait(false);
+                }
+                catch (Exception ex)
+                {
+                    this.logger.LogWarning(
+                        ex,
+                        $"Preferred tenant based locations lookup for subscription with Id '{subscription.SubscriptionId}' used tenant '{preferredTenantId}'. Looping thru tenants.");
+
+                    secondaryTenantLookups = this.GetTheTenantIdLookupForSubscriptionOnInvalidAuthenticationTokenError(ex as CloudException);
+                }
+            }
+            else
+            {
+                secondaryTenantLookups = this.GetTheTenantIdLookupForSubscriptionOnInvalidAuthenticationTokenError();
+            }
+
+            // If we have reached this point. Either token acquire for preferred tenant failed or we hit an exception.
+            foreach (string tenantId in secondaryTenantLookups)
+            {
+                await this.TryUpdateTokenCacheForTenantAsync(tenantId).ConfigureAwait(false);
+
+                if (this.tenantBasedTokenMap.ContainsKey(tenantId))
+                {
+                    TokenCredentials subsCreds = new TokenCredentials(this.tenantBasedTokenMap[tenantId].AccessToken);
+
+                    SubscriptionClient subscriptionClient = new SubscriptionClient(subsCreds);
+
+                    try
+                    {
+                        return await subscriptionClient.Subscriptions.ListLocationsAsync(subscription.SubscriptionId).ConfigureAwait(false);
+                    }
+                    catch (Exception ex)
+                    {
+                        this.logger.LogWarning(
+                            ex,
+                            $"Lookup with TenantId '{tenantId}' failed for subscription with Id '{subscription.SubscriptionId}'. Moving on to next tenant.");
+                    }
+                }
+            }
+
+            // If we reach this point. We just all up failed to get locations in any possible way. Throwing exception so the subscription can be removed from the list.
+            throw new UnauthorizedAccessException("Failed to get subscription location");
+        }
+
+        /// <summary>
+        /// Processes an optional cloud exception and returns an optimistic list of tenants to try against to get subscription info.
+        /// </summary>
+        /// <param name="cloudException">Optional cloud exception.</param>
+        /// <returns>Collection of tenantIds to try.</returns>
+        private HashSet<string> GetTheTenantIdLookupForSubscriptionOnInvalidAuthenticationTokenError(CloudException cloudException = null)
+        {
+            List<string> tenantLookup = new List<string>();
+
+            // If Azure thinks we used the wrong tenant, go thru the tenant list and check if we can acquire the token for any other
+            // tenant and get subscription details. If we can't we drop the subscription and move on.
+            if (cloudException?.Body?.Code == "InvalidAuthenticationTokenTenant")
+            {
+                // Try to optimistically get tenantId from WWW-authenticate header.
+                // The header looks like
+                // Bearer authorization_uri="https://login.windows.net/<TenantId>", error="invalid_token", error_description="The access token is from the wrong issuer. It must match the tenant associated with this subscription. Please use correct authority to get the token."
+                if (cloudException.Response?.Headers != null && cloudException.Response.Headers.ContainsKey("WWW-Authenticate"))
+                {
+                    string wwwAuthHeader = cloudException.Response.Headers["WWW-Authenticate"].First();
+
+                    string authUrlPart = wwwAuthHeader.Split(",").FirstOrDefault(split => split.StartsWith("Bearer", StringComparison.OrdinalIgnoreCase));
+
+                    string loginAuthority = authUrlPart.Replace("Bearer authorization_uri=\"", string.Empty, StringComparison.OrdinalIgnoreCase);
+                    loginAuthority = loginAuthority.Substring(0, loginAuthority.Length - 1);
+
+                    if (Uri.IsWellFormedUriString(loginAuthority, UriKind.Absolute))
+                    {
+                        string tenantId = new Uri(loginAuthority).AbsolutePath.TrimStart('/');
+
+                        tenantLookup.Add(tenantId);
+                    }
+                }
+            }
+
+            tenantLookup.AddRange(this.tenantBasedTokenMap.Keys);
+
+            return new HashSet<string>(tenantLookup);
         }
 
         /// <summary>
@@ -269,6 +395,29 @@ namespace TunnelRelay.UI.ResourceManagement
             {
                 this.logger.LogWarning(ex, "Hit exception during tenantId extraction process");
                 return authenticationResult.TenantId;
+            }
+        }
+
+        /// <summary>
+        /// For a given token tries to update the token cache.
+        /// </summary>
+        /// <param name="tenantId">Tenant Id to update cache for.</param>
+        /// <returns>Task tracking operation.</returns>
+        private async Task TryUpdateTokenCacheForTenantAsync(string tenantId)
+        {
+            // Optimization to skip refetching tokens. AAD tokens live for 1 hour.
+            if (!this.tenantBasedTokenMap.ContainsKey(tenantId))
+            {
+                try
+                {
+                    this.logger.LogInformation("Get token with '{0}' tenant info", tenantId);
+                    UserAuthenticationDetails tenantizedToken = await this.AcquireAzureManagementTokenAsync(tenantId, usePrompt: false, this.userIdentifier).ConfigureAwait(false);
+                    this.tenantBasedTokenMap[this.GetTenantOnToken(tenantizedToken)] = tenantizedToken;
+                }
+                catch (Exception ex)
+                {
+                    this.logger.LogWarning(ex, $"Failed to acquire token for tenant with Id '{tenantId}'");
+                }
             }
         }
 
