@@ -10,12 +10,18 @@ namespace TunnelRelay.UI.ResourceManagement
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.Linq;
+    using System.Runtime.InteropServices;
     using System.Text;
     using System.Threading.Tasks;
     using Microsoft.Azure.Management.ResourceManager.Fluent;
     using Microsoft.Azure.Management.ResourceManager.Fluent.Models;
     using Microsoft.Extensions.Logging;
+    using Microsoft.Identity.Client.Platforms.Shared.Desktop.OsBrowser;
+#if USEADAL
+    using Microsoft.IdentityModel.Clients.ActiveDirectory;
+#else
     using Microsoft.Identity.Client;
+#endif
     using Microsoft.Rest;
     using Microsoft.Rest.Azure;
     using Newtonsoft.Json;
@@ -31,23 +37,14 @@ namespace TunnelRelay.UI.ResourceManagement
         private const string AADLoginAuthority = "https://login.microsoftonline.com/";
 
         /// <summary>
-        /// The azure aad resource scope.
+        /// The azure aad resource for azure management app.
         /// </summary>
-        private const string AzureAADResourceScope = "https://management.azure.com//.default";
+        private const string AzureAADResource = "https://management.core.windows.net/";
 
         /// <summary>
         /// The ps native client id to get desktop tokens.
         /// </summary>
         private const string PSClientId = "1950a258-227b-4e31-a9cf-717495945fc2";
-
-        private readonly IPublicClientApplication publicClientApplication = PublicClientApplicationBuilder
-            .CreateWithApplicationOptions(new PublicClientApplicationOptions
-            {
-                ClientId = PSClientId,
-                AzureCloudInstance = AzureCloudInstance.AzurePublic,
-                RedirectUri = "http://localhost",
-            })
-            .Build();
 
         /// <summary>
         /// Logger.
@@ -57,7 +54,7 @@ namespace TunnelRelay.UI.ResourceManagement
         /// <summary>
         /// The tenant based token map. This stores tokens Tenant wise.
         /// </summary>
-        private readonly ConcurrentDictionary<string, AuthenticationResult> tenantBasedTokenMap = new ConcurrentDictionary<string, AuthenticationResult>();
+        private readonly ConcurrentDictionary<string, UserAuthenticationDetails> tenantBasedTokenMap = new ConcurrentDictionary<string, UserAuthenticationDetails>();
 
         /// <summary>
         /// The subscription to tenant map. Stores the list of subscription alongside their tenant ids.
@@ -69,10 +66,24 @@ namespace TunnelRelay.UI.ResourceManagement
         /// </summary>
         private readonly ConcurrentDictionary<SubscriptionInner, IEnumerable<Location>> subscriptionToLocationMap = new ConcurrentDictionary<SubscriptionInner, IEnumerable<Location>>();
 
+#if !USEADAL
+        /// <summary>
+        /// Public client application instance.
+        /// </summary>
+        private readonly IPublicClientApplication publicClientApplication = PublicClientApplicationBuilder
+            .CreateWithApplicationOptions(new PublicClientApplicationOptions
+            {
+                ClientId = PSClientId,
+                AzureCloudInstance = AzureCloudInstance.AzurePublic,
+                RedirectUri = "http://localhost",
+            })
+            .Build();
+#endif
+
         /// <summary>
         /// The user identifier.
         /// </summary>
-        private IAccount userIdentifier;
+        private string userIdentifier;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="UserAuthenticator"/> class.
@@ -93,10 +104,10 @@ namespace TunnelRelay.UI.ResourceManagement
             if (this.tenantBasedTokenMap.Count == 0)
             {
                 this.logger.LogInformation("Logging the user in with Common tenant info");
-                AuthenticationResult authToken = await this.AcquireAzureManagementTokenAsync("common", Prompt.SelectAccount).ConfigureAwait(false);
+                UserAuthenticationDetails authDetails = await this.AcquireAzureManagementTokenAsync("common", usePrompt: true).ConfigureAwait(false);
 
-                this.userIdentifier = authToken.Account;
-                this.tenantBasedTokenMap[this.GetTenantOnToken(authToken)] = authToken;
+                this.userIdentifier = authDetails.Username;
+                this.tenantBasedTokenMap[this.GetTenantOnToken(authDetails)] = authDetails;
             }
         }
 
@@ -141,7 +152,7 @@ namespace TunnelRelay.UI.ResourceManagement
                                 try
                                 {
                                     this.logger.LogInformation("Get token with '{0}' tenant info", tenant.TenantId);
-                                    AuthenticationResult tenantizedToken = await this.AcquireAzureManagementTokenAsync(tenant.TenantId, Prompt.NoPrompt, this.userIdentifier).ConfigureAwait(false);
+                                    UserAuthenticationDetails tenantizedToken = await this.AcquireAzureManagementTokenAsync(tenant.TenantId, usePrompt: false, this.userIdentifier).ConfigureAwait(false);
                                     this.tenantBasedTokenMap[this.GetTenantOnToken(tenantizedToken)] = tenantizedToken;
                                 }
                                 catch (Exception ex)
@@ -231,7 +242,7 @@ namespace TunnelRelay.UI.ResourceManagement
         /// </summary>
         /// <param name="authenticationResult">Authentication result token.</param>
         /// <returns>Tenant on the token.</returns>
-        private string GetTenantOnToken(AuthenticationResult authenticationResult)
+        private string GetTenantOnToken(UserAuthenticationDetails authenticationResult)
         {
             try
             {
@@ -265,36 +276,87 @@ namespace TunnelRelay.UI.ResourceManagement
         /// Acquires the Azure management token asynchronously.
         /// </summary>
         /// <param name="tenantId">The tenant identifier.</param>
-        /// <param name="promptBehavior">The prompt behavior.</param>
+        /// <param name="usePrompt">The prompt behavior. If true, raises a prompt, otherwise performs silent login.</param>
         /// <param name="userIdentifier">Optional user for which token is to be fetched.</param>
         /// <returns>AAD authentication result.</returns>
-        private async Task<AuthenticationResult> AcquireAzureManagementTokenAsync(
+        private async Task<UserAuthenticationDetails> AcquireAzureManagementTokenAsync(
             string tenantId,
-            Prompt promptBehavior,
-            IAccount userIdentifier = null)
+            bool usePrompt,
+            string userIdentifier = null)
         {
             Guid correlationId = Guid.NewGuid();
 
             this.logger.LogInformation($"Acquiring token with correlation Id set to '{correlationId}'");
-
             try
             {
+#if USEADAL
+                AuthenticationContext authenticationContext = new AuthenticationContext(
+                    $"{UserAuthenticator.AADLoginAuthority}{tenantId}",
+                    validateAuthority: false,
+                    TokenCache.DefaultShared,
+                    new AzureAdHttpClientFactory())
+                {
+                    CorrelationId = correlationId,
+                };
+
+                AuthenticationResult authenticationResult = null;
+
+                if (userIdentifier == null)
+                {
+                    if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                    {
+                        Uri redirectUri = DefaultOsBrowserWebUi.UpdateRedirectUri(new Uri("http://localhost"));
+
+                        authenticationResult = await authenticationContext.AcquireTokenAsync(
+                            UserAuthenticator.AzureAADResource,
+                            UserAuthenticator.PSClientId,
+                            redirectUri,
+                            new PlatformParameters(
+                                usePrompt ? PromptBehavior.SelectAccount : PromptBehavior.Never,
+                                new DefaultOsBrowserWebUi(this.logger))).ConfigureAwait(false);
+                    }
+                    else
+                    {
+                        DeviceCodeResult deviceCodeResult = await authenticationContext.AcquireDeviceCodeAsync(UserAuthenticator.AzureAADResource, UserAuthenticator.PSClientId).ConfigureAwait(false);
+
+                        Console.WriteLine($"Interactive login required. Please enter {deviceCodeResult.UserCode} when asked for in the browser window. If a browser windows does not open or is not supported, follow the instructions below (these can be followed on any device) {Environment.NewLine}{deviceCodeResult.Message}");
+                        await Task.Delay(1000).ConfigureAwait(false);
+
+                        authenticationResult = await authenticationContext.AcquireTokenByDeviceCodeAsync(deviceCodeResult).ConfigureAwait(false);
+                    }
+                }
+                else
+                {
+                    authenticationResult = await authenticationContext.AcquireTokenSilentAsync(
+                        UserAuthenticator.AzureAADResource,
+                        UserAuthenticator.PSClientId).ConfigureAwait(false);
+                }
+
+                return new UserAuthenticationDetails
+                {
+                    AccessToken = authenticationResult.AccessToken,
+                    TenantId = authenticationResult.TenantId,
+                    Username = authenticationResult.UserInfo.DisplayableId,
+                };
+#else
+                AuthenticationResult authenticationResult = null;
+
                 if (userIdentifier == null)
                 {
                     if (this.publicClientApplication.IsSystemWebViewAvailable)
                     {
-                        return await this.publicClientApplication
-                            .AcquireTokenInteractive(new List<string>() { AzureAADResourceScope })
+                        authenticationResult = await this.publicClientApplication
+                            .AcquireTokenInteractive(new List<string>() { AzureAADResource + "/.default" })
                             .WithAuthority($"{UserAuthenticator.AADLoginAuthority}{tenantId}", validateAuthority: false)
                             .WithCorrelationId(correlationId)
-                            .WithPrompt(promptBehavior)
+                            .WithPrompt(usePrompt ? Prompt.SelectAccount : Prompt.NoPrompt)
                             .ExecuteAsync().ConfigureAwait(false);
                     }
                     else
                     {
-                        return await this.publicClientApplication
+                        authenticationResult = await this.publicClientApplication
                             .AcquireTokenWithDeviceCode(
-                                new List<string>() { AzureAADResourceScope },
+                                new List<string>() { AzureAADResource + "/.default" },
                                 async (deviceCodeResult) =>
                                 {
                                     Console.WriteLine($"Interactive login required. Please enter {deviceCodeResult.UserCode} when asked for in the browser window. If a browser windows does not open or is not supported, follow the instructions below (these can be followed on any device) {Environment.NewLine}{deviceCodeResult.Message}");
@@ -323,18 +385,47 @@ namespace TunnelRelay.UI.ResourceManagement
                 }
                 else
                 {
-                    return await this.publicClientApplication
-                        .AcquireTokenSilent(new List<string>() { AzureAADResourceScope }, userIdentifier)
+                    authenticationResult = await this.publicClientApplication
+                        .AcquireTokenSilent(new List<string>() { AzureAADResource + "/.default" }, userIdentifier)
                         .WithAuthority($"{UserAuthenticator.AADLoginAuthority}{tenantId}", validateAuthority: false)
                         .WithCorrelationId(correlationId)
                         .ExecuteAsync().ConfigureAwait(false);
                 }
+
+                return new UserAuthenticationDetails
+                {
+                    AccessToken = authenticationResult.AccessToken,
+                    Username = authenticationResult.Account.Username,
+                    TenantId = authenticationResult.TenantId,
+                };
+#endif
             }
             catch (Exception ex)
             {
                 this.logger.LogError(ex, $"Failed to acquire token. Correlation Id '{correlationId}'");
                 throw;
             }
+        }
+
+        /// <summary>
+        /// User authentication details.
+        /// </summary>
+        private class UserAuthenticationDetails
+        {
+            /// <summary>
+            /// Gets or sets the access token.
+            /// </summary>
+            public string AccessToken { get; set; }
+
+            /// <summary>
+            /// Gets or sets the username.
+            /// </summary>
+            public string Username { get; set; }
+
+            /// <summary>
+            /// Gets or sets the tenant ID.
+            /// </summary>
+            public string TenantId { get; set; }
         }
     }
 }

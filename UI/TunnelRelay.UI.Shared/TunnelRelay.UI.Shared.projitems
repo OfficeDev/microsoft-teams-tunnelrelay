@@ -9,6 +9,12 @@
     <Import_RootNamespace>TunnelRelay.UI</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)ResourceManagement\AdalUI\Imported\DefaultOsBrowserWebUi.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ResourceManagement\AdalUI\Imported\HttpListenerInterceptor.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ResourceManagement\AdalUI\Imported\IUriInterceptor.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ResourceManagement\AdalUI\Imported\MessageAndHttpCode.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ResourceManagement\AdalUI\Imported\PlatformProxyShared.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ResourceManagement\AzureAdHttpClientFactory.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ResourceManagement\HybridConnectionDetails.cs" />
     <Compile Include="..\TunnelRelay.UI.Shared\ResourceManagement\AzureRelayResourceManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ResourceManagement\UserAuthenticator.cs" />
