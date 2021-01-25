@@ -23,13 +23,18 @@
     <PackageReference Include="Microsoft.Azure.Management.Relay.Fluent" Version="1.9.1-beta" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="3.1.0" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="3.1.0" />
-    <PackageReference Include="Microsoft.Identity.Client" Version="4.7.1" />
+    <PackageReference Include="Microsoft.Identity.Client" Version="4.19.0" />
+    <PackageReference Include="Microsoft.IdentityModel.Clients.ActiveDirectory" Version="5.2.8" />
     <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="4.7.0" />
   </ItemGroup>
   
   <ItemGroup>
     <Folder Include="Properties\" />
   </ItemGroup>
+
+  <PropertyGroup>
+    <DefineConstants>USEADAL</DefineConstants>
+  </PropertyGroup>
   
   <ItemGroup>
     <None Update="App.xaml">

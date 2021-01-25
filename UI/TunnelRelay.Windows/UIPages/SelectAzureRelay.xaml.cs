@@ -273,7 +273,7 @@ namespace TunnelRelay.Windows
 
                     this.Dispatcher.Invoke(() =>
                     {
-                        MessageBox.Show("Failed to create new Azure Relay namespace!!", "Azure Error", MessageBoxButton.OKCancel, MessageBoxImage.Error);
+                        MessageBox.Show($"Failed to create new Azure Relay namespace!! Underlying error {ex}", "Azure Error", MessageBoxButton.OKCancel, MessageBoxImage.Error);
                         this.progressBar.Visibility = Visibility.Hidden;
                         this.btnDone.IsEnabled = true;
                     });
