@@ -71,8 +71,11 @@
             </Grid.RowDefinitions>
 
             <Grid Grid.Row="0" Grid.ColumnSpan="10">
-                <Label Content="All Requests" FontWeight="Bold" HorizontalAlignment="Left"/>
-                <Button Content="Clear Requests" HorizontalAlignment="Right" Name="btnClearAllRequests" Width="100" BorderBrush="LightSlateGray" Background="White" Click="BtnClearAllRequests_Click"/>
+                <Label Content="All Requests" FontWeight="Bold" HorizontalAlignment="Left" VerticalAlignment="Bottom"/>
+                <WrapPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button Content="Clear Requests" HorizontalAlignment="Right" Name="btnClearAllRequests" Width="100" BorderBrush="LightSlateGray" Background="White" Click="BtnClearAllRequests_Click"/>
+                    <Button Content="Re-Issue Request" HorizontalAlignment="Right" Name="btnReIssueRequest" Width="100" BorderBrush="LightSlateGray" Background="White" Click="BtnReIssueRequestFromRequestMap_ClickAsync"/>
+                </WrapPanel>
             </Grid>
 
             <ListView Name="lstRequests" x:FieldModifier="public" Grid.Row="2" BorderThickness="0" ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.HorizontalScrollBarVisibility="Disabled" w:ListBox.AutoScroll="True">
