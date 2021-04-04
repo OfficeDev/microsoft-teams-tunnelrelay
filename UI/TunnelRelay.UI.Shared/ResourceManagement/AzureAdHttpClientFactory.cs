@@ -20,7 +20,7 @@ namespace TunnelRelay.UI.ResourceManagement
     /// Azure AD HTTP client factory.
     /// </summary>
 #if USEADAL
-    public sealed class AzureAdHttpClientFactory : IHttpClientFactory, IDisposable
+    public sealed class AzureAdHttpClientFactory : Microsoft.IdentityModel.Clients.ActiveDirectory.IHttpClientFactory, IDisposable
 #else
     public sealed class AzureAdHttpClientFactory : IDisposable
 #endif
