@@ -71,8 +71,14 @@
             </Grid.RowDefinitions>
 
             <Grid Grid.Row="0" Grid.ColumnSpan="10">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="150"/>
+                    <ColumnDefinition Width="150"/>
+                </Grid.ColumnDefinitions>
                 <Label Content="All Requests" FontWeight="Bold" HorizontalAlignment="Left"/>
-                <Button Content="Clear Requests" HorizontalAlignment="Right" Name="btnClearAllRequests" Width="100" BorderBrush="LightSlateGray" Background="White" Click="BtnClearAllRequests_Click"/>
+                <Button Content="Replay Request" Grid.Column="1" HorizontalAlignment="Right" Name="btnReplayRequest" Width="100" BorderBrush="LightSlateGray" Background="White" Click="BtnReplayRequest_Click" />
+                <Button Content="Clear Requests" Grid.Column="2" HorizontalAlignment="Right" Name="btnClearAllRequests" Width="100" BorderBrush="LightSlateGray" Background="White" Click="BtnClearAllRequests_Click"/>
             </Grid>
 
             <ListView Name="lstRequests" x:FieldModifier="public" Grid.Row="2" BorderThickness="0" ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.HorizontalScrollBarVisibility="Disabled" w:ListBox.AutoScroll="True">

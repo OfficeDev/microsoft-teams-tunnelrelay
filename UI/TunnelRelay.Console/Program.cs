@@ -75,6 +75,11 @@ namespace TunnelRelay.Console
                 "Deletes the configuration and exits the app. You can relaunch to go through configuration again.",
                 CommandOptionType.NoValue);
 
+            CommandOption disableEncryptionOption = commandLineApplication.Option(
+                "-NoEncrypt | --DisableEncryption",
+                "Disables encryption of keys in config. Encryption is always disabled in non-Windows environments.",
+                CommandOptionType.NoValue);
+
             CommandOption disableLoggingOption = commandLineApplication.Option(
                 "-NoLog | --DisableLogging",
                 "Disables logging for the application. If you going to run this for a very long time, it might be better to disable logging to not overrun disk space.",
@@ -170,14 +175,16 @@ namespace TunnelRelay.Console
 
                         applicationData = await Program.PerformInteractiveConfigurationAsync(
                             serviceDescriptors.BuildServiceProvider(),
-                            serviceAddressOption.Value()).ConfigureAwait(false);
+                            serviceAddressOption.Value(),
+                            disableEncryptionOption.HasValue()).ConfigureAwait(false);
                     }
                 }
                 else
                 {
                     applicationData = await Program.PerformInteractiveConfigurationAsync(
                         serviceDescriptors.BuildServiceProvider(),
-                        serviceAddressOption.Value()).ConfigureAwait(false);
+                        serviceAddressOption.Value(),
+                        disableEncryptionOption.HasValue()).ConfigureAwait(false);
                 }
 
                 serviceDescriptors.AddSingleton<ApplicationData>(applicationData);
@@ -254,7 +261,8 @@ namespace TunnelRelay.Console
 
         private static async Task<ApplicationData> PerformInteractiveConfigurationAsync(
             IServiceProvider serviceProvider,
-            string redirectionUrl = null)
+            string redirectionUrl = null,
+            bool forceDisableEncryption = false)
         {
             Console.WriteLine("Please wait while we log you in...");
 
@@ -333,6 +341,8 @@ namespace TunnelRelay.Console
             }
 
             HybridConnectionDetails hybridConnectionDetails = null;
+            string hybridConnectionName = Environment.MachineName;
+
             if (selectedRelayIndex == 0)
             {
                 Console.Write("Enter the name for the new Azure Relay. This must be atleast 6 character long and globally unique. ");
@@ -365,20 +375,36 @@ namespace TunnelRelay.Console
                     break;
                 }
 
+                Console.Write("Enter the name of new hybrid connection. Defaults to machine name. ");
+                string consoleInput = Console.ReadLine();
+
+                if (!string.IsNullOrWhiteSpace(consoleInput))
+                {
+                    hybridConnectionName = consoleInput;
+                }
+
                 Console.WriteLine("Please wait while the new Relay is being created");
                 hybridConnectionDetails = await relayResourceManager.CreateHybridConnectionAsync(
                     selectedSubscription,
                     relayName,
-                    Environment.MachineName,
+                    hybridConnectionName,
                     subscriptionLocations[selectedLocationIndex - 1].DisplayName).ConfigureAwait(false);
             }
             else
             {
+                Console.Write("Enter the name of new hybrid connection. Defaults to machine name. ");
+                string consoleInput = Console.ReadLine();
+
+                if (!string.IsNullOrWhiteSpace(consoleInput))
+                {
+                    hybridConnectionName = consoleInput;
+                }
+
                 Console.WriteLine("Please wait while the details for Relay are fetched");
                 hybridConnectionDetails = await relayResourceManager.GetHybridConnectionAsync(
                     selectedSubscription,
                     relayNamespaces[selectedRelayIndex - 1],
-                    Environment.MachineName).ConfigureAwait(false);
+                    hybridConnectionName).ConfigureAwait(false);
             }
 
             if (string.IsNullOrEmpty(redirectionUrl))
@@ -390,7 +416,7 @@ namespace TunnelRelay.Console
             return new ApplicationData
             {
                 // DPAPI APIs used for encryption are only present on Windows.
-                EnableCredentialEncryption = RuntimeInformation.IsOSPlatform(OSPlatform.Windows),
+                EnableCredentialEncryption = !forceDisableEncryption && RuntimeInformation.IsOSPlatform(OSPlatform.Windows),
                 EnabledPlugins = new HashSet<string>(),
                 HybridConnectionKeyName = hybridConnectionDetails.HybridConnectionKeyName,
                 HybridConnectionName = hybridConnectionDetails.HybridConnectionName,
