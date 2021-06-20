@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
-  <Product Id="*" Name="Tunnel Relay" Language="1033" Version="2.3.0.0" Manufacturer="Microsoft" UpgradeCode="f777fda3-99c0-4223-9ef3-271b868864f3">
+  <Product Id="*" Name="Tunnel Relay" Language="1033" Version="2.4.0.0" Manufacturer="Microsoft" UpgradeCode="f777fda3-99c0-4223-9ef3-271b868864f3">
     <Package InstallerVersion="200" Compressed="yes" InstallPrivileges="elevated" InstallScope="perMachine" Platform="x64"/>
 
     <MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." AllowSameVersionUpgrades="yes"/>
