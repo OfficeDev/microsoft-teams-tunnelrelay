@@ -84,6 +84,7 @@ namespace TunnelRelay.Windows
         private void Window_ContentRendered(object sender, EventArgs e)
         {
             this.progressBar.Visibility = Visibility.Visible;
+            this.txtHybridConnectionName.Text = Environment.MachineName;
 
             Thread subscriptionThread = new Thread(new ThreadStart(() =>
             {
@@ -203,13 +204,17 @@ namespace TunnelRelay.Windows
             string selectedLocation = this.listBoxSubscriptionLocations.SelectedItem.ToString();
 
             string newRelayName = this.txtAzureRelayName.Text;
+            string hybridConnectionName = this.txtHybridConnectionName.Text;
 
             // Case 1. When user used existing Relay.
             Thread existingAzureRelayThread = new Thread(new ThreadStart(() =>
             {
                 try
                 {
-                    HybridConnectionDetails hybridConnectionDetails = this.relayResourceManager.GetHybridConnectionAsync(selectedSubscription, selectedAzureRelay, Environment.MachineName).ConfigureAwait(false).GetAwaiter().GetResult();
+                    HybridConnectionDetails hybridConnectionDetails = this.relayResourceManager.GetHybridConnectionAsync(
+                        selectedSubscription,
+                        selectedAzureRelay,
+                        hybridConnectionName).ConfigureAwait(false).GetAwaiter().GetResult();
 
                     this.SetApplicationData(hybridConnectionDetails);
                 }
@@ -248,10 +253,21 @@ namespace TunnelRelay.Windows
                         return;
                     }
 
+                    if (string.IsNullOrEmpty(this.txtHybridConnectionName.Text))
+                    {
+                        MessageBox.Show("Hybrid connection name can't be empty.");
+                        this.Dispatcher.Invoke(() =>
+                        {
+                            this.progressBar.Visibility = Visibility.Hidden;
+                            this.btnDone.IsEnabled = true;
+                        });
+                        return;
+                    }
+
                     HybridConnectionDetails hybridConnectionDetails = this.relayResourceManager.CreateHybridConnectionAsync(
                         selectedSubscription,
                         newRelayName,
-                        Environment.MachineName,
+                        hybridConnectionName,
                         selectedLocation).ConfigureAwait(false).GetAwaiter().GetResult();
 
                     this.SetApplicationData(hybridConnectionDetails);

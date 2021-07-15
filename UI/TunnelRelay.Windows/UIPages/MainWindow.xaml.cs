@@ -10,6 +10,8 @@ namespace TunnelRelay.Windows
     using System.IO;
     using System.IO.Compression;
     using System.Net;
+    using System.Net.Http;
+    using System.Net.Http.Headers;
     using System.Threading;
     using System.Threading.Tasks;
     using System.Windows;
@@ -26,7 +28,7 @@ namespace TunnelRelay.Windows
     /// <summary>
     /// Interaction logic for MainWindow.xaml.
     /// </summary>
-    internal partial class MainWindow : Window, IRelayRequestEventListener
+    internal partial class MainWindow : Window, IRelayRequestEventListener, IDisposable
     {
         /// <summary>
         /// The request map. Request ID => Index.
@@ -37,6 +39,11 @@ namespace TunnelRelay.Windows
         /// Logger.
         /// </summary>
         private readonly ILogger<MainWindow> logger = LoggingHelper.GetLogger<MainWindow>();
+
+        /// <summary>
+        /// Http client to use for replaying the requests.
+        /// </summary>
+        private readonly HttpClient httpClient = new HttpClient();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MainWindow"/> class.
@@ -128,6 +135,14 @@ namespace TunnelRelay.Windows
         }
 
         /// <summary>
+        /// Cleans up unmanaged resources.
+        /// </summary>
+        public void Dispose()
+        {
+            this.httpClient.Dispose();
+        }
+
+        /// <summary>
         /// Gets UI friendly string from stream.
         /// </summary>
         /// <param name="stream">Stream to read from.</param>
@@ -190,7 +205,7 @@ namespace TunnelRelay.Windows
         /// </summary>
         private void StartRelayEngine()
         {
-            Thread backGroundThread = new Thread(new ThreadStart(() =>
+            Thread backgroundThread = new Thread(new ThreadStart(() =>
             {
                 try
                 {
@@ -216,7 +231,7 @@ namespace TunnelRelay.Windows
                 }
             }));
 
-            backGroundThread.Start();
+            backgroundThread.Start();
         }
 
         /// <summary>Checks if Copy command can be execute.</summary>
@@ -330,6 +345,65 @@ namespace TunnelRelay.Windows
                 string exportedSettingsFileName = saveFileDialog.FileName;
 
                 File.WriteAllText(exportedSettingsFileName, TunnelRelayStateManager.ApplicationData.ExportSettings());
+            }
+        }
+
+        /// <summary>
+        /// Handles click event for Replay Request button.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="RoutedEventArgs"/> instance containing the event data.</param>
+        private void BtnReplayRequest_Click(object sender, RoutedEventArgs e)
+        {
+            const string TransferEncodingHeader = "Transfer-Encoding";
+            const string ViaHeader = "Via";
+
+            if (this.lstRequests.SelectedItem == null)
+            {
+                return;
+            }
+
+            KeyValuePair<string, RequestDetails> selectedRequestEntry = (KeyValuePair<string, RequestDetails>)this.lstRequests.SelectedItem;
+
+            RequestDetails selectedRequest = selectedRequestEntry.Value;
+
+            string url = this.txtProxyDetails.Text + selectedRequest.Url;
+
+            HttpRequestMessage httpRequestMessage = new HttpRequestMessage(
+                new HttpMethod(selectedRequest.Method),
+                url);
+
+            // Try to copy all headers to request.
+            CopyOverHeaders(selectedRequest.RequestHeaders, httpRequestMessage.Headers);
+
+            if (!string.IsNullOrEmpty(selectedRequest.RequestData))
+            {
+                HttpContent httpContent = new StringContent(selectedRequest.RequestData);
+
+                // Try to copy all headers to content as well.
+                CopyOverHeaders(selectedRequest.RequestHeaders, httpContent.Headers);
+            }
+
+            _ = Task.Run(async () => await this.httpClient.SendAsync(httpRequestMessage).ConfigureAwait(false));
+
+            void CopyOverHeaders(List<HeaderDetails> headerDetails, HttpHeaders httpHeaders)
+            {
+                foreach (HeaderDetails header in selectedRequest.RequestHeaders)
+                {
+                    // Remove Transfer Encoding header.
+                    if (header.HeaderName.Equals(TransferEncodingHeader, StringComparison.OrdinalIgnoreCase))
+                    {
+                        continue;
+                    }
+
+                    // Remove Via header.
+                    if (header.HeaderName.Equals(ViaHeader, StringComparison.OrdinalIgnoreCase))
+                    {
+                        continue;
+                    }
+
+                    httpHeaders.TryAddWithoutValidation(header.HeaderName, header.HeaderValue);
+                }
             }
         }
     }
