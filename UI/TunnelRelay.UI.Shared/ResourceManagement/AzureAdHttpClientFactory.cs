@@ -57,7 +57,10 @@ namespace TunnelRelay.UI.ResourceManagement
 
             public CodeVerifierBypassDelegatingHandler()
             {
-                this.InnerHandler = new HttpClientHandler();
+                this.InnerHandler = new HttpClientHandler()
+                {
+                    AllowAutoRedirect = false,
+                };
             }
 
             protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)

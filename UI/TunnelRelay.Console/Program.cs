@@ -229,6 +229,7 @@ namespace TunnelRelay.Console
                         return new HttpClientHandler
                         {
                             ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator,
+                            AllowAutoRedirect = false,
                         };
                     })
                     .SetHandlerLifetime(TimeSpan.FromHours(1));
