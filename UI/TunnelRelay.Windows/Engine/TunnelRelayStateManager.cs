@@ -137,6 +137,7 @@ namespace TunnelRelay.Windows.Engine
                 new HttpClient(new HttpClientHandler
                 {
                     ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator,
+                    AllowAutoRedirect = false,
                 }),
                 TunnelRelayStateManager.RelayRequestManagerOptions,
                 Plugins.Where(details => details.IsEnabled).Select(details => details.PluginInstance),
